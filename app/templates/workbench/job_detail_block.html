@@ -11,7 +11,7 @@
   <div class="tab-nav" role="tablist">
     <button class="tab-button {{ '' if show_api_calls_first else 'active' }}" type="button" data-tab-target="prompt">提示词</button>
     <button class="tab-button" type="button" data-tab-target="events">事件日志</button>
-    <button class="tab-button" type="button" data-tab-target="files">文件列表</button>
+    <button class="tab-button" type="button" data-tab-target="files">参考素材与文件</button>
     <button class="tab-button {{ 'active' if show_api_calls_first else '' }}" type="button" data-tab-target="api-calls">上游调用</button>
   </div>
 
@@ -32,18 +32,7 @@
   </div>
 
   <div class="tab-panel" data-tab-panel="files">
-    <div class="table-wrap surface-table compact-file-table clean-table-wrap">
-      <table class="table clean-table">
-        <thead><tr><th>类型</th><th>文件名</th><th>大小</th></tr></thead>
-        <tbody>
-          {% for file in files %}
-          <tr><td>{{ file.file_type }}</td><td>{{ file.file_name }}</td><td>{{ file.file_size or '-' }}</td></tr>
-          {% else %}
-          <tr><td colspan="3"><div class="empty-state compact-empty">暂无文件</div></td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    {% include "workbench/job_assets.html" %}
   </div>
 
   <div class="tab-panel {{ 'active' if show_api_calls_first else '' }}" data-tab-panel="api-calls">
@@ -65,3 +54,6 @@
     </div>
   </div>
 </section>
+
+<link rel="stylesheet" href="/static/workbench/job-assets.css?v=20260909-assets">
+<script defer src="/static/workbench/job-assets.js?v=20260909-assets"></script>
