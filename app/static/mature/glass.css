@@ -431,3 +431,10 @@ html[data-theme=dark] .wb-glass {
   .wb-glass.wb-create-page .wb-available {grid-column:1;grid-row:2;margin:0}
   .wb-glass.wb-create-page .wb-submit>.primary-btn {grid-column:2;grid-row:1/3;min-width:116px}
 }
+
+/* Prompt actions remain beside the pane heading while the list scrolls. */
+.wb-glass .wb-prompt-actions {flex-wrap:nowrap;gap:4px}
+@media(max-width:767px) {
+  .wb-glass .wb-prompts>.wb-pane-title {gap:8px}
+  .wb-glass .wb-prompts>.wb-pane-title>div:first-child>.wb-icon {display:none}
+}
