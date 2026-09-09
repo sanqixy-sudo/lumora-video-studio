@@ -74,7 +74,11 @@ const SoraUI = (() => {
     try {
       const data = new FormData(form);
       if (submitter?.name) data.append(submitter.name, submitter.value);
-      const response = await fetch(form.action, {method:'POST',body:data,credentials:'same-origin'});
+      // Empty multipart forms are rejected by some reverse proxies (including BT WAF).
+      // Use standard URL encoding unless the form actually contains a file control.
+      const hasFile = [...data.values()].some(value => value instanceof File);
+      const body = hasFile ? data : new URLSearchParams([...data.entries()]);
+      const response = await fetch(form.action, {method:'POST',body,credentials:'same-origin'});
       const contentType = response.headers.get('content-type') || '';
       if (response.status === 401) { window.location.assign(`/login?next=${encodeURIComponent(location.pathname + location.search)}&expired=1`); return; }
       if (!response.ok) {
@@ -83,17 +87,25 @@ const SoraUI = (() => {
       }
       if (contentType.includes('json')) {
         const result = await response.json();
+        if (!result || typeof result !== 'object' || Array.isArray(result)) throw new Error('服务器或网关返回异常，操作未确认保存。');
+        if (result?.ok === false || result?.success === false) throw new Error(message(result.detail || result.message || '保存失败，请重试。'));
+        if (!result.target && result.ok !== true && result.success !== true) throw new Error(message(result.detail || result.message || '服务器未确认保存结果。'));
         if (result?.target) { document.dispatchEvent(new CustomEvent('lumora:saved',{detail:{form}}));window.location.assign(result.target); return; }
       } else {
         const page = new DOMParser().parseFromString(await response.text(), 'text/html');
-        const alert = page.querySelector('.login-alert');
+        if (!response.redirected) throw new Error('服务器未确认保存结果，请刷新页面后重试。');
+        const alert = page.querySelector('.login-alert,[data-form-error]:not(.hidden)');
         if (alert) throw new Error(alert.textContent);
         if (response.redirected && new URL(response.url).pathname === '/login') { window.location.assign(response.url); return; }
       }
       document.dispatchEvent(new CustomEvent('lumora:saved',{detail:{form}}));
-      try { sessionStorage.setItem('app.toast.message','操作已保存'); sessionStorage.setItem('app.toast.type','info'); } catch (_) {}
+      try {
+        if (!new URL(response.url).searchParams.has('notice')) {
+          sessionStorage.setItem('app.toast.message','操作已保存'); sessionStorage.setItem('app.toast.type','info');
+        } else { sessionStorage.removeItem('app.toast.message'); sessionStorage.removeItem('app.toast.type'); }
+      } catch (_) {}
       const target = new URL(response.redirected ? response.url : location.href);
-      if (target.pathname === location.pathname) { target.search = location.search || target.search; target.hash = location.hash || target.hash; }
+      if (target.pathname === location.pathname) { target.search = target.search || location.search; target.hash = location.hash || target.hash; }
       window.location.assign(target.href);
     } catch (error) { formError(form,error); }
     finally { if (button) { button.disabled = false; button.innerHTML = original; button.removeAttribute('aria-busy'); } }
