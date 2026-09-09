@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% block title %}用户详情{% endblock %}
-{% block scripts %}{% if notice %}<script>window.PAGE_TOAST = {{ notice|tojson }}; window.PAGE_TOAST_TYPE = "info";</script>{% endif %}{% endblock %}
 {% block content %}
 <section class="wb-page-heading">
   <div><h2>{{ user_display_name(subject) }}</h2></div>

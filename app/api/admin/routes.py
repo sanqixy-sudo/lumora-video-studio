@@ -962,7 +962,7 @@ def user_detail_page(user_id: int, request: Request, admin: User = Depends(requi
         "queued": db.query(func.count(Job.id)).filter(Job.user_id == user.id, Job.status == "queued").scalar() or 0,
         "today_usage": user_today_usage,
     }
-    response = render(request, "admin/user_detail.html", current_user=admin, subject=user, wallet=wallet, quota_stats=quota_stats, jobs=jobs, calls=calls, ledger=ledger, package_ledger=package_ledger, package_rows=package_rows, available_plans=available_plans, audits=audits, user_stats=user_stats, plan_quota_amount=plan_quota_amount, notice={"showcase_on":"已开启广场公开","showcase_off":"已关闭广场公开"}.get(request.query_params.get("notice"), request.query_params.get("notice")))
+    response = render(request, "admin/user_detail.html", current_user=admin, subject=user, wallet=wallet, quota_stats=quota_stats, jobs=jobs, calls=calls, ledger=ledger, package_ledger=package_ledger, package_rows=package_rows, available_plans=available_plans, audits=audits, user_stats=user_stats, plan_quota_amount=plan_quota_amount, notice={"password_reset":"密码已重置","showcase_on":"已开启广场公开","showcase_off":"已关闭广场公开"}.get(request.query_params.get("notice"), request.query_params.get("notice")))
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     return response
 
@@ -1245,8 +1245,7 @@ def reset_password_form(user_id: int, password: str = Form(...), admin: User = D
         raise HTTPException(status_code=404, detail="Job not found")
     reset_user_password(db, user, password, admin.id)
     db.commit()
-    state = "on" if bool(user.showcase_enabled) else "off"
-    return RedirectResponse(f"/admin/users/{user_id}/page?notice=showcase_{state}", status_code=303, headers={"Cache-Control":"no-store"})
+    return RedirectResponse(f"/admin/users/{user_id}/page?notice=password_reset", status_code=303, headers={"Cache-Control":"no-store"})
 
 
 @router.get("/quota-ledger/page", response_class=HTMLResponse)
