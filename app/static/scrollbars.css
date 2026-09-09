@@ -1,11 +1,41 @@
-/* Global presentation preference. Overflow and native scrolling remain unchanged. */
-* {
-  scrollbar-width: none !important;
-  scrollbar-gutter: auto !important;
+/* Visible scroll affordances; keep native wheel, touch and keyboard behavior. */
+:root {
+  --scroll-thumb:#8a86a5;
+  --scroll-thumb-hover:#69628f;
+  --scroll-thumb-active:#574aea;
 }
-
-*::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+:root[data-theme=dark] {
+  --scroll-thumb:#77738f;
+  --scroll-thumb-hover:#9993b4;
+  --scroll-thumb-active:#b8aeff;
+}
+:root, :root body, :root body * {
+  scrollbar-width:thin;
+  scrollbar-color:var(--scroll-thumb) transparent;
+}
+/* Chromium/Safari use rounded inset thumbs; Firefox uses the standard rules above. */
+@supports selector(::-webkit-scrollbar) {
+  :root, :root body, :root body * {scrollbar-width:auto;scrollbar-color:auto}
+  *::-webkit-scrollbar {width:10px;height:10px}
+  *::-webkit-scrollbar-track {background:transparent}
+  *::-webkit-scrollbar-thumb {
+    background:var(--scroll-thumb);background-clip:padding-box;
+    border:2px solid transparent;border-radius:999px;min-height:32px;min-width:32px;
+  }
+  *::-webkit-scrollbar-thumb:hover {background-color:var(--scroll-thumb-hover)}
+  *::-webkit-scrollbar-thumb:active {background-color:var(--scroll-thumb-active)}
+  *::-webkit-scrollbar-corner {background:transparent}
+  *::-webkit-scrollbar-button {display:none;width:0;height:0}
+  .wb-nav::-webkit-scrollbar {width:6px}
+  .wb-nav::-webkit-scrollbar-thumb {border-width:1px}
+}
+/* Reserve space in editing panes so overflow does not shift the text. */
+@media(min-width:768px) {
+  .wb-materials-content,.wb-prompts-content,.wb-dialog-body {scrollbar-gutter:stable}
+  .wb-nav {overflow-x:hidden}
+  .wb-nav-collapsed .wb-nav-link {padding-inline:6px}
+}
+@media(forced-colors:active) {
+  :root, :root body, :root body * {scrollbar-color:auto;scrollbar-width:auto}
+  *::-webkit-scrollbar-thumb {background:ButtonText}
 }

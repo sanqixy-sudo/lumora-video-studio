@@ -17,7 +17,7 @@ function check(m) {
 }
 (async()=>{
   fs.mkdirSync(out,{recursive:true});
-  const browser = await chromium.launch(); const results=[];
+  const browser = await chromium.launch({ignoreDefaultArgs:['--hide-scrollbars']}); const results=[];
   try {
     for(const [width,height] of [[1920,1080],[1440,900],[1366,768],[1024,768],[768,1024],[844,390],[375,812],[390,844],[720,450]]) {
       for(const theme of ['light','dark']) {
