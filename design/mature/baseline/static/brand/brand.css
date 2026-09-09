@@ -1,6 +1,0 @@
-/* The supplied mark keeps its original transparent background and proportions. */
-html img.lumora-logo{object-fit:contain;border-radius:0;background:transparent;flex-shrink:0}
-html .lumora-logo-holder{background:transparent;box-shadow:none;border:0;border-radius:0}
-.wb-auth-brand>span{display:flex;align-items:baseline;gap:10px;letter-spacing:0}
-.wb-auth-brand .lumora-english{font-size:13px;font-weight:500;letter-spacing:.015em;color:inherit;opacity:.8}
-.wb-brand-caption.lumora-caption{letter-spacing:.02em}
