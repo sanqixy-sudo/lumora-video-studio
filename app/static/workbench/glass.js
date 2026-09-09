@@ -1,0 +1,1 @@
+(()=>{document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll(".wb-nav-link.is-active").forEach(e=>e.setAttribute("data-glass-active","true"));document.querySelectorAll(".prompt-card-head strong").forEach((e,i)=>{if(!e.dataset.promptNumber)e.dataset.promptNumber=String(i+1).padStart(2,"0")});});})();

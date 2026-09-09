@@ -1,0 +1,91 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>批次详情 · 流光 Lumora</title>
+  <script src="/static/theme.js?v=20260908-lumora9-2"></script>
+  
+  <link rel="stylesheet" href="/static/workbench/tokens.css?v=20260908-lumora9-2">
+  <link rel="stylesheet" href="/static/workbench/components.css?v=20260908-lumora9-2">
+  <link rel="stylesheet" href="/static/workbench/pages.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/workbench/motion.css?v=20260908-lumora9-2">
+<link rel="stylesheet" href="/static/workbench/collections.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/scrollbars.css?v=20260908-lumora9-2">
+<link rel="icon" href="/static/brand/lumora.ico?v=20260908-lumora9-2" sizes="16x16 32x32 48x48"><link rel="icon" href="/static/brand/lumora-mark.svg?v=20260908-lumora9-2" type="image/svg+xml"><link rel="apple-touch-icon" href="/static/brand/lumora-180.png?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/brand/brand.css?v=20260908-lumora9-2">
+<link rel="stylesheet" href="/static/theme-controls.css?v=20260908-lumora9-2"><script defer src="/static/theme-controls.js?v=20260908-lumora9-2"></script>
+<link rel="stylesheet" href="/static/workbench/guidelines.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/workbench/reports.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/workbench/mobile.css?v=20260908-lumora9-2"></head>
+<body class="wb " data-role="user">
+<a class="wb-skip" href="#main-content">跳至主要内容</a>
+
+<div class="wb-shell">
+  <aside class="wb-sidebar" id="wb-sidebar" aria-label="主导航">
+    <a aria-label="流光 Lumora 首页" class="wb-brand" href="/app"><img class="lumora-logo" src="/static/brand/lumora-mark.svg" width="32" height="32" alt=""><span>流光<span class="wb-brand-caption lumora-caption">Lumora · 创作工作台</span></span></a>
+    <nav class="wb-nav">
+    
+      
+    
+    
+      <div class="wb-nav-group"><span class="wb-nav-label">工作空间</span><a class="wb-nav-link " href="/app" title="开始创作" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 0 1 2.652 2.652L9.582 17.07a4.5 4.5 0 0 1-1.897 1.13L5.25 18.75l.55-2.435a4.5 4.5 0 0 1 1.13-1.897L18.55 2.799M16.862 4.487l2.652 2.652M18 14.25V19.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V8.25A2.25 2.25 0 0 1 4.5 6H9"/>
+
+</svg><span>开始创作</span></a><a class="wb-nav-link " href="/app/jobs/page" title="任务记录" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75zm0 5.25h.008v.008H3.75zm0 5.25h.008v.008H3.75z"/>
+
+</svg><span>任务记录</span></a><a class="wb-nav-link " href="/app/job-batches/page" title="批次记录" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m12 3 9 4.5-9 4.5-9-4.5L12 3Zm-9 9 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>
+
+</svg><span>批次记录</span></a><a class="wb-nav-link " href="/app/library/page" title="我的作品" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 19.5h9A2.25 2.25 0 0 0 15.75 17.25V6.75A2.25 2.25 0 0 0 13.5 4.5h-9A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
+
+</svg><span>我的作品</span></a></div>
+    
+      <div class="wb-nav-group"><span class="wb-nav-label">资源</span><a class="wb-nav-link " href="/app/reference-images/page" title="素材预设" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z"/><circle cx="16.5" cy="7.5" r=".75" fill="currentColor"/>
+
+</svg><span>素材预设</span></a><a class="wb-nav-link " href="/app/quota/page" title="我的额度" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25H3m18 0v10.5A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25v3ZM16.5 15h.008v.008H16.5Z"/>
+
+</svg><span>我的额度</span></a><a class="wb-nav-link " href="/app/plaza/page" title="视频广场" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 19.5h9A2.25 2.25 0 0 0 15.75 17.25V6.75A2.25 2.25 0 0 0 13.5 4.5h-9A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
+
+</svg><span>视频广场</span></a></div>
+    
+    </nav>
+    <div class="wb-sidebar-bottom"><button type="button" class="wb-nav-link" data-collapse-nav aria-expanded="true"><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<rect x="3" y="4.5" width="18" height="15" rx="2.25"/><path d="M9 4.5v15"/>
+
+</svg><span>收起导航</span></button></div>
+  </aside>
+  <div class="wb-stage">
+    <header class="wb-topbar">
+      <div class="wb-location"><button type="button" class="icon-btn wb-mobile-trigger" data-open-nav aria-label="展开导航" aria-controls="wb-sidebar" aria-expanded="false"><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+
+</svg></button><span class="wb-context">工作空间</span><span class="wb-location-divider">/</span><h1>批次详情</h1></div>
+      <div class="wb-top-actions"><div class="wb-account"><button type="button" class="wb-account-trigger" data-account-toggle aria-expanded="false" aria-controls="wb-account-menu"><span class="wb-avatar">C</span><span>creator01</span><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m9 5.25 6.75 6.75L9 18.75"/>
+
+</svg></button><div id="wb-account-menu" class="wb-popover hidden"><div class="wb-account-heading"><strong>creator01</strong><span>User</span></div><label>外观<select data-theme-select aria-label="外观主题"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label><form action="/auth/logout" method="post" data-native-submit><button type="submit" class="ghost-btn">退出登录</button></form></div></div></div>
+    </header>
+    <main class="wb-main" id="main-content" tabindex="-1">
+<section class="wb-page-heading"><div></div><div class="inline-actions"><a class="ghost-btn small-btn" href="/app/job-batches/page">返回批次记录</a><a class="primary-btn small-btn" href="/app">继续创作</a></div></section>
+<section class="batch-overview">
+  <div class="batch-overview-main"><h2>NiceReels 竖屏广告</h2><span class="muted">NiceReels / 菲律宾 · <time data-ui-time>2026-06-04 16:30</time></span><div class="tiny muted">B20260604-001 · 2 个任务</div></div>
+  <div class="batch-stat"><strong id="batch-completed">1</strong><span>已完成</span></div>
+  <div class="batch-stat"><strong id="batch-active">1</strong><span>处理中</span></div>
+  <div class="batch-stat"><strong id="batch-failed">0</strong><span>失败 / 暂停</span></div>
+</section>
+<section class="wb-panel">
+<div class="section-head"><div><h2>本批次任务 <span class="badge" id="batch-state">进行中</span></h2><span id="batch-summary" class="muted tiny">1 运行中 / 1 已完成</span></div><span class="muted tiny" id="batch-refresh-state" role="status">正在同步进度</span></div>
+<div class="table-wrap"><table class="table batch-result-table"><thead><tr><th>任务</th><th>提示词</th><th>状态</th><th>队列</th><th>进度</th><th>操作</th></tr></thead><tbody>
+<tr data-batch-job="101"><td><strong>#101</strong><div class="tiny muted">第 1 条</div></td><td class="prompt-preview-cell"><details><summary>城市雨夜里，一位摄影师穿过霓虹街道，镜头缓慢推进，电影感，高级灰色调。</summary><p>城市雨夜里，一位摄影师穿过霓虹街道，镜头缓慢推进，电影感，高级灰色调。</p></details></td><td><span class="badge status-polling" data-job-status>查询中</span></td><td data-job-queue>运行中，第 1 位</td><td data-job-progress>62%</td><td><div class="inline-actions"><a class="ghost-btn small-btn" href="/app/jobs/101/page">详情</a><a class="primary-btn small-btn hidden" data-job-download href="#">下载</a></div></td></tr><tr data-batch-job="102"><td><strong>#102</strong><div class="tiny muted">第 2 条</div></td><td class="prompt-preview-cell"><details><summary>产品镜头沿金属边缘滑过，冷光、干净背景、浅景深。</summary><p>产品镜头沿金属边缘滑过，冷光、干净背景、浅景深。</p></details></td><td><span class="badge status-completed" data-job-status>已完成</span></td><td data-job-queue>已完成</td><td data-job-progress>100%</td><td><div class="inline-actions"><a class="ghost-btn small-btn" href="/app/jobs/102/page">详情</a><a class="primary-btn small-btn hidden" data-job-download href="#">下载</a></div></td></tr>
+</tbody></table></div>
+<div class="inline-actions batch-result-actions"><a id="batch-download" class="primary-btn " href="/app/job-batches/12/download-zip">下载已完成 1 个</a><span id="batch-download-empty" class="muted hidden">暂无可下载作品，生成后会自动更新。</span></div>
+</section>
+</main>
+  </div>
+</div>
+<script src="/static/ui.js?v=20260908-lumora9-2"></script>
+<script src="/static/app.js?v=20260908-lumora9-2"></script>
+<script src="/static/workbench/collections.js?v=20260908-lumora9-2"></script><script src="/static/workbench/micro-motion.js?v=20260908-lumora9-2"></script><script src="/static/workbench/interactions.js?v=20260908-lumora9-2"></script>
+<script>window.BATCH_DATA_ENDPOINT = "/app/job-batches/12";</script>
+<script src="/static/workbench/guidelines.js?v=20260908-lumora9-2"></script><script src="/static/workbench/reports.js?v=20260908-lumora9-2"></script></body></html>

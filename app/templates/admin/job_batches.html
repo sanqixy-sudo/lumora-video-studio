@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}批量任务管理{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>批量任务管理</h2></div>
+  <div class="inline-actions">
+    <form method="get" action="/admin/job-batches/page" class="inline-filter-form">
+      <input autocomplete="off" class="compact-input" name="user" aria-label="搜索用户、批次或业务" value="{{ user_filter }}" placeholder="用户 / 批次 / APP / 地区…" />
+      <button class="secondary-btn small-btn" type="submit">筛选</button>
+      {% if user_filter %}<a class="ghost-btn small-btn" href="/admin/job-batches/page">清空</a>{% endif %}
+    </form>
+    {% if can_manage %}
+    <form method="post" action="/admin/job-batches/delete-empty/form" data-confirm-message="确定清理所有已经没有任务的空批次记录吗？">
+      <button class="danger-ghost-btn small-btn" type="submit">清理空批次</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+
+<section class="wb-panel batch-list-card">
+  
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table">
+      <thead><tr><th>批次</th><th>用户</th><th>APP / 地区</th><th>创建时间</th><th>任务数</th><th>状态</th><th>概览</th><th>操作</th></tr></thead>
+      <tbody>
+        {% for batch in batches %}
+        {% set summary = summary_map.get(batch.id, {}) %}
+        {% set owner = user_map.get(batch.user_id) %}
+        <tr>
+          <td><div class="user-cell"><strong>{{ batch.batch_name or batch.batch_code }}</strong><span>{{ batch.batch_code }} / ID: {{ batch.id }}</span></div></td>
+          <td>{% if owner %}<a class="batch-link" href="/admin/users/{{ owner.id }}/page">{{ user_display_name(owner) }}（#{{ owner.id }}）</a><br><span class="muted tiny">{{ owner.username }}</span>{% else %}用户 #{{ batch.user_id }}{% endif %}</td>
+          <td><div class="meta-stack"><strong>{{ batch.product_name or '-' }}</strong><span>{{ batch.region_name or '-' }}</span></div></td>
+          <td><time data-ui-time>{{ batch.created_at|dt }}</time></td>
+          <td>{% if summary.get('total') is not none and summary.get('total') != batch.total_count %}{{ summary.get('total') }} / {{ batch.total_count }} 条{% else %}{{ batch.total_count }} 条{% endif %}</td>
+          <td><span class="badge {{ summary.get('state_class', 'status-cleared') }}">{{ summary.get('state_label', '已清空') }}</span></td>
+          <td class="batch-summary-text">{{ summary.get('text', '暂无任务') }}</td>
+          <td>
+            <div class="inline-actions compact-actions">
+              <a class="ghost-btn small-btn" href="/admin/jobs/page?batch_id={{ batch.id }}">批次详情</a>
+              {% if can_manage %}
+              <form method="post" action="/admin/job-batches/{{ batch.id }}/delete/form" data-confirm-message="确定删除批次 {{ batch.batch_name or batch.batch_code }}（{{ batch.batch_code }}）及其下面所有任务吗？此操作不可恢复。">
+                <button class="danger-btn small-btn" type="submit">删除批次</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state compact-empty">暂无批量记录</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}运营概览{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>运营概览</h2>
+  </div>
+</section>
+
+<section class="wb-attention" aria-label="需要关注"><a href="/admin/queue/page"><span>排队等待 ↗</span><strong>{{ stats.queued }}</strong></a><a href="/admin/queue/page"><span>卡住任务 ↗</span><strong>{{ stats.stuck }}</strong></a><a href="/admin/download-failures/page"><span>下载异常 ↗</span><strong>{{ stats.download_failed_jobs }}</strong></a></section><section class="metric-row metric-row-wide">
+  <article class="metric-card accent-blue"><span>运行槽位</span><strong>{{ stats.running }} / {{ stats.max_running }}</strong></article>
+  <article class="metric-card accent-amber"><a class="text-link" href="/admin/queue/page">排队中 ↗</a><strong>{{ stats.queued }}</strong></article>
+  <article class="metric-card accent-indigo"><span>今日任务</span><strong>{{ stats.today_jobs }}</strong></article>
+  <article class="metric-card accent-emerald"><span>今日完成</span><strong>{{ stats.today_completed }}</strong></article>
+  <article class="metric-card accent-sky"><span>今日扣费</span><strong>{{ stats.today_usage }}</strong></article>
+  <article class="metric-card accent-rose"><a class="text-link" href="/admin/download-failures/page">下载失败 ↗</a><strong>{{ stats.download_failed_jobs }}</strong></article>
+</section>
+
+<div class="dashboard-layout">
+  <section class="wb-panel">
+    <div class="section-head">
+      <div>
+        <h2>最近任务</h2>
+      </div>
+      <a class="ghost-btn small-btn" href="/admin/jobs/page">查看全部</a>
+    </div>
+    <div class="table-wrap surface-table clean-table-wrap">
+      <table class="table clean-table">
+        <thead>
+          <tr><th>ID</th><th>用户</th><th>APP / 地区</th><th>状态</th><th>进度</th><th>更新时间</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+          {% set owner = job_user_map.get(job.user_id) %}
+          <tr>
+            <td><strong>#{{ job.id }}</strong></td>
+            <td>{{ user_display_name(owner) if owner else ('用户 #' ~ job.user_id) }}</td>
+            <td><div class="meta-stack"><strong>{{ job.product_name or '-' }}</strong><span>{{ job.region_name or '-' }}</span></div></td>
+            <td><span class="badge status-{{ job.status }}">{{ status_label(job.status) }}</span></td>
+            <td>
+              <div class="mini-progress"><span style="width: {{ job.progress }}%"></span></div>
+              <span class="tiny muted">{{ job.progress }}%</span>
+            </td>
+            <td><time data-ui-time>{{ job.updated_at|dt }}</time></td>
+            <td class="action-cell"><a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">详情</a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7"><div class="empty-state compact-empty">暂无任务</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <aside class="dashboard-aside">
+    <section class="wb-panel">
+      <div class="section-head"><h2>系统状态</h2></div>
+      <div class="meta-grid">
+        <div><div class="k">普通用户</div><div class="v">{{ stats.active_users }} / {{ stats.users }}</div></div>
+        <div><div class="k">任务总数</div><div class="v">{{ stats.jobs }}</div></div>
+        <div><div class="k">已完成</div><div class="v">{{ stats.completed_jobs }}</div></div>
+        <div><div class="k">失败任务</div><div class="v">{{ stats.failed_jobs }}</div></div>
+        <div><a class="k text-link" href="/admin/queue/page">卡住任务 ↗</a><div class="v">{{ stats.stuck }}</div></div>
+      </div>
+    </section>
+    <section class="wb-panel">
+      <div class="section-head"><h2>快速入口</h2></div>
+      <div class="quick-links">
+        <a class="quick-link-card" href="/admin/queue/page">
+          <strong>队列监控</strong>
+        </a>
+        <a class="quick-link-card" href="/admin/download-failures/page">
+          <strong>下载失败</strong>
+        </a>
+        <a class="quick-link-card" href="/admin/provider-keys/page">
+          <strong>密钥管理</strong>
+        </a>
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

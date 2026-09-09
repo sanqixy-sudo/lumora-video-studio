@@ -1,0 +1,14 @@
+{
+  "source": "existing public showcase video posters",
+  "candidates": 300,
+  "selected": 24,
+  "filters": [
+    "completed",
+    "showcase_enabled=true",
+    "is_private_protected is not true",
+    "output_video",
+    "existing video and poster"
+  ],
+  "bytes": 678722,
+  "server_writes": false
+}

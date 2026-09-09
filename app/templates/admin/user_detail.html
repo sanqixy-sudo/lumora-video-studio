@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}用户详情{% endblock %}
+{% block scripts %}{% if notice %}<script>window.PAGE_TOAST = {{ notice|tojson }}; window.PAGE_TOAST_TYPE = "info";</script>{% endif %}{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>{{ user_display_name(subject) }}</h2></div>
+  <a class="ghost-btn small-btn" href="/admin/users/page">返回用户列表</a>
+</section>
+
+<section class="metric-row metric-row-wide">
+  <article class="metric-card accent-blue"><span>任务总数</span><strong>{{ user_stats.jobs }}</strong></article>
+  <article class="metric-card accent-emerald"><span>完成</span><strong>{{ user_stats.completed }}</strong></article>
+  <article class="metric-card accent-amber"><span>排队 / 运行</span><strong>{{ user_stats.queued }} / {{ user_stats.running }}</strong></article>
+  <article class="metric-card"><span>今日扣费</span><strong>{{ user_stats.today_usage }}</strong></article>
+  <article class="metric-card accent-rose"><span>失败</span><strong>{{ user_stats.failed }}</strong></article>
+</section>
+
+<section class="wb-panel task-tabs-card">
+  <div class="tab-nav">
+    <button class="tab-button active" type="button" data-tab-target="basic">基本信息</button>
+    <button class="tab-button" type="button" data-tab-target="quota">额度</button>
+    <button class="tab-button" type="button" data-tab-target="packages">套餐</button>
+    <button class="tab-button" type="button" data-tab-target="tasks">任务</button>
+    <button class="tab-button" type="button" data-tab-target="limits">限速/并发</button>
+    <button class="tab-button" type="button" data-tab-target="actions">操作记录</button>
+  </div>
+
+  <div class="tab-panel active" data-tab-panel="basic">
+    <div class="grid two-col-grid">
+      <div class="meta-grid">
+        <div><div class="k">用户 ID</div><div class="v">{{ subject.id }}</div></div>
+        <div><div class="k">显示名称</div><div class="v">{{ user_display_name(subject) }}</div></div>
+        <div><div class="k">用户名</div><div class="v">{{ subject.username }}</div></div>
+        <div><div class="k">角色</div><div class="v">{{ role_label(subject.role) }}</div></div>
+        <div><div class="k">状态</div><div class="v">{{ '启用' if subject.status == 'active' else '禁用' }}</div></div>
+        <div><div class="k">作品公开</div><div class="v">{{ '已开启' if subject.showcase_enabled else '已关闭' }}</div></div>
+        <div><div class="k">子管理员报表</div><div class="v">{{ '隐藏' if subject.hidden_from_subadmin_reports else '显示' }}</div></div>
+        <div><div class="k">创建时间</div><div class="v"><time data-ui-time>{{ subject.created_at|dt }}</time></div></div>
+      </div>
+      <div class="stack-grid">
+        <form data-short-editor action="/admin/users/{{ subject.id }}/display-name/form" method="post" class="stack-form action-card">
+          <h3>账号名称</h3>
+          <input type="hidden" name="return_to" value="/admin/users/{{ subject.id }}/page" />
+          <label>显示名称<input autocomplete="off" name="display_name" value="{{ subject.display_name or '' }}" placeholder="不填则显示用户名…" /></label>
+          <button class="ghost-btn" type="submit">保存名称</button>
+        </form>
+        <form data-short-editor action="/admin/users/{{ subject.id }}/role/form" method="post" class="stack-form action-card">
+          <h3>修改角色</h3>
+          <input type="hidden" name="return_to" value="/admin/users/{{ subject.id }}/page" />
+          <label>角色<select name="role"><option value="user" {% if subject.role == "user" %}selected{% endif %}>普通用户</option><option value="sub_admin" {% if subject.role == "sub_admin" %}selected{% endif %}>子管理员</option><option value="admin" {% if subject.role == "admin" %}selected{% endif %}>主管理员</option></select></label>
+          <button class="ghost-btn" type="submit">保存角色</button>
+        </form>
+        <form data-short-editor action="/admin/users/{{ subject.id }}/reset-password/form" method="post" class="stack-form action-card">
+          <h3>重置密码</h3>
+          <label>新密码<input autocomplete="new-password" name="password" type="password" required /></label>
+          <button class="ghost-btn" type="submit">重置密码</button>
+        </form>
+        <form action="/admin/users/{{ subject.id }}/toggle-status/form" method="post" class="stack-form action-card">
+          <h3>账号状态</h3>
+          <button class="ghost-btn" type="submit">{{ '禁用账号' if subject.status == 'active' else '启用账号' }}</button>
+        </form>
+        <form action="/admin/users/{{ subject.id }}/toggle-showcase/form" method="post" class="stack-form action-card">
+          <h3>广场公开</h3>
+          <button class="primary-btn" type="submit">{{ '关闭公开' if subject.showcase_enabled else '开启公开' }}</button>
+        </form>
+        <form action="/admin/users/{{ subject.id }}/toggle-report-hidden/form" method="post" class="stack-form action-card">
+          <h3>子管理员报表</h3>
+          <input type="hidden" name="return_to" value="/admin/users/{{ subject.id }}/page" />
+          <button class="ghost-btn" type="submit">{{ '取消隐藏' if subject.hidden_from_subadmin_reports else '隐藏此用户' }}</button>
+        </form>
+        <form action="/admin/users/{{ subject.id }}/delete/form" method="post" class="stack-form action-card confirm-username-form" data-confirm-username="{{ subject.username }}">
+          <h3>删除用户</h3>
+          <input type="hidden" name="confirm_username" />
+          <button class="danger-btn" type="submit">删除用户</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="quota">
+    <section class="metric-row">
+      <article class="metric-card"><span>总可用额度</span><strong>{{ quota_stats.total_available }}</strong></article>
+      <article class="metric-card"><span>总预占</span><strong>{{ quota_stats.total_reserved }}</strong></article>
+      <article class="metric-card"><span>个人剩余 / 套餐剩余</span><strong>{{ quota_stats.personal_remaining }} / {{ quota_stats.package_remaining }}</strong></article>
+      <article class="metric-card"><span>累计已用</span><strong>{{ wallet.total_used if wallet else 0 }}</strong></article>
+    </section>
+    <div class="stack-grid">
+      <form data-short-editor action="/admin/users/{{ subject.id }}/grant-quota/form" method="post" class="stack-form action-card"><h3>增加额度</h3><label>数量<input inputmode="numeric" autocomplete="off" name="amount" type="number" min="1" required /></label><label>备注<input autocomplete="off" name="note" /></label><button class="primary-btn" type="submit">确认增加</button></form>
+      <form data-short-editor action="/admin/users/{{ subject.id }}/deduct-quota/form" method="post" class="stack-form action-card"><h3>扣减额度</h3><label>数量<input inputmode="numeric" autocomplete="off" name="amount" type="number" min="1" required /></label><label>备注<input autocomplete="off" name="note" /></label><button class="danger-btn" type="submit">确认扣减</button></form>
+    </div>
+    <div class="table-wrap surface-table clean-table-wrap top-gap"><table class="table clean-table"><thead><tr><th>ID</th><th>变动</th><th>动作</th><th>备注</th><th>时间</th></tr></thead><tbody>{% for row in ledger %}<tr><td>#{{ row.id }}</td><td>{{ row.change_amount }}</td><td>{{ row.action }}</td><td>{{ row.note or '-' }}</td><td><time data-ui-time>{{ row.created_at|dt }}</time></td></tr>{% else %}<tr><td colspan="5"><div class="empty-state compact-empty">暂无额度流水</div></td></tr>{% endfor %}</tbody></table></div>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="packages" id="packages">
+    <div class="grid two-col-grid">
+      <section class="action-card">
+        <h3>绑定套餐</h3>
+        <form action="/admin/users/{{ subject.id }}/quota-plans/bind/form" method="post" class="stack-form">
+          <label>选择套餐<select name="plan_id" required>
+            {% for plan in available_plans %}
+            <option value="{{ plan.id }}">{{ plan.name }} / {{ quota_plan_period_label(plan.period_type) }} / {{ plan.quota_amount }} 次</option>
+            {% endfor %}
+          </select></label>
+          <button class="primary-btn" type="submit" {% if not available_plans %}disabled{% endif %}>绑定套餐</button>
+        </form>
+      </section>
+      <section class="action-card">
+        <h3>套餐规则</h3>
+        <p class="muted">日套餐每天 08:00 刷新，周套餐每周一 08:00 刷新，月套餐每月 1 日 08:00 刷新，均按上海时间。未用完不结转。</p>
+      </section>
+    </div>
+    <div class="table-wrap surface-table clean-table-wrap top-gap">
+      <table class="table clean-table">
+        <thead><tr><th>套餐</th><th>周期</th><th>额度</th><th>剩余/预占</th><th>下次刷新</th><th class="action-col">操作</th></tr></thead>
+        <tbody>
+          {% for assignment, plan in package_rows %}
+          <tr>
+            <td><strong>{{ plan.name }}</strong><div class="muted tiny">{{ '启用' if plan.status == 'active' else '套餐已停用' }}</div></td>
+            <td><time data-ui-time>{{ assignment.period_start_at|dt }}</time> 至 <time data-ui-time>{{ assignment.period_end_at|dt }}</time></td>
+            <td>{{ plan_quota_amount(plan, assignment) }}{% if assignment.custom_quota_amount is not none %}<div class="muted tiny">定制额度</div>{% endif %}</td>
+            <td>{{ assignment.remaining_quota }} / 预占 {{ assignment.reserved_quota }}</td>
+            <td><time data-ui-time>{{ assignment.next_refresh_at|dt }}</time></td>
+            <td class="action-cell">
+              <form action="/admin/users/{{ subject.id }}/quota-plans/{{ assignment.id }}/custom/form" method="post" class="inline-actions">
+                <input inputmode="numeric" autocomplete="off" name="custom_quota_amount" type="number" min="0" value="{{ assignment.custom_quota_amount if assignment.custom_quota_amount is not none else '' }}" placeholder="默认 {{ plan.quota_amount }}" />
+                <button class="ghost-btn small-btn" type="submit">保存定制</button>
+              </form>
+              <form action="/admin/users/{{ subject.id }}/quota-plans/{{ assignment.id }}/unbind/form" method="post" class="inline-form" data-confirm-submit="确定解绑此套餐？">
+                <button class="danger-btn small-btn" type="submit">解绑</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6"><div class="empty-state compact-empty">暂无绑定套餐</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <h3 class="top-gap">套餐流水</h3>
+    <pre class="logs mini-logs">{% for row in package_ledger %}[{{ row.created_at|dt }}] {{ row.action }} {{ row.change_amount }} {{ row.note or '' }}
+{% else %}暂无套餐流水{% endfor %}</pre>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="tasks">
+    <div class="table-wrap surface-table clean-table-wrap"><table class="table clean-table"><thead><tr><th>ID</th><th>APP / 地区</th><th>状态</th><th>进度</th><th>创建时间</th><th>操作</th></tr></thead><tbody>{% for job in jobs %}<tr><td>#{{ job.id }}</td><td><div class="meta-stack"><strong>{{ job.product_name or '-' }}</strong><span>{{ job.region_name or '-' }}</span></div></td><td><span class="badge status-{{ job.status }}">{{ status_label(job.status) }}</span></td><td>{{ job.progress }}%</td><td><time data-ui-time>{{ job.created_at|dt }}</time></td><td><a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">详情</a></td></tr>{% else %}<tr><td colspan="6"><div class="empty-state compact-empty">暂无任务</div></td></tr>{% endfor %}</tbody></table></div>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="limits">
+    <form action="/admin/users/{{ subject.id }}/rate-limits/form" method="post" class="stack-form narrow-form">
+      <input type="hidden" name="return_to" value="/admin/users/{{ subject.id }}/page" />
+      <label>每日提交上限<input inputmode="numeric" autocomplete="off" name="daily_job_limit" type="number" min="0" value="{{ subject.daily_job_limit or '' }}" placeholder="默认…" /></label>
+      <label>同时生成数<input inputmode="numeric" autocomplete="off" name="concurrent_job_limit" type="number" min="0" value="{{ subject.concurrent_job_limit or '' }}" placeholder="默认…" /></label>
+      <label>提交间隔秒<input inputmode="numeric" autocomplete="off" name="min_submit_interval_seconds" type="number" min="0" value="{{ subject.min_submit_interval_seconds or '' }}" placeholder="默认…" /></label>
+      <button class="primary-btn" type="submit">保存限速/并发</button>
+    </form>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="actions">
+    <div class="grid two-col-grid">
+      <section><h3>调用记录</h3><pre class="logs mini-logs">{% for row in calls %}[{{ row.created_at|dt }}] {{ row.method }} {{ row.endpoint }} => {{ row.status_code or '-' }} {{ row.error_text or '' }}
+{% else %}暂无调用记录{% endfor %}</pre></section>
+      <section><h3>审计记录</h3><pre class="logs mini-logs">{% for row in audits %}[{{ row.created_at|dt }}] {{ row.action }} {{ row.target_type }}#{{ row.target_id or '-' }}
+{% else %}暂无审计记录{% endfor %}</pre></section>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}{% if notice %}<script>window.PAGE_TOAST = {{ notice|tojson }}; window.PAGE_TOAST_TYPE = "info";</script>{% endif %}{% endblock %}

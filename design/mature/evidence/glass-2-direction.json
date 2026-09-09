@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "results": [
+    "direct login page selection",
+    "page tab create",
+    "page tab detail",
+    "page tab users",
+    "page tab usage",
+    "page tab login",
+    "login selection survives refresh",
+    "unavailable preview feedback and retry",
+    "top bar icon themes and persistence",
+    "icon prompt actions and sequential numbers",
+    "375px top bar and prompt targets"
+  ],
+  "mobile": {
+    "overflow": false,
+    "targets": [
+      {
+        "name": "浅色",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "name": "深色",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "name": "跟随系统",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "name": "复制提示词",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "name": "删除提示词",
+        "width": 44,
+        "height": 44
+      }
+    ]
+  },
+  "errors": []
+}

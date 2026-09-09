@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="silver"><stop stop-color="#929BB9" stop-opacity="0"/><stop offset=".38" stop-color="#929BB9" stop-opacity=".14"/><stop offset=".72" stop-color="#A0AACB" stop-opacity=".7"/><stop offset=".86" stop-color="#BDC5DF" stop-opacity=".8"/><stop offset="1" stop-color="#C6CEE5" stop-opacity="0"/></linearGradient>
+    <linearGradient id="wash" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#BEC8E6" stop-opacity=".34"/><stop offset=".6" stop-color="#D7DEF0" stop-opacity=".1"/><stop offset="1" stop-color="#E9EDF6" stop-opacity="0"/></linearGradient>
+    <linearGradient id="shine"><stop stop-color="#FAFBFF" stop-opacity="0"/><stop offset=".5" stop-color="#FAFBFF" stop-opacity=".6"/><stop offset=".8" stop-color="#FAFBFF"/><stop offset="1" stop-color="#FAFBFF" stop-opacity="0"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="14"/></filter>
+  </defs>
+  <path d="M0 290 Q450 295 750 155 Q840 110 1000 120 L1000 360 L0 420Z" fill="url(#wash)"/>
+  <path d="M0 285 Q450 290 750 150 Q840 105 1000 115" fill="none" stroke="url(#shine)" stroke-width="32" filter="url(#soft)"/>
+  <path d="M0 290 Q450 295 750 155 Q840 110 1000 120" fill="none" stroke="url(#silver)" stroke-width="1"/>
+  <path d="M0 288 Q450 293 750 153 Q840 108 1000 118" fill="none" stroke="url(#shine)" stroke-width="2"/>
+</svg>

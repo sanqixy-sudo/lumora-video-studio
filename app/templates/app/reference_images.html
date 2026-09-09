@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}我的预设{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>我的预设</h2>
+  </div>
+  <a class="ghost-btn small-btn" href="/app">返回创建</a>
+</section>
+
+<form data-create-editor="新增个人预设" action="/app/reference-images/form" method="post" class="stack-form refined-form provider-key-form-grid">
+    <label>预设名称<input autocomplete="off" name="name" required maxlength="128" placeholder="例如：竖屏产品手持图…" /></label>
+    <label class="wide-field">图片链接<input autocomplete="off" name="image_url" required type="url" placeholder="https://example.com/image.webp…" /></label>
+    <label>排序<input inputmode="numeric" autocomplete="off" name="sort_order" type="number" value="100" min="0" /></label>
+    <div class="form-submit-cell"><button class="primary-btn" type="submit">保存预设</button></div>
+  </form>
+
+<section class="wb-panel top-gap">
+  
+  <div class="preset-grid-admin">
+    {% for row in rows %}
+    <article class="preset-admin-card">
+      <div class="preset-admin-preview"><img width="{{ row.width or 720 }}" height="{{ row.height or 1280 }}" src="{{ row.image_url }}" alt="{{ row.name }}" loading="lazy" referrerpolicy="no-referrer" /></div>
+      <div class="preset-admin-body">
+        <div class="preset-admin-title"><strong>{{ row.name }}</strong><span class="badge status-{{ row.status }}">{{ '启用' if row.status == 'active' else '暂停' }}</span></div>
+        <p class="muted tiny">{{ row.width or '-' }}x{{ row.height or '-' }} / {{ row.aspect_ratio or '-' }} / 排序 {{ row.sort_order }}</p>
+        <p class="mono-line tiny">{{ row.image_url }}</p>
+        <div class="inline-actions">
+          <form action="/app/reference-images/{{ row.id }}/toggle/form" method="post"><button class="ghost-btn small-btn" type="submit">{{ '暂停' if row.status == 'active' else '启用' }}</button></form>
+          <button class="ghost-btn small-btn" type="button" data-toggle-edit="preset-edit-{{ row.id }}">修改</button>
+          <form action="/app/reference-images/{{ row.id }}/delete/form" method="post" data-confirm-message="确认删除这个个人预设？"><button class="danger-btn small-btn" type="submit">删除</button></form>
+        </div>
+        <form id="preset-edit-{{ row.id }}" action="/app/reference-images/{{ row.id }}/update/form" method="post" class="stack-form refined-form hidden top-gap">
+          <label>名称<input autocomplete="off" name="name" value="{{ row.name }}" required maxlength="128" /></label>
+          <label>图片链接<input autocomplete="off" name="image_url" value="{{ row.image_url }}" required type="url" /></label>
+          <label>排序<input inputmode="numeric" autocomplete="off" name="sort_order" type="number" min="0" value="{{ row.sort_order }}" /></label>
+          <button class="primary-btn small-btn" type="submit">保存修改</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-panel">暂无个人预设</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

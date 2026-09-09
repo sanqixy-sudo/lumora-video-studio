@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}系统设置{% endblock %}
+{% block content %}<header class="wb-page-heading"><div><h2>系统设置</h2><p>配置后续任务的生成、下载和额度规则。</p></div></header>
+<section class="wb-panel task-tabs-card"><div class="section-head"><h2>运行配置</h2><span class="muted tiny">所有分组一起保存，空值按默认规则处理。</span></div>
+<form action="/admin/settings/update/form" method="post" class="settings-form">
+<div class="settings-layout"><nav class="tab-nav" aria-label="设置分组">{% for name in ['生成与队列','下载与重试','用户与额度'] %}<button class="tab-button {{ 'active' if loop.first else '' }}" data-tab-target="settings-{{ loop.index }}" type="button">{{ name }}</button>{% endfor %}</nav><div>
+{% for group in ['生成与队列','下载与重试','用户与额度'] %}<section class="tab-panel {{ 'active' if loop.first else '' }}" data-tab-panel="settings-{{ loop.index }}">
+<h3 class="setting-group-title">{{ group }}</h3><div class="settings-grid">
+{% for item in settings_rows if item.group == group %}
+<label class="setting-item"><span>{{ item.label }}{% if item.unit %} <small class="muted">{{ item.unit }}</small>{% endif %}</span>
+{% if item.type == 'bool' %}<select name="{{ item.key }}"><option value="0" {{ 'selected' if not item.value or item.value == '0' else '' }}>关闭</option><option value="1" {{ 'selected' if item.value == '1' else '' }}>开启</option></select>
+{% else %}<input inputmode="{{ 'numeric' if item.type in ['int','int_optional'] else 'text' }}" autocomplete="off" name="{{ item.key }}" value="{{ item.value or '' }}" {% if item.type in ['int','int_optional'] %}type="number" min="0" step="1"{% endif %} />{% endif %}
+<small class="setting-help">{{ item.description }}<br>默认：{{ ('开启' if item.default == '1' else '关闭') if item.type == 'bool' else (item.default or '不限') }} · {{ '重启后完全生效' if item.restart else '保存后用于后续处理' }}</small></label>
+{% endfor %}</div></section>{% endfor %}</div></div>
+<div class="form-footer"><button class="primary-btn" type="submit">保存全部设置</button></div></form></section>
+{% endblock %}

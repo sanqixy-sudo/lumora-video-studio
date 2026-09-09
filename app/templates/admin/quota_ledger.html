@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}额度流水{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>额度流水</h2></div>
+</section>
+<section class="wb-panel">
+  <div class="table-wrap surface-table">
+    <table class="table">
+      <thead><tr><th>ID</th><th>用户</th><th>任务</th><th>变动</th><th>动作</th><th>备注</th><th>时间</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr><td>#{{ row.id }}</td><td>{{ row.user_id }}</td><td>{{ row.job_id or '-' }}</td><td>{{ row.change_amount }}</td><td>{{ row.action }}</td><td>{{ row.note or '-' }}</td><td><time data-ui-time>{{ row.created_at|dt }}</time></td></tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state compact-empty">暂无额度流水</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

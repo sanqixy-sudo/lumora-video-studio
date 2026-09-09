@@ -1,0 +1,27 @@
+services:
+  sora:
+    build:
+      context: .
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-public.ecr.aws/docker/library/postgres:16-bookworm}
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "8088:8000"
+    volumes:
+      - postgres-data:/data/postgres
+      - ./data/uploads:/data/uploads
+      - ./data/outputs:/data/outputs
+      - ./data/logs:/data/logs
+      - ./data/temp:/data/temp
+      - ./data/secrets:/data/secrets
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/readyz || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:

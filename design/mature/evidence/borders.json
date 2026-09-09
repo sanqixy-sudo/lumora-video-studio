@@ -1,0 +1,190 @@
+[
+  {
+    "theme": "light",
+    "route": "/login",
+    "rows": [
+      {
+        "name": "username",
+        "inside": 3.607325673049344,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "password",
+        "inside": 3.607325673049344,
+        "outside": 3.3335996026103447
+      }
+    ]
+  },
+  {
+    "theme": "light",
+    "route": "/app",
+    "rows": [
+      {
+        "name": "model_choice",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "product_name",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "region_name",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "batch_name",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "reference_image_url",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "prompt-card",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      }
+    ]
+  },
+  {
+    "theme": "light",
+    "route": "/admin/users/page",
+    "rows": [
+      {
+        "name": "q",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "role",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "status",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "secondary-btn small-btn",
+        "inside": 3.607325673049344,
+        "outside": 3.3335996026103447
+      }
+    ]
+  },
+  {
+    "theme": "light",
+    "route": "/admin/usage/monthly/page",
+    "rows": [
+      {
+        "name": "month",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      },
+      {
+        "name": "q",
+        "inside": 3.636066843781034,
+        "outside": 3.3335996026103447
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "route": "/login",
+    "rows": [
+      {
+        "name": "username",
+        "inside": 4.2085011378993995,
+        "outside": 4.679532943455236
+      },
+      {
+        "name": "password",
+        "inside": 4.2085011378993995,
+        "outside": 4.679532943455236
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "route": "/app",
+    "rows": [
+      {
+        "name": "model_choice",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "product_name",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "region_name",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "batch_name",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "reference_image_url",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "prompt-card",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "route": "/admin/users/page",
+    "rows": [
+      {
+        "name": "q",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "role",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "status",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "secondary-btn small-btn",
+        "inside": 4.2085011378993995,
+        "outside": 4.585858040389697
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "route": "/admin/usage/monthly/page",
+    "rows": [
+      {
+        "name": "month",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      },
+      {
+        "name": "q",
+        "inside": 3.972724612241234,
+        "outside": 4.585858040389697
+      }
+    ]
+  }
+]

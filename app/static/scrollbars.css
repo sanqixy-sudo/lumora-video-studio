@@ -1,0 +1,11 @@
+/* Global presentation preference. Overflow and native scrolling remain unchanged. */
+* {
+  scrollbar-width: none !important;
+  scrollbar-gutter: auto !important;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

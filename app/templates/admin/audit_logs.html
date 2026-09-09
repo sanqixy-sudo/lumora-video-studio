@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}审计中心{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>审计中心</h2></div>
+  {% if noise_count %}
+  <form method="post" action="/admin/audit-logs/cleanup-noise/form" data-confirm-message="确认清理历史普通入队记录？这只会删除 queue_job 这类普通业务流水。">
+    <button class="ghost-btn small-btn" type="submit">清理普通入队记录 {{ noise_count }}</button>
+  </form>
+  {% endif %}
+</section>
+
+<section class="wb-panel">
+  <div class="status-tabs audit-tabs">
+    {% for key, item in groups.items() %}
+    <a class="status-tab {{ 'active' if group == key else '' }}" href="{{ request.url.include_query_params(group=key, page=1) }}">{{ item.label }}</a>
+    {% endfor %}
+  </div>
+  <div class="table-wrap surface-table">
+    <table class="table">
+      <thead><tr><th>ID</th><th>操作者</th><th>动作</th><th>目标</th><th>详情</th><th>时间</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>#{{ row.id }}</td>
+          <td>{{ row.actor_label }}</td>
+          <td><span class="badge">{{ row.action_label }}</span><div class="muted tiny">{{ row.action }}</div></td>
+          <td>{{ row.target_type }}{% if row.target_id %} #{{ row.target_id }}{% else %} -{% endif %}</td>
+          <td class="audit-detail">{{ row.detail_text }}</td>
+          <td><time data-ui-time>{{ row.created_at|dt }}</time></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-panel">暂无审计记录</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'workbench/base.html' %}
+{% block title %}开始创作{% endblock %}
+{% block body_class %}wb-create-page{% endblock %}
+{% block top_actions %}{% endblock %}
+{% block content %}
+<div class="wb-creator">
+<section class="mature-create-heading"><div><span class="mature-eyebrow">创作空间</span><h1>开始创作</h1></div><a class="mature-quota" href="/app/quota/page"><span>可用额度</span><strong>{{ quota_stats.total_available }}<small> 次</small></strong>{{ icon('chevron') }}</a></section>
+<form action="/app/jobs/batch/form" method="post" enctype="multipart/form-data" id="create-job-form" data-async-formdata="/app/jobs/batch" data-available-quota="{{ quota_stats.total_available }}" class="wb-creation-form">
+<input type="hidden" name="batch_request_id" value="{{ new_request_id }}">
+<div class="glass-workbench"><section class="wb-settings" aria-label="共享生成设置">
+ <div class="wb-settings-fields">
+  <label class="wb-model-label">生成模型<select name="model_choice" id="job-model-select" required><option value="">选择模型与时长</option>{% for group in model_options|groupby('provider_name') %}<optgroup label="{{ {'sora_api':'Sora','seedance':'Seedance','veo_omni':'VEO Omni','wuyin_omni':'Wuyin Omni'}.get(group.grouper,group.grouper) }}">{% for option in group.list %}<option value="{{ option.value }}" data-seconds="{{ option.seconds }}" data-provider="{{ option.provider_name }}" data-model-id="{{ option.model_id }}">{{ option.label }}</option>{% endfor %}</optgroup>{% endfor %}</select><input type="hidden" name="seconds" id="job-seconds-select"></label>
+  <label>APP 名称<input autocomplete="off" name="product_name" maxlength="80" placeholder="例如 NiceReels…" required></label>
+  <label>投放地区<input autocomplete="off" name="region_name" maxlength="80" placeholder="例如 美国…" required></label>
+  <label>批次名称 <span class="wb-optional">选填</span><input autocomplete="off" name="batch_name" maxlength="128" placeholder="为这批视频命名…"></label>
+ </div>
+ <div class="wb-format-row"><fieldset class="wb-aspect"><legend>画幅</legend><label><input autocomplete="off" type="radio" name="aspect_choice" value="720x1280" checked><span><i class="wb-frame-portrait"></i>竖屏 9:16</span></label><label><input autocomplete="off" type="radio" name="aspect_choice" value="1280x720"><span><i class="wb-frame-landscape"></i>横屏 16:9</span></label></fieldset><select name="size" id="job-size-select" hidden aria-label="分辨率"><option value="720x1280">720 × 1280</option><option value="1280x720">1280 × 720</option></select><span id="studio-spec-summary">选择模型后显示时长</span><span class="wb-shared-label">本批次共用设置与素材</span></div>
+ {% if not model_options %}<div class="form-error" role="status">暂无可用模型，请联系管理员配置渠道。</div>{% endif %}
+</section>
+<div class="wb-editor">
+ <section class="wb-materials" aria-labelledby="materials-title">
+  <div class="wb-pane-title"><div>{{ icon('image') }}<h2 id="materials-title">参考素材</h2></div><a class="icon-btn" href="/app/reference-images/page" aria-label="管理素材预设" title="管理素材预设">{{ icon('settings') }}</a></div>
+  <div class="wb-materials-content">
+   <div id="wb-selected-materials" class="wb-selected-materials" aria-live="polite"></div><button type="button" class="wb-add-material" data-open-materials>{{ icon('plus') }}<strong>选择预设素材</strong><span>浏览素材库并添加参考图</span></button>
+   
+   <div id="standard-reference-field" class="reference-field">
+    <select name="reference_preset_id" id="reference-preset-select" hidden aria-label="所选参考图"><option value="">不使用预设</option>{% for preset in reference_presets %}<option value="{{ preset.id }}" data-url="{{ preset.image_url }}" data-width="{{ preset.width or '' }}" data-height="{{ preset.height or '' }}" data-ratio="{{ preset.aspect_ratio or '' }}">{{ preset.name }}</option>{% endfor %}</select>
+    <details class="wb-link-disclosure"><summary>添加图片链接 {{ icon('plus') }}</summary><label>图片链接<input autocomplete="off" name="reference_image_url" id="reference-image-url" type="url" placeholder="https://example.com/image.jpg…"></label></details>
+    <div class="reference-ratio-card" id="reference-ratio-card"><div class="ratio-frame" id="reference-ratio-frame" data-ratio="9:16"><img width="720" height="1280" id="reference-image-preview-img" alt="参考图预览" referrerpolicy="no-referrer"><span id="reference-empty-text">素材预览</span></div><div class="reference-ratio-meta"><strong id="reference-image-name">未选择参考图</strong><span id="reference-image-dimensions">支持预设或公网图片链接</span></div></div><p class="field-hint" id="reference-image-hint">参考图尺寸需与视频分辨率一致。</p>
+   </div>
+   <section id="omni-material-card" class="omni-material-card hidden" data-max-images="6"><div class="wb-material-count"><strong id="omni-material-title">VEO Omni 素材</strong><span id="omni-material-count">0 / 6 张</span></div><p class="field-hint" id="omni-material-description">选择 1–6 张参考图。</p>
+    <div id="omni-preset-list" hidden>{% for preset in reference_presets %}<input autocomplete="off" type="checkbox" name="omni_reference_preset_ids" value="{{ preset.id }}" data-name="{{ preset.name }}" data-url="{{ preset.image_url }}" data-width="{{ preset.width or '-' }}" data-height="{{ preset.height or '-' }}" disabled>{% endfor %}</div>
+    <details class="wb-link-disclosure"><summary>添加图片链接 {{ icon('plus') }}</summary><div class="omni-image-url-list" id="omni-image-url-list"><div class="omni-image-url-row"><input autocomplete="off" name="omni_reference_image_urls" type="url" aria-label="参考图片链接" placeholder="https://example.com/image.jpg…" disabled><button type="button" class="omni-remove-image" disabled>移除</button></div></div><button type="button" id="omni-add-image" class="omni-add-image small-btn" disabled>添加链接</button></details>
+    <div id="omni-video-block" class="hidden"><label><span id="omni-video-label">参考视频链接（可选）</span><input autocomplete="off" name="omni_reference_video_url" id="omni-reference-video-url" type="url" placeholder="https://example.com/video.mp4…" disabled></label><p class="field-hint" id="omni-video-hint">填写公网视频链接。</p></div><p class="field-hint" id="omni-material-hint">素材按列表顺序提交。</p>
+   </section>
+  </div>
+  <div class="wb-material-note">{{ icon('batch') }}<span>同一组素材，不同的创作方向。</span></div>
+ </section>
+ <section class="wb-prompts" aria-labelledby="prompts-title">
+  <div class="wb-pane-title"><div>{{ icon('create') }}<h2 id="prompts-title">提示词</h2><span class="wb-count" id="wb-prompt-total">1</span></div><button class="ghost-btn small-btn" type="button" id="batch-import-toggle" aria-expanded="false" aria-controls="batch-import-box">{{ icon('download') }}批量导入</button></div>
+  <div class="wb-prompts-content"><p class="wb-editor-hint">每条提示词生成一个视频</p>
+   <div id="batch-import-box" class="batch-import-box hidden"><label>粘贴提示词<textarea autocomplete="off" id="batch-import-textarea" placeholder="使用空行或单独一行 --- 分隔提示词…"></textarea></label><div class="wb-import-tools"><label>导入方式<select id="batch-import-mode"><option value="append">追加到当前提示词</option><option value="replace">替换全部提示词</option></select></label><span id="wb-import-count" role="status">已解析 0 条</span></div><div class="inline-actions"><button type="button" class="secondary-btn small-btn" id="batch-import-apply">导入</button><button type="button" class="ghost-btn small-btn" id="batch-import-cancel">取消</button></div></div>
+   <div class="mature-prompt-tools">   <button type="button" class="wb-add-prompt" id="add-prompt-btn">{{ icon('plus') }}新增提示词<span>最多 100 条</span></button></div><div id="prompt-list" class="prompt-list"><article class="prompt-card" data-prompt-card><div class="prompt-card-head"><strong>提示词 1</strong><div class="inline-actions"><button type="button" class="ghost-btn small-btn" data-copy-prompt>复制</button><button type="button" class="danger-ghost-btn small-btn" data-remove-prompt>删除</button></div></div><textarea autocomplete="off" name="prompts" aria-label="提示词 1" placeholder="例如：雨夜街道，镜头缓慢推进…"></textarea></article></div>
+
+  </div>
+ </section>
+</div>
+</div>
+<div id="studio-form-error" class="form-error hidden" role="alert" tabindex="-1"></div>
+<footer class="wb-submit"><div class="wb-submit-summary"><strong id="prompt-count-text" aria-live="polite">0 个视频待生成</strong><span id="quota-cost-text">填写提示词后计算预计额度</span></div><span class="wb-available">可用 <strong>{{ quota_stats.total_available }}</strong> 次</span><button class="primary-btn" type="submit" data-loading-text="正在提交…" {% if not model_options %}disabled{% endif %}>生成视频 {{ icon('arrow') }}</button></footer>
+</form>
+
+</div>
+<dialog id="wb-material-drawer" class="wb-drawer" aria-labelledby="wb-material-drawer-title"><header class="wb-dialog-head"><div><h2 id="wb-material-drawer-title">选择参考素材</h2><p id="wb-material-limit">从预设选择参考图</p></div><button type="button" class="icon-btn" data-close-drawer aria-label="取消素材选择">{{ icon('close') }}</button></header><div class="wb-dialog-body"><div class="wb-preset-grid">{% for preset in reference_presets %}<label class="wb-preset-choice"><input autocomplete="off" type="checkbox" value="{{ preset.id }}" data-preset-choice><img width="720" height="1280" src="{{ preset.image_url }}" alt="{{ preset.name }}" loading="lazy" referrerpolicy="no-referrer"><strong>{{ preset.name }}</strong><span>{{ preset.width or '-' }} × {{ preset.height or '-' }} · {{ '我的' if preset.owner_user_id else '通用' }}</span></label>{% else %}<p class="empty-state">暂无预设。可以返回工作台添加图片链接。</p>{% endfor %}</div></div><footer class="wb-dialog-foot"><span class="muted" id="wb-material-draft-count">已选择 0 张</span><div class="inline-actions"><button type="button" class="ghost-btn" data-close-drawer>取消</button><button type="button" class="primary-btn" id="wb-apply-materials">应用素材</button></div></footer></dialog>
+{% endblock %}

@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "results": {
+    "login": "Covered by check_login_wall.cjs: alternating public-cover rows",
+    "navigation": {
+      "start": 208,
+      "mid": 114.6365737915039,
+      "end": 208,
+      "rapidReverse": true
+    },
+    "drawer": {
+      "enter": 0.612578,
+      "rapidReverse": true,
+      "focusReturned": true
+    },
+    "menu": {
+      "closeOpacity": 0.315572
+    },
+    "recent": {
+      "middle": 124.438,
+      "end": 162.172,
+      "rapidReverse": true
+    },
+    "reducedMotion": true
+  }
+}

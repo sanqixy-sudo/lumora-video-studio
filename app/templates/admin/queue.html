@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}队列监控{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>队列监控</h2></div>
+  {% if can_manage %}
+  <form action="/admin/jobs/delete-stuck/form" method="post" data-confirm-message="确认删除全部卡住任务？">
+    <button class="danger-btn small-btn" type="submit">清理全部卡住任务</button>
+  </form>
+  {% endif %}
+</section>
+
+<section class="metric-row metric-row-wide">
+  <article class="metric-card accent-blue"><span>运行中</span><strong>{{ stats.running }} / {{ stats.max_running }}</strong></article>
+  <article class="metric-card accent-amber"><span>排队中</span><strong>{{ stats.queued }}</strong></article>
+  <article class="metric-card accent-rose"><span>卡住任务</span><strong>{{ stats.stuck }}</strong></article>
+  <article class="metric-card"><span>下载失败</span><strong>{{ stats.download_failed }}</strong></article>
+</section>
+
+<div class="grid two-col-grid">
+  <section class="wb-panel">
+    <div class="section-head"><h2>运行中</h2></div>
+    <div class="jobs">
+      {% for job in running_jobs %}
+      {% set owner = user_map.get(job.user_id) %}
+      <article class="compact-job-card">
+        <div class="compact-job-top"><strong>#{{ job.id }}</strong><span class="badge status-{{ job.status }}">{{ status_label(job.status) }}</span></div>
+        <div class="compact-job-meta"><span>{{ job.product_name or '-' }} / {{ job.region_name or '-' }}</span></div>
+        <div class="compact-job-meta"><span>{{ user_display_name(owner) if owner else ('用户 #' ~ job.user_id) }}</span><span><time data-ui-time>{{ job.updated_at|dt }}</time></span></div>
+        <div class="mini-progress"><span style="width: {{ job.progress }}%"></span></div>
+        <div class="compact-job-footer top-gap"><span class="muted tiny">{{ queue_map.get(job.id, '-') }}</span><a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">详情</a></div>
+      </article>
+      {% else %}<div class="empty-state compact-empty">暂无运行任务</div>{% endfor %}
+    </div>
+  </section>
+
+  <section class="wb-panel">
+    <div class="section-head"><h2>排队中</h2></div>
+    <div class="jobs">
+      {% for job in queued_jobs %}
+      {% set owner = user_map.get(job.user_id) %}
+      <article class="compact-job-card">
+        <div class="compact-job-top"><strong>#{{ job.id }}</strong><span class="badge status-queued">排队中</span></div>
+        <div class="compact-job-meta"><span>{{ job.product_name or '-' }} / {{ job.region_name or '-' }}</span></div>
+        <div class="compact-job-meta"><span>{{ user_display_name(owner) if owner else ('用户 #' ~ job.user_id) }}</span><span><time data-ui-time>{{ job.queued_at|dt }}</time></span></div>
+        <div class="compact-job-footer"><span class="muted tiny">{{ queue_map.get(job.id, '-') }}</span><a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">详情</a></div>
+      </article>
+      {% else %}<div class="empty-state compact-empty">暂无排队任务</div>{% endfor %}
+    </div>
+  </section>
+</div>
+
+<section class="wb-panel top-gap">
+  <div class="section-head"><h2>卡住任务</h2></div>
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table">
+      <thead><tr><th>ID</th><th>用户</th><th>APP / 地区</th><th>状态</th><th>更新时间</th><th>错误</th><th>操作</th></tr></thead>
+      <tbody>
+        {% for job in stuck_jobs %}
+        {% set owner = user_map.get(job.user_id) %}
+        <tr>
+          <td><strong>#{{ job.id }}</strong></td>
+          <td>{{ user_display_name(owner) if owner else ('用户 #' ~ job.user_id) }}</td>
+          <td><div class="meta-stack"><strong>{{ job.product_name or '-' }}</strong><span>{{ job.region_name or '-' }}</span></div></td>
+          <td><span class="badge status-{{ job.status }}">{{ status_label(job.status) }}</span></td>
+          <td><time data-ui-time>{{ job.updated_at|dt }}</time></td>
+          <td class="truncate-cell">{{ job.error_text or '-' }}</td>
+          <td><a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">详情</a></td>
+        </tr>
+        {% else %}<tr><td colspan="7"><div class="empty-state compact-empty">暂无卡住任务</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

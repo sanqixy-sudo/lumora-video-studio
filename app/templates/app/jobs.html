@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}我的任务{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>我的任务</h2>
+  </div>
+  <a class="primary-btn small-btn" href="/app">创建任务</a>
+</section>
+
+<section class="wb-panel">
+  
+  <div class="table-wrap surface-table">
+    <table class="table clean-table job-list-table">
+      <thead>
+        <tr><th>ID</th><th>APP / 地区</th><th>状态</th><th>队列</th><th>进度</th><th>生成规格</th><th>提交时间</th><th>更新时间</th><th class="action-col">操作</th></tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td>
+            <div class="user-cell">
+              <strong>#{{ job.id }}</strong>
+              {% if job.batch_id and batch_map.get(job.batch_id) %}
+              <a class="batch-link" href="/app/job-batches/{{ job.batch_id }}/result">{{ batch_map.get(job.batch_id).batch_code }}</a>
+              {% endif %}
+            </div>
+          </td>
+          <td><div class="meta-stack"><strong>{{ job.product_name or '-' }}</strong><span>{{ job.region_name or '-' }}</span></div></td>
+          <td><span class="badge status-{{ job.status }}">{{ status_label(job.status) }}</span></td>
+          <td>{{ queue_map.get(job.id, "-") }}</td>
+          <td>
+            <div class="mini-progress"><span style="width: {{ job.progress }}%"></span></div>
+            <span class="tiny muted">{{ job.progress }}%</span>
+          </td>
+          <td><div class="meta-stack"><strong>{{ job.seconds }} 秒 · {{ job.size }}</strong><span>{{ job.model }}</span></div></td>
+          <td><time data-ui-time>{{ (job.queued_at or job.created_at)|dt }}</time></td>
+          <td><time data-ui-time>{{ job.updated_at|dt }}</time></td>
+          <td class="action-cell"><a class="ghost-btn small-btn" href="/app/jobs/{{ job.id }}/page">详情</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty-state compact-empty">暂无任务</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

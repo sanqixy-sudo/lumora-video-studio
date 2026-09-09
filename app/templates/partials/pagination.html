@@ -1,0 +1,30 @@
+<div class="pagination-row">
+  {% if pagination.has_prev %}
+  <a class="ghost-btn small-btn" href="{{ request.url.include_query_params(page=pagination.page - 1, per_page=pagination.per_page) }}">上一页</a>
+  {% endif %}
+  <span class="muted">{{ pagination.page }} / {{ pagination.total_pages }}，共 {{ pagination.total_items }} 条</span>
+  <form method="get" class="pagination-jump">
+    {% for key, value in request.query_params.multi_items() %}
+      {% if key not in ["page", "per_page"] %}<input type="hidden" name="{{ key }}" value="{{ value }}" />{% endif %}
+    {% endfor %}
+    <input inputmode="numeric" autocomplete="off" aria-label="跳转页码" type="number" name="page" min="1" max="{{ pagination.total_pages }}" value="{{ pagination.page }}" />
+    <input type="hidden" name="per_page" value="{{ pagination.per_page }}" />
+    <button class="ghost-btn small-btn" type="submit">跳转</button>
+  </form>
+  {% if per_page_options is defined %}
+  <form method="get" class="pagination-size-form" data-per-page-form data-per-page-storage-key="{{ per_page_storage_key or '' }}">
+    {% for key, value in request.query_params.multi_items() %}
+      {% if key not in ["page", "per_page"] %}<input type="hidden" name="{{ key }}" value="{{ value }}" />{% endif %}
+    {% endfor %}
+    <input type="hidden" name="page" value="1" />
+    <label><span>每页</span>
+      <select name="per_page" data-per-page-select>
+        {% for size in per_page_options %}<option value="{{ size }}" {% if pagination.per_page == size %}selected{% endif %}>{{ size }} 条</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+  {% endif %}
+  {% if pagination.has_next %}
+  <a class="ghost-btn small-btn" href="{{ request.url.include_query_params(page=pagination.page + 1, per_page=pagination.per_page) }}">下一页</a>
+  {% endif %}
+</div>

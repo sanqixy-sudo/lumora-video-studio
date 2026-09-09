@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}批次详情{% endblock %}
+{% block content %}
+<section class="wb-page-heading"><div></div><div class="inline-actions"><a class="ghost-btn small-btn" href="/app/job-batches/page">返回批次记录</a><a class="primary-btn small-btn" href="/app">继续创作</a></div></section>
+<section class="batch-overview">
+  <div class="batch-overview-main"><h2>{{ batch.batch_name or batch.batch_code }}</h2><span class="muted">{{ batch.product_name or '-' }} / {{ batch.region_name or '-' }} · <time data-ui-time>{{ batch.created_at|dt }}</time></span><div class="tiny muted">{{ batch.batch_code }} · {{ batch.total_count }} 个任务</div></div>
+  <div class="batch-stat"><strong id="batch-completed">{{ summary.get('completed_count',0) }}</strong><span>已完成</span></div>
+  <div class="batch-stat"><strong id="batch-active">{{ summary.get('active_count',0) }}</strong><span>处理中</span></div>
+  <div class="batch-stat"><strong id="batch-failed">{{ summary.get('failed_count',0) }}</strong><span>失败 / 暂停</span></div>
+</section>
+<section class="wb-panel">
+<div class="section-head"><div><h2>本批次任务 <span class="badge" id="batch-state">{{ summary.get('state_label','处理中') }}</span></h2><span id="batch-summary" class="muted tiny">{{ summary.get('text','') }}</span></div><span class="muted tiny" id="batch-refresh-state" role="status">正在同步进度</span></div>
+<div class="table-wrap"><table class="table batch-result-table"><thead><tr><th>任务</th><th>提示词</th><th>状态</th><th>队列</th><th>进度</th><th>操作</th></tr></thead><tbody>
+{% for job in jobs %}<tr data-batch-job="{{ job.id }}"><td><strong>#{{ job.id }}</strong><div class="tiny muted">第 {{ job.batch_index or loop.index }} 条</div></td><td class="prompt-preview-cell"><details><summary>{{ job.prompt[:60] }}{% if job.prompt|length > 60 %}…{% endif %}</summary><p>{{ job.prompt }}</p></details></td><td><span class="badge status-{{ job.status }}" data-job-status>{{ status_label(job.status) }}</span></td><td data-job-queue>{{ queue_map.get(job.id,'-') }}</td><td data-job-progress>{{ job.progress }}%</td><td><div class="inline-actions"><a class="ghost-btn small-btn" href="/app/jobs/{{ job.id }}/page">详情</a><a class="primary-btn small-btn hidden" data-job-download href="#">下载</a></div></td></tr>{% else %}<tr><td colspan="6"><div class="empty-state">此批次已无任务。</div></td></tr>{% endfor %}
+</tbody></table></div>
+<div class="inline-actions batch-result-actions"><a id="batch-download" class="primary-btn {{ '' if summary.get('downloadable_count',0) else 'hidden' }}" href="/app/job-batches/{{ batch.id }}/download-zip">下载已完成 {{ summary.get('downloadable_count',0) }} 个</a><span id="batch-download-empty" class="muted {{ 'hidden' if summary.get('downloadable_count',0) else '' }}">暂无可下载作品，生成后会自动更新。</span></div>
+</section>
+{% endblock %}
+{% block scripts %}<script>window.BATCH_DATA_ENDPOINT = "/app/job-batches/{{ batch.id }}";</script>{% endblock %}

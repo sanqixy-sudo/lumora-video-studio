@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}用户排行{% endblock %}
+{% block content %}
+<section class="wb-page-heading rankings-heading">
+  <div><h2>用户排行</h2><p>比较所选周期内的使用次数与任务结果。</p></div><a class="secondary-btn" href="/admin/usage/monthly/page">查看每日用量</a>
+</section>
+
+<section class="wb-panel rankings-panel">
+  <form class="filter-bar modern-filter rankings-filter" method="get" action="/admin/rankings/page">
+    <label><span>周期</span><select name="period"><option value="today" {{ 'selected' if period == 'today' else '' }}>今日</option><option value="week" {{ 'selected' if period == 'week' else '' }}>本周</option><option value="month" {{ 'selected' if period == 'month' else '' }}>本月</option><option value="custom" {{ 'selected' if period == 'custom' else '' }}>自定义</option></select></label>
+    <label><span>开始日期</span><input autocomplete="off" type="date" name="start_date" value="{{ start_date or '' }}" /></label>
+    <label><span>结束日期</span><input autocomplete="off" type="date" name="end_date" value="{{ end_date or '' }}" /></label>
+    <button class="primary-btn small-btn" type="submit">查询</button>
+  </form>
+  <div class="section-head"><h2>{{ period_label }}</h2></div>
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table rankings-table"><colgroup><col class="rank-col"><col class="rank-user-col">{% for _ in range(4) %}<col class="rank-number-col">{% endfor %}</colgroup>
+      <thead><tr><th scope="col">排名</th><th scope="col">用户</th><th scope="col">扣费次数</th><th scope="col">完成</th><th scope="col">失败</th><th scope="col">下载失败</th></tr></thead>
+      <tbody>
+        {% for row in rankings %}
+        <tr>
+          <td><strong class="{{ 'rank-top' if loop.index <= 3 else '' }}">{{ loop.index }}</strong></td>
+          <td><div class="user-cell"><strong title="{{ row.display_name or row.username }}">{{ row.display_name or row.username }}</strong><span title="{{ row.username }} / ID: {{ row.user_id }}" translate="no">{{ row.username }} / ID: {{ row.user_id }}</span></div></td>
+          <td><strong>{{ row.usage_count }}</strong></td>
+          <td>{{ row.success_count }}</td>
+          <td>{{ row.failure_count }}</td>
+          <td>{{ row.download_failure_count }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state compact-empty">暂无排行数据</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

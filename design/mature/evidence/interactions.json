@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "name": "compact prompt expands on focus, retains height on blur, manually collapses",
+      "passed": true
+    },
+    {
+      "name": "100 prompt import; reject 101 without truncation; last focus is clear of footer",
+      "passed": true
+    },
+    {
+      "name": "material draft cancel/apply; natural names; Omni arbitrary aspect",
+      "passed": true
+    },
+    {
+      "name": "login failure preserves username and presents specific error; retry enabled",
+      "passed": true
+    },
+    {
+      "name": "generation failure retains inputs and one request despite repeat click",
+      "passed": true
+    },
+    {
+      "name": "user filters operate; failed drawer save retains values and Esc restores focus",
+      "passed": true
+    },
+    {
+      "name": "month lengths and subadmin report cannot expose adjusted markers or real counts",
+      "passed": true
+    },
+    {
+      "name": "detail remote ID and long model/error wrap; completed video stays intact",
+      "passed": true
+    },
+    {
+      "name": "mobile navigation and material drawer restore focus with no horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "manual/system theme and refresh retain selection; browser theme-color follows",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

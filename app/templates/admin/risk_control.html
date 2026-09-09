@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}风控设置{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>风控设置</h2></div>
+</section>
+
+<form data-create-editor="新增风控规则" action="/admin/risk-control/form" method="post" class="stack-form refined-form">
+    <label>关键词<textarea autocomplete="off" name="keywords" rows="3" placeholder="多个关键词可用逗号、换行分隔…" required></textarea></label>
+    <label>失败提示<input autocomplete="off" name="error_message" placeholder="例如：生成失败，请调整提示词后重试…" required /></label>
+    <div class="inline-actions"><button class="primary-btn" type="submit">新增规则</button></div>
+  </form>
+
+<section class="wb-panel top-gap">
+  
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table">
+      <thead><tr><th>ID</th><th>关键词</th><th>失败提示</th><th>状态</th><th>更新时间</th><th class="action-col">操作</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>#{{ row.id }}</td>
+          <td>{{ (row.keywords or [])|join('，') }}</td>
+          <td>{{ row.error_message }}</td>
+          <td><span class="badge status-{{ 'active' if row.status == 'active' else 'disabled' }}">{{ '启用' if row.status == 'active' else '停用' }}</span></td>
+          <td><time data-ui-time>{{ row.updated_at|dt }}</time></td>
+          <td class="action-cell">
+            <details class="row-editor">
+              <summary class="ghost-btn small-btn">编辑</summary>
+              <form action="/admin/risk-control/{{ row.id }}/update/form" method="post" class="stack-form action-card">
+                <label>关键词<textarea autocomplete="off" name="keywords" rows="3" required>{{ (row.keywords or [])|join('\n') }}</textarea></label>
+                <label>失败提示<input autocomplete="off" name="error_message" value="{{ row.error_message }}" required /></label>
+                <button class="primary-btn small-btn" type="submit">保存</button>
+              </form>
+            </details>
+            <form action="/admin/risk-control/{{ row.id }}/toggle/form" method="post" class="inline-form"><button class="ghost-btn small-btn" type="submit">{{ '停用' if row.status == 'active' else '启用' }}</button></form>
+            <form action="/admin/risk-control/{{ row.id }}/delete/form" method="post" class="inline-form" data-confirm-submit="确定删除这条风控规则？"><button class="danger-btn small-btn" type="submit">删除</button></form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state compact-empty">暂无风控规则</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

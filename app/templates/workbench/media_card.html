@@ -1,0 +1,22 @@
+<article class="plaza-card {{ 'library-card' if library else '' }} {{ 'is-starred' if card.is_starred else '' }} {{ 'is-protected' if card.is_private_protected else '' }}" data-job-card="{{ card.job_id }}" data-download-url="{{ card.local_download_url }}" data-copy-scope>
+  {% if library %}<label class="library-card-check"><input autocomplete="off" type="checkbox" class="library-select-checkbox" aria-label="选择作品 {{ card.job_id }}" value="{{ card.job_id }}" data-download-url="{{ card.local_download_url }}"><span class="library-check-text">选择</span></label>{% endif %}
+  <div class="plaza-video-wrap {{ 'is-landscape' if card.size == '1280x720' else 'is-portrait' }}"><button type="button" aria-label="播放或暂停视频预览" class="plaza-video-shell plaza-preview-trigger" data-stream-url="/app/files/{{ card.output_file_id }}/stream">
+    <img width="720" height="1280" class="plaza-cover-image" loading="lazy" src="/app/files/{{ card.output_file_id }}/poster" alt="{{ card.product_name or '作品' }} 视频封面" onerror="this.style.display='none'">
+    <div class="plaza-poster">{% if card.is_private_protected %}<div class="protected-ribbon">自用保护</div>{% endif %}<span class="plaza-play-pill">点击预览</span><span>{{ '横屏' if card.size == '1280x720' else '竖屏' }}</span></div>
+    <video aria-label="作品预览" aria-describedby="media-prompt-{{ card.job_id }}" class="plaza-inline-video hidden" preload="none" playsinline loop></video>
+  </button></div>
+  <div class="plaza-card-body">
+    <div class="plaza-meta"><span>{{ card.product_name or '未命名作品' }} · {{ card.region_name or '-' }}</span><span>#{{ card.job_id }}</span></div>
+    <h3 id="media-prompt-{{ card.job_id }}" title="{{ card.prompt }}">{{ card.prompt }}</h3>
+    <div class="card-spec-row"><span>{{ card.size }} / {{ card.seconds }} 秒</span><span>{{ card.created_date or card.created_at[:10] }}</span></div>
+    <div class="card-model-id">{{ card.model or '-' }}{% if not library %} · {{ card.creator }}{% endif %}</div>
+    <div class="job-actions"><button class="secondary-btn small-btn plaza-preview-trigger" type="button" data-stream-url="/app/files/{{ card.output_file_id }}/stream">播放预览</button><a class="primary-btn small-btn" href="{{ card.local_download_url }}">下载视频</a></div>
+    <div class="wb-media-secondary">
+    {% if library %}
+      <button class="library-star-btn {{ 'active' if card.is_starred else '' }}" type="button" data-toggle-star="{{ card.job_id }}"><span class="star-text">{{ '已收藏' if card.is_starred else '收藏' }}</span></button>
+      <button class="protection-toggle-btn {{ 'active' if card.is_private_protected else '' }}" type="button" data-toggle-protection="{{ card.job_id }}"><span class="protection-text">{{ '取消保护' if card.is_private_protected else '自用保护' }}</span></button>
+      <span class="hidden" data-prompt-copy-source>{{ card.prompt }}</span><button type="button" data-copy-text="1" data-copy-source="[data-prompt-copy-source]" data-copy-label="提示词">复制提示词</button><a href="/app/jobs/{{ card.job_id }}/page">详情</a>
+    {% else %}<button class="plaza-open-btn" type="button" data-job-id="{{ card.job_id }}">作品详情</button>{% endif %}
+    </div>
+  </div>
+</article>

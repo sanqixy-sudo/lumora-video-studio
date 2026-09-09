@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}额度审批{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>额度审批</h2></div>
+</section>
+
+<section class="wb-panel">
+  <div class="status-tabs">
+    <a class="status-tab {{ 'active' if status_filter == 'pending' else '' }}" href="/admin/quota-requests/page?status=pending"><span>待审批</span><strong>{{ counts.pending }}</strong></a>
+    <a class="status-tab {{ 'active' if status_filter == 'approved' else '' }}" href="/admin/quota-requests/page?status=approved"><span>已通过</span><strong>{{ counts.approved }}</strong></a>
+    <a class="status-tab {{ 'active' if status_filter == 'rejected' else '' }}" href="/admin/quota-requests/page?status=rejected"><span>已拒绝</span><strong>{{ counts.rejected }}</strong></a>
+    <a class="status-tab {{ 'active' if status_filter not in ['pending','approved','rejected'] else '' }}" href="/admin/quota-requests/page?status=all"><span>全部</span><strong>{{ counts.pending + counts.approved + counts.rejected }}</strong></a>
+  </div>
+
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table">
+      <thead><tr><th>ID</th><th>用户</th><th>申请额度</th><th>状态</th><th>说明</th><th>审批</th><th>时间</th><th>操作</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        {% set owner = user_map.get(row.user_id) %}
+        {% set reviewer = user_map.get(row.reviewer_user_id) if row.reviewer_user_id else None %}
+        <tr>
+          <td>#{{ row.id }}</td>
+          <td><div class="user-cell"><strong>{{ user_display_name(owner) if owner else '-' }}</strong><span>{{ owner.username if owner else ('用户 #' ~ row.user_id) }}</span></div></td>
+          <td><strong>{{ row.amount }}</strong></td>
+          <td><span class="badge status-{{ row.status }}">{{ {'pending':'待审批','approved':'已通过','rejected':'已拒绝'}.get(row.status, row.status) }}</span></td>
+          <td>{{ row.reason or '-' }}</td>
+          <td>{% if reviewer %}{{ user_display_name(reviewer) }}<br><span class="muted tiny">{{ row.review_note or '-' }}</span>{% else %}-{% endif %}</td>
+          <td><div class="meta-stack"><strong><time data-ui-time>{{ row.created_at|dt }}</time></strong><span><time data-ui-time>{{ row.reviewed_at|dt if row.reviewed_at else '-' }}</time></span></div></td>
+          <td>
+            {% if row.status == 'pending' %}
+            <div class="quota-review-actions">
+              <form action="/admin/quota-requests/{{ row.id }}/approve/form" method="post" class="inline-review-form">
+                <input autocomplete="off" name="review_note" aria-label="审批备注" placeholder="审批备注…" />
+                <button class="primary-btn small-btn" type="submit">通过</button>
+              </form>
+              <form action="/admin/quota-requests/{{ row.id }}/reject/form" method="post" class="inline-review-form">
+                <input autocomplete="off" name="review_note" aria-label="拒绝原因" placeholder="拒绝原因…" />
+                <button class="danger-ghost-btn small-btn" type="submit">拒绝</button>
+              </form>
+            </div>
+            {% else %}
+            -
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state compact-empty">暂无额度申请</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

@@ -1,0 +1,392 @@
+/* Frosted workspace sample. Login owns its approved material independently. */
+.wb-glass {
+  --glass-panel:rgba(252,252,255,.68);
+  --glass-nav:rgba(245,245,255,.68);
+  --glass-float:rgba(252,252,255,.94);
+  --glass-edge:rgba(255,255,255,.88);
+  --glass-shadow:0 10px 36px #4443770d,0 2px 6px #44437706,inset 0 1px 0 #ffffff75;
+  --glass-glow-blue:#bfd5f3bb;
+  --glass-glow-purple:#d9caf2b0;
+  --glass-editor:#FDFDFF;
+  --glass-tint:#f0eff980;
+  --glass-radius:18px;
+  background-color:#eff0f7;
+  background-image:radial-gradient(ellipse at 10% 0%,var(--glass-glow-blue),transparent 48%),radial-gradient(ellipse at 90% 15%,var(--glass-glow-purple),transparent 52%);
+  background-attachment:fixed;
+}
+html[data-theme=dark] .wb-glass {
+  --glass-panel:rgba(32,33,49,.74);
+  --glass-nav:rgba(33,34,52,.78);
+  --glass-float:rgba(39,40,58,.96);
+  --glass-edge:rgba(183,182,221,.17);
+  --glass-shadow:0 12px 40px #08091530,0 2px 6px #08091514,inset 0 1px 0 #ffffff06;
+  --glass-glow-blue:#32496588;
+  --glass-glow-purple:#50376c80;
+  --glass-editor:#232435;
+  --glass-tint:#a99bff08;
+  background-color:#171823;
+}
+/* Blur only the outer material, never the scrolling rows or individual cards. */
+.wb-glass :is(.wb-sidebar,.wb-topbar,.glass-workbench,.wb-user-directory,.usage-report-card,.wb-task-status,.wb-parameters,.wb-detail-tabs,.wb-user-metrics,.report-metrics) {
+  background:var(--glass-panel);
+  border:1px solid var(--glass-edge);
+  box-shadow:var(--glass-shadow);
+  border-radius:var(--glass-radius);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+.wb-glass .wb-sidebar {top:12px;margin:12px 0 12px 12px;height:calc(100dvh - 24px);padding:22px 10px 12px;background:var(--glass-nav)}
+.wb-glass .wb-brand {padding:0 10px 30px;gap:12px}
+.wb-glass .wb-brand img {width:34px;height:34px}
+.wb-glass .wb-nav-group {margin-bottom:26px}
+.wb-glass .wb-nav-label {padding-left:12px;font-size:12px}
+.wb-glass .wb-nav-link {min-height:44px;padding:10px 12px;border-radius:10px;margin:3px 0}
+.wb-glass .wb-nav-link.is-active {background:var(--wb-selection);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--wb-accent) 18%,transparent);font-weight:600}
+.wb-glass .wb-topbar {height:56px;top:12px;margin:12px 28px 0;padding:0 18px;background:var(--glass-nav);border-radius:14px}
+.wb-glass .wb-top-actions {gap:12px}
+.wb-glass .wb-account-trigger {padding:3px 6px;border-radius:8px}
+.wb-glass .wb-avatar {border-radius:9px;width:30px;height:30px}
+.wb-glass .wb-main {padding:28px;max-width:none}
+.wb-glass .wb-page-heading,.wb-glass .mature-create-heading {margin-bottom:24px;padding:0;min-height:62px}
+.wb-glass .mature-eyebrow {font-size:12px;letter-spacing:.025em;margin-bottom:4px}
+.wb-glass h1 {font-size:28px;font-weight:600;letter-spacing:-.025em}
+.wb-glass .mature-quota {column-gap:16px;padding:10px 16px;border-left:1px solid var(--wb-line);text-align:right}
+.wb-glass .mature-quota strong {font-size:26px}
+.wb-glass .primary-btn {box-shadow:0 3px 9px color-mix(in srgb,var(--wb-accent) 16%,transparent),inset 0 1px 0 #ffffff22;border-radius:10px}
+.wb-glass :is(.secondary-btn,.icon-btn,.ghost-btn) {border-radius:10px}
+.wb-glass :is(input:not([type=checkbox]):not([type=radio]),select,textarea) {background-color:var(--glass-editor);border-radius:10px;font-size:16px}
+.wb-glass :is(.wb-popover,.menu-panel.wb-floating-menu,dialog,.modal-card,.app-toast) {background:var(--glass-float);border-color:var(--glass-edge);box-shadow:0 18px 60px #11142b26;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:16px}
+.wb-glass .wb-dialog-foot {background:transparent}
+.wb-glass .wb-dialog-head {border-bottom-color:var(--wb-line)}
+/* One work surface, with an inset material rail and a solid editing layer. */
+.wb-glass .glass-workbench {min-width:0}
+.wb-glass .wb-settings {padding:22px 24px 0;background:transparent;border-radius:0;border-bottom:1px solid var(--wb-line)}
+.wb-glass .wb-settings-fields {gap:16px}
+.wb-glass .wb-format-row {min-height:66px}
+.wb-glass .wb-editor {padding:0;gap:0;grid-template-columns:280px minmax(0,1fr);align-items:stretch;min-height:400px}
+.wb-glass .wb-materials,.wb-glass .wb-prompts {background:transparent;border-radius:0;box-shadow:none;min-height:0}
+.wb-glass .wb-materials {background:var(--glass-tint);border-right:1px solid var(--wb-line);border-bottom-left-radius:var(--glass-radius)}
+.wb-glass .wb-pane-title {padding:18px 20px 12px;min-height:68px}
+.wb-glass .wb-pane-title>div>.wb-icon {color:var(--wb-accent)}
+.wb-glass .wb-prompts-content {padding-bottom:24px}
+.wb-glass .wb-materials-content {max-height:490px}
+.wb-glass .wb-add-material {background:var(--glass-editor);min-height:108px;border-radius:12px;padding:18px;row-gap:4px}
+.wb-glass .wb-material-note {margin-top:auto;padding-top:12px}
+.wb-glass .mature-prompt-tools {border:0;margin-bottom:8px}
+.wb-glass .wb-add-prompt {min-height:40px}
+.wb-glass .wb-editor-hint {margin-bottom:4px}
+.wb-glass .prompt-list {max-height:480px;gap:12px;padding:2px}
+.wb-glass .prompt-card {background:var(--glass-editor);border-radius:12px}
+.wb-glass .prompt-card-head {padding:6px 12px;background:var(--glass-tint);border-bottom:1px solid var(--wb-line)}
+.wb-glass .prompt-card-head strong {color:var(--wb-ink);font-weight:500}
+.wb-glass .prompt-card textarea {background:transparent;border-radius:0;padding:12px 16px;min-height:96px;height:96px}
+.wb-glass .prompt-card.is-expanded textarea {height:168px;min-height:168px}
+.wb-glass .wb-submit {margin-top:16px;background:var(--glass-float);border:1px solid var(--glass-edge);border-radius:16px;box-shadow:0 6px 30px #27224318;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.wb-glass #studio-form-error:not(.hidden) {margin-top:16px}
+.wb-glass .wb-recent {margin-top:12px;padding:0 6px}
+.wb-glass .wb-preset-choice {background:var(--glass-editor)}
+/* Statistics read as one strip; the data remains opaque beneath frozen columns. */
+.wb-glass .wb-user-metrics,.wb-glass .report-metrics {max-width:none;padding:20px 24px;margin-bottom:24px;gap:0}
+.wb-glass .wb-user-metrics>div,.wb-glass .report-metrics>.metric-card {padding:0 24px;border-left:1px solid var(--wb-line)}
+.wb-glass .wb-user-metrics>div:first-child,.wb-glass .report-metrics>.metric-card:first-child {padding-left:0;border-left:0}
+.wb-glass .wb-user-metrics strong,.wb-glass .report-metrics .metric-card>strong {font-size:28px;letter-spacing:-.025em}
+.wb-glass .wb-user-directory {padding:22px 24px 0}
+.wb-glass .wb-user-table {min-width:1020px}
+.wb-glass .wb-user-table th {background:var(--glass-tint);padding-top:12px;padding-bottom:12px}
+.wb-glass .wb-user-table td {padding-top:16px;padding-bottom:16px}
+.wb-glass .wb-user-table th:first-child {border-radius:8px 0 0 8px}
+.wb-glass .wb-user-table th:last-child {border-radius:0 8px 8px 0}
+.wb-glass .mature-initial {border-radius:12px;width:38px;height:38px}
+.wb-glass .usage-report-card {border-radius:18px}
+.wb-glass .usage-filter {padding:20px 24px}
+.wb-glass .usage-table-toolbar,.wb-glass .usage-legend {padding-left:24px;padding-right:24px}
+.wb-glass .usage-cell,.wb-glass .usage-user,.wb-glass .usage-month-total {backdrop-filter:none}
+/* Result stays a complete frame. Metadata has its own quiet, readable plane. */
+.wb-glass .wb-result-layout {gap:20px;margin-bottom:20px}
+.wb-glass .wb-result-media {border-radius:18px;background:#11121c;box-shadow:var(--glass-shadow)}
+.wb-glass .player-wrap video {background:#11121c}
+.wb-glass .wb-video-caption {color:#c9c8da;border-color:#ffffff1a;padding:14px 18px}
+.wb-glass .wb-task-status {padding:24px;align-self:stretch;display:flex;flex-direction:column}
+.wb-glass .wb-status-note {margin-top:auto;padding-top:20px}
+.wb-glass .wb-result-actions {margin-bottom:24px}
+.wb-glass .wb-parameters {padding:24px;margin-bottom:20px}
+.wb-glass .wb-detail-wide {background:var(--glass-tint);padding:14px 16px;border-radius:10px}
+.wb-glass .wb-detail-tabs {padding:0 24px}
+.wb-glass .tab-panel {padding:20px 0}
+.wb-glass .prompt-box {background:transparent;margin:0;padding:0}
+.wb-glass .wb-task-heading h1 {margin-top:8px;overflow-wrap:anywhere}
+.wb-glass.wb-nav-collapsed .wb-sidebar {padding-left:6px;padding-right:6px}
+.wb-glass.wb-nav-collapsed .wb-brand {padding-left:2px;padding-right:0}
+.wb-glass.wb-nav-collapsed .wb-nav-link {padding-left:8px;padding-right:8px}
+/* glass-2: a clearer material hierarchy and quieter editing chrome. */
+.wb-glass .wb-nav-link.is-active {background:var(--glass-editor);box-shadow:0 3px 10px #3029680b,inset 0 0 0 1px color-mix(in srgb,var(--wb-accent) 32%,transparent)}
+.wb-glass .wb-brand {padding-bottom:28px}
+.wb-glass .wb-brand-caption {letter-spacing:.065em}
+.wb-glass .wb-topbar {box-shadow:0 4px 18px #24234406,inset 0 1px 0 var(--glass-edge)}
+.wb-glass .glass-theme-control {display:flex;align-items:center}
+.wb-glass .theme-icon-switch {background:var(--glass-tint);border:1px solid var(--glass-edge);border-radius:12px;padding:3px}
+.wb-glass .theme-icon-button {border-radius:8px}
+.wb-glass .theme-icon-button[aria-pressed=true] {background:var(--glass-editor);box-shadow:0 2px 6px #26204210,inset 0 0 0 1px var(--wb-line);color:var(--wb-accent)}
+.wb-glass .wb-account-trigger {padding:4px 8px;min-height:44px;background:var(--glass-editor);border:1px solid var(--wb-line);border-radius:12px}
+.wb-glass .wb-creation-form {isolation:isolate}
+.wb-glass .wb-settings {padding-top:24px}
+.wb-glass .wb-settings-fields label {gap:9px;font-weight:500}
+.wb-glass .wb-pane-title h2 {font-size:17px;letter-spacing:-.01em}
+.wb-glass .wb-pane-title>div>.wb-icon {padding:7px;box-sizing:content-box;background:var(--wb-selection);border-radius:10px}
+.wb-glass .wb-count {background:transparent;padding:0 2px;font-variant-numeric:tabular-nums}
+.wb-glass .wb-add-material {border-style:solid;box-shadow:0 2px 6px #28243c04}
+.wb-glass .wb-add-material>.wb-icon {padding:8px;background:var(--wb-selection);border-radius:10px;box-sizing:content-box;width:20px;height:20px}
+.wb-glass .wb-add-material {grid-template-columns:36px 1fr;column-gap:12px}
+.wb-glass .wb-selected-item img {padding:8px;border:1px solid var(--glass-edge);border-radius:12px;background:var(--glass-editor)}
+.wb-glass .wb-selected-item>button {width:32px;border-radius:8px;font-weight:400}
+.wb-glass .wb-materials-content {gap:20px}
+.wb-glass .wb-editor-hint {font-size:12px;margin-bottom:0}
+.wb-glass .mature-prompt-tools {margin:4px 0 12px}
+.wb-glass .prompt-card {box-shadow:0 2px 6px #2b254004;border-radius:14px}
+.wb-glass .prompt-card:focus-within {box-shadow:0 0 0 3px color-mix(in srgb,var(--wb-accent) 15%,transparent);border-color:var(--wb-accent)}
+.wb-glass .prompt-card-head {background:transparent;border:0;padding:10px 12px 2px}
+.wb-glass .prompt-card-head strong {font-size:0;display:inline-flex;align-items:center;justify-content:center;background:var(--wb-selection);color:var(--wb-accent);border-radius:8px;min-width:30px;height:28px;letter-spacing:.025em;font-variant-numeric:tabular-nums}
+.wb-glass .prompt-card-head strong::before {content:attr(data-prompt-number);font-size:12px}
+.wb-glass .prompt-card-head .inline-actions {gap:4px}
+.wb-glass .prompt-card-head button {width:32px;min-width:32px;height:32px;min-height:32px;padding:6px;color:var(--wb-muted)}
+.wb-glass .prompt-card-head button .wb-icon {width:17px;height:17px}
+.wb-glass .prompt-card textarea {padding-top:8px}
+.wb-glass .wb-submit {padding:16px 20px}
+.wb-glass .wb-submit-summary {grid-template-columns:34px minmax(0,1fr);column-gap:12px;align-items:center}
+.wb-glass .wb-submit-summary::before {content:'';grid-column:1;grid-row:1/3;width:32px;height:32px;border-radius:10px;background:var(--wb-selection) url('/static/brand/lumora-mark.svg') center/21px no-repeat}
+.wb-glass .wb-submit-summary>strong,.wb-glass .wb-submit-summary>span {grid-column:2}
+.wb-glass .wb-submit .primary-btn {min-width:184px;box-shadow:0 5px 14px color-mix(in srgb,var(--wb-accent) 20%,transparent),inset 0 1px 0 #ffffff24}
+.wb-glass .wb-recent {padding:4px 16px;background:var(--glass-tint);border-radius:14px;border:1px solid var(--glass-edge)}
+.wb-glass .wb-preset-choice {padding:10px;gap:8px;border-radius:16px;box-shadow:0 3px 12px #19152b06}
+.wb-glass .wb-preset-choice img {border-radius:10px;background:var(--wb-inset);padding:6px}
+.wb-glass .wb-preset-choice strong {padding:0 2px}
+.wb-glass .wb-preset-choice>span {padding:0 2px 3px;font-variant-numeric:tabular-nums}
+.wb-glass .wb-preset-choice:has(input:checked) {box-shadow:0 0 0 2px color-mix(in srgb,var(--wb-accent) 20%,transparent)}
+.wb-glass .wb-user-metrics>div:first-child strong,.wb-glass .report-metrics>.metric-card:first-child strong {color:var(--wb-accent)}
+.wb-glass .wb-user-table td {padding-top:14px;padding-bottom:14px}
+.wb-glass .wb-user-table th {font-weight:500;background:var(--wb-inset)}
+.wb-glass .wb-user-table tbody tr:nth-child(even) {background:var(--glass-tint)}
+.wb-glass .wb-user-table tbody tr:focus-within {background:var(--wb-selection)}
+.wb-glass .mature-initial {border:1px solid color-mix(in srgb,var(--wb-accent) 18%,transparent);border-radius:12px}
+.wb-glass .wb-list-foot {min-height:58px;align-items:center}
+.wb-glass .wb-detail-tabs .tab-nav {gap:8px;padding:12px 0;border:0}
+.wb-glass .wb-detail-tabs .tab-button {min-height:38px;padding:8px 14px;border:0;border-radius:10px}
+.wb-glass .wb-detail-tabs .tab-button.active {background:var(--wb-selection);color:var(--wb-accent)}
+.wb-glass .wb-detail-tabs .tab-panel {padding-top:12px}
+.wb-glass .wb-detail-fields dt {font-size:12px;margin-bottom:8px}
+.wb-glass .wb-detail-wide {border:1px solid var(--wb-line);padding:14px 16px}
+.wb-glass .wb-status-heading h2 {font-size:17px}
+.wb-glass .progress-bar {height:6px}
+.wb-glass .progress-wrap {padding:18px;background:var(--glass-editor);border-radius:12px;margin:24px 0}
+.wb-glass .wb-dialog-head {background:var(--glass-tint)}
+.wb-glass .wb-popover {padding:20px;gap:18px}
+.wb-glass .menu-panel a,.wb-glass .menu-panel button {border-radius:8px}
+@media(hover:hover) and (pointer:fine) {
+ .wb-glass .wb-selected-item>button:hover {background:var(--wb-error-bg);color:var(--wb-error)}
+ .wb-glass .wb-add-material:hover {background:var(--wb-selection);border-color:var(--wb-accent)}
+ .wb-glass .wb-preset-choice:hover {border-color:var(--wb-accent)}
+}
+@media (min-width:1200px) {
+  .wb-glass .wb-sidebar {background:transparent;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .wb-glass .wb-sidebar::before {width:196px;background:var(--glass-nav);border:1px solid var(--glass-edge);border-radius:18px;box-shadow:var(--glass-shadow);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transform:none}
+  .wb-glass.wb-nav-collapsed .wb-sidebar::before {width:52px;transform:none}
+  .wb-glass.wb-nav-animate .wb-sidebar::before {transition:width 220ms var(--wb-move)}
+}
+@media (min-width:768px) and (max-width:1199px) {
+  .wb-glass .wb-sidebar {padding-left:6px;padding-right:6px}
+  .wb-glass .wb-brand {padding-left:2px;padding-right:0}
+  .wb-glass .wb-nav-link {padding-left:8px;padding-right:8px}
+  .wb-glass .wb-main {padding:24px}
+  .wb-glass .wb-topbar {margin-left:24px;margin-right:24px}
+  .wb-glass .wb-editor {grid-template-columns:240px minmax(0,1fr)}
+  .wb-glass .wb-settings {padding:20px 20px 0}
+}
+@media (max-width:767px) {
+  .wb-glass {background-attachment:scroll}
+  .wb-glass .wb-top-actions {gap:6px}
+  .wb-glass .wb-account-trigger {padding:4px;min-width:44px;border:0;background:transparent}
+  .wb-glass .wb-account-trigger>.wb-icon {display:none}
+  .wb-glass .theme-icon-switch {padding:2px;gap:0;border-radius:10px}
+  .wb-glass .wb-location {gap:4px}
+  .wb-glass .wb-topbar {gap:8px}
+  .wb-glass .mature-breadcrumb {overflow:hidden;text-overflow:ellipsis}
+  .wb-glass .prompt-card-head button {width:44px;min-width:44px;height:44px;min-height:44px}
+  .wb-glass .wb-pane-title h2 {font-size:16px}
+  .wb-glass .wb-pane-title>div>.wb-icon {padding:5px;border-radius:8px;width:16px;height:16px}
+  .wb-glass .wb-submit-summary {display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+  .wb-glass .wb-submit-summary::before {display:none}
+  .wb-glass .wb-submit-summary>strong,.wb-glass .wb-submit-summary>span {grid-column:1}
+  .wb-glass .wb-submit .primary-btn {min-width:124px}
+  .wb-glass .wb-detail-tabs .tab-nav {gap:2px}
+  .wb-glass .wb-detail-tabs .tab-button {min-height:44px;padding:8px 10px}
+  .wb-glass .wb-recent {padding:0 4px}
+
+  .wb-glass .wb-topbar {top:8px;margin:8px 12px 0;padding:0 10px;height:56px}
+  .wb-glass .wb-main {padding:22px 12px 28px}
+  .wb-glass h1 {font-size:24px}
+  .wb-glass .wb-page-heading,.wb-glass .mature-create-heading {margin-bottom:20px;gap:12px}
+  .wb-glass .mature-quota {padding:4px 8px;column-gap:8px}
+  .wb-glass .mature-quota strong {font-size:24px}
+  .wb-glass .wb-settings {padding:18px 16px 0}
+  .wb-glass .wb-settings-fields>label:last-child {grid-column:1/-1}
+  .wb-glass .wb-user-filters :is(input,select) {font-size:16px;min-height:44px}
+  .wb-glass .wb-selected-materials:has(>.wb-selected-item:only-child) {grid-template-columns:1fr}
+  .wb-glass .wb-selected-item:only-child {grid-template-columns:88px minmax(0,1fr) 44px;gap:12px}
+  .wb-glass .wb-selected-item:only-child img {grid-column:auto;width:88px;height:108px}
+  .wb-glass .wb-editor {display:flex;min-height:0}
+  .wb-glass .wb-materials {border-right:0;border-bottom:1px solid var(--wb-line);border-radius:0}
+  .wb-glass .wb-pane-title {padding:12px 16px;min-height:64px}
+  .wb-glass .wb-materials-content {max-height:none}
+  .wb-glass .wb-add-material {min-height:76px;padding:12px 16px}
+  .wb-glass .wb-prompts-content {padding-bottom:18px}
+  .wb-glass .prompt-list {max-height:none;overflow:visible}
+  .wb-glass .wb-add-prompt {min-height:44px}
+  .wb-glass .prompt-card-head {padding:4px 8px}
+  .wb-glass .wb-submit {padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom));margin-top:12px}
+  .wb-glass .wb-user-metrics,.wb-glass .report-metrics {padding:18px 16px;gap:20px 0;margin-bottom:20px}
+  .wb-glass .wb-user-metrics>div,.wb-glass .report-metrics>.metric-card {flex-basis:50%;padding:0 14px}
+  .wb-glass .wb-user-metrics>div:nth-child(odd),.wb-glass .report-metrics>.metric-card:nth-child(odd) {padding-left:0;border-left:0}
+  .wb-glass .wb-user-metrics strong,.wb-glass .report-metrics .metric-card>strong {font-size:24px}
+  .wb-glass .wb-user-directory {padding:16px 12px 0}
+  .wb-glass .usage-filter {padding:16px 12px}
+  .wb-glass .usage-table-toolbar,.wb-glass .usage-legend {padding-left:12px;padding-right:12px}
+  .wb-glass .wb-task-status,.wb-glass .wb-parameters {padding:20px 16px}
+  .wb-glass .wb-detail-tabs {padding:0 16px}
+  .wb-glass .wb-mobile-nav-dialog {background:var(--wb-surface);border-radius:0}
+  .wb-glass .wb-mobile-nav-dialog .wb-sidebar {margin:0;height:100%;padding:22px 12px 16px;border-radius:0;border:0;background:var(--glass-panel)}
+  .wb-glass .wb-mobile-nav-dialog .wb-nav-link {min-height:48px}
+}
+@media (prefers-reduced-transparency:reduce),(prefers-contrast:more) {
+  .wb-glass {--glass-panel:var(--wb-surface);--glass-nav:var(--wb-surface);--glass-float:var(--wb-raised);--glass-edge:var(--wb-line-strong);background-image:none}
+  html[data-theme=dark] .wb-glass {--glass-panel:var(--wb-surface);--glass-nav:var(--wb-surface);--glass-float:var(--wb-raised);--glass-edge:var(--wb-line-strong)}
+  .wb-glass *,.wb-glass *::before {backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+}
+@supports not (backdrop-filter:blur(1px)) {
+  .wb-glass,html[data-theme=dark] .wb-glass {--glass-panel:var(--wb-surface);--glass-nav:var(--wb-surface);--glass-float:var(--wb-raised)}
+}
+
+/* dashboard metric rail: continuous blocks without legacy gaps */
+.wb-glass .metric-row-wide{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;overflow:hidden;border:1px solid var(--glass-edge);border-radius:14px;background:var(--glass-panel)}
+.wb-glass .metric-row-wide .metric-card{min-width:0;border:0;border-right:1px solid var(--wb-line);border-radius:0;background:transparent;padding:20px 22px}
+.wb-glass .metric-row-wide .metric-card:last-child{border-right:0}
+.wb-glass .wb-attention{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.wb-glass .wb-attention>a{min-width:0;border-radius:14px;background:var(--glass-panel);border:1px solid var(--glass-edge);padding:20px 22px;box-shadow:var(--glass-shadow)}
+@media(max-width:900px){.wb-glass .metric-row-wide{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.wb-glass .metric-row-wide{grid-template-columns:repeat(2,minmax(0,1fr))}.wb-glass .metric-row-wide .metric-card:nth-child(3n){border-right:1px solid var(--wb-line)}.wb-glass .metric-row-wide .metric-card:nth-child(even){border-right:0}.wb-glass .wb-attention{grid-template-columns:1fr}}
+
+/* unified content layout */
+.wb-glass .metric-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;overflow:hidden;border:1px solid var(--glass-edge);border-radius:14px;background:var(--glass-panel)}
+.wb-glass .metric-row .metric-card{min-width:0;padding:20px 24px;border:0;border-right:1px solid var(--wb-line);border-radius:0;background:transparent}
+.wb-glass .metric-row .metric-card:last-child{border-right:0}
+.wb-glass .wb-panel{min-width:0;border-radius:16px;background:var(--glass-panel);border:1px solid var(--glass-edge);box-shadow:var(--glass-shadow)}
+.wb-glass .dashboard-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.wb-glass .dashboard-layout .table-wrap{width:100%;overflow:auto}
+.wb-glass .wb-user-filters,.wb-glass .jobs-filters,.wb-glass .filter-bar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:0;margin:0 0 20px}
+.wb-glass .wb-user-filters input,.wb-glass .jobs-filters input,.wb-glass .filter-bar input{min-width:0}
+@media(max-width:900px){.wb-glass .dashboard-layout{grid-template-columns:1fr}.wb-glass .metric-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.wb-glass .metric-row{grid-template-columns:1fr}.wb-glass .metric-row .metric-card{border-right:0;border-bottom:1px solid var(--wb-line)}.wb-glass .metric-row .metric-card:last-child{border-bottom:0}}
+
+/* report metrics rail */
+.wb-glass .report-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:stretch;overflow:hidden;border:1px solid var(--glass-edge);border-radius:16px;background:var(--glass-panel)}
+.wb-glass .report-metrics>.metric-card{min-width:0;margin:0;padding:22px 24px;border:0;border-right:1px solid var(--wb-line);background:transparent}
+.wb-glass .report-metrics>.metric-card:last-child{border-right:0}
+.wb-glass .report-head{align-items:center}
+@media(max-width:900px){.wb-glass .report-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.wb-glass .report-metrics>.metric-card:nth-child(2n){border-right:0}.wb-glass .report-metrics>.metric-card:nth-child(n+3){border-top:1px solid var(--wb-line)}}
+@media(max-width:600px){.wb-glass .report-metrics{grid-template-columns:1fr}.wb-glass .report-metrics>.metric-card{border-right:0;border-top:1px solid var(--wb-line)}.wb-glass .report-metrics>.metric-card:first-child{border-top:0}}
+
+/* creation heading: compact hierarchy, more room for editor */
+.wb-glass .mature-create-heading{min-height:48px;margin-bottom:14px;align-items:center}
+.wb-glass .mature-create-heading .mature-eyebrow{display:none}
+.wb-glass .mature-create-heading h1{font-size:30px;line-height:1.2;letter-spacing:-.035em;margin:0}
+.wb-glass .mature-create-heading .mature-quota{padding:6px 12px;border-left:1px solid var(--wb-line);font-size:12px}
+.wb-glass .mature-create-heading .mature-quota strong{font-size:24px}
+.wb-glass .wb-pane-title{min-height:58px;padding-top:14px;padding-bottom:10px}
+.wb-glass .wb-editor-hint{font-size:12px;line-height:1.4;color:var(--wb-muted);margin:0 0 2px}
+.wb-glass .wb-prompts-content{padding-top:14px}
+@media(max-width:767px){.wb-glass .mature-create-heading{min-height:42px;margin-bottom:12px}.wb-glass .mature-create-heading h1{font-size:26px}.wb-glass .mature-create-heading .mature-quota{padding:4px 8px}.wb-glass .mature-create-heading .mature-quota strong{font-size:20px}}
+
+/* compact page chrome: breadcrumb carries context, remove duplicate title blocks */
+.wb-glass .wb-page-heading{min-height:0;margin-bottom:10px;padding:0}
+.wb-glass .wb-page-heading>div h1,.wb-glass .wb-page-heading>div h2,.wb-glass .wb-page-heading>div p{display:none}
+.wb-glass .wb-page-heading:has(>div:not(:only-child)){min-height:0}
+.wb-glass .mature-create-heading{min-height:40px;margin-bottom:10px}
+.wb-glass .mature-create-heading h1,.wb-glass .mature-create-heading .mature-eyebrow{display:none}
+.wb-glass .mature-create-heading .mature-quota{margin-left:auto}
+@media(max-width:767px){.wb-glass .wb-page-heading{margin-bottom:8px}.wb-glass .mature-create-heading{min-height:36px;margin-bottom:8px}}
+
+/* usage filter compact toolbar */
+.wb-glass .usage-filter{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:62px}
+.wb-glass .usage-filter>label:first-of-type{display:flex;align-items:center;gap:10px;flex:0 1 360px;max-width:360px;margin:0}
+.wb-glass .usage-filter>label:first-of-type>span{white-space:nowrap;font-size:12px;color:var(--wb-muted)}
+.wb-glass .usage-filter input{height:40px;min-height:40px}
+.wb-glass .usage-filter .checkline{min-height:40px;align-self:center}
+.wb-glass .usage-filter .filter-actions{align-self:center}
+.wb-glass .usage-table-toolbar{padding:10px 16px;min-height:44px}
+@media(max-width:600px){.wb-glass .usage-filter{align-items:stretch;flex-wrap:wrap;padding:10px 12px}.wb-glass .usage-filter>label:first-of-type{flex-basis:100%;max-width:none}.wb-glass .usage-filter .checkline{flex:1}.wb-glass .usage-filter .filter-actions{margin-left:auto}}
+
+/* reserve space for sticky submit bar so recent tasks stay readable */
+.wb-glass .wb-creation-form{padding-bottom:112px}
+.wb-glass .wb-submit{z-index:25}
+.wb-glass .wb-recent{margin-bottom:24px;position:relative;z-index:1}
+@media(max-width:767px){.wb-glass .wb-creation-form{padding-bottom:128px}.wb-glass .wb-recent{margin-bottom:18px}}
+/* final global content pass */
+.wb-glass .wb-panel,.wb-glass .surface-table,.wb-glass .clean-table-wrap,.wb-glass .settings-panel,.wb-glass .list-panel{background:var(--glass-panel);border:1px solid var(--glass-edge);border-radius:16px;box-shadow:var(--glass-shadow);min-width:0}
+.wb-glass .wb-panel{padding:22px 24px}
+.wb-glass .section-head{padding:0 0 14px;margin:0 0 14px;border-bottom:1px solid var(--wb-line)}
+.wb-glass .table-wrap{border-radius:12px;overflow:auto;background:var(--glass-tint)}
+.wb-glass .table{min-width:0;background:transparent}
+.wb-glass .table th{background:var(--glass-tint);color:var(--wb-muted);font-weight:600}
+.wb-glass .table td,.wb-glass .table th{border-bottom:1px solid var(--wb-line);padding:14px 16px}
+.wb-glass .table tbody tr:last-child td{border-bottom:0}
+.wb-glass .table tbody tr:hover{background:var(--wb-selection)}
+.wb-glass .modern-filter,.wb-glass .filter-bar{background:var(--glass-tint);border:1px solid var(--glass-edge);border-radius:12px;padding:14px 16px}
+.wb-glass .metric-row,.wb-glass .metric-row-wide,.wb-glass .report-metrics{margin-bottom:20px}
+.wb-glass .quick-link-card{background:var(--glass-tint);border:1px solid var(--glass-edge);border-radius:12px;padding:16px;transition:transform 160ms var(--wb-enter),background 160ms ease}
+.wb-glass .quick-link-card:hover{transform:translateY(-2px);background:var(--wb-selection)}
+.wb-glass .empty-state,.wb-glass .empty-panel{padding:48px 24px;background:var(--glass-tint);border-radius:12px}
+.wb-glass .form-error,.wb-glass .field-error{border-radius:10px}
+.wb-glass .primary-btn,.wb-glass .secondary-btn,.wb-glass .ghost-btn,.wb-glass .danger-btn{transition:transform 140ms var(--wb-enter),box-shadow 140ms ease,background 140ms ease}
+.wb-glass .primary-btn:active,.wb-glass .secondary-btn:active,.wb-glass .ghost-btn:active{transform:translateY(1px)}
+.wb-glass .meta-grid{gap:12px}
+.wb-glass .meta-grid>div{padding:14px;border-radius:10px;background:var(--glass-tint);border:1px solid var(--glass-edge)}
+@media(max-width:767px){.wb-glass .wb-panel{padding:16px}.wb-glass .section-head{padding-bottom:10px;margin-bottom:10px}.wb-glass .modern-filter,.wb-glass .filter-bar{padding:12px}.wb-glass .table td,.wb-glass .table th{padding:12px}}
+
+/* prevent recent-task summary from sitting under submit bar */
+@media(min-width:768px){.wb-glass .wb-submit{position:relative;bottom:auto}.wb-glass .wb-recent{margin-top:12px;margin-bottom:0}}
+@media(max-width:767px){.wb-glass .wb-recent{padding-bottom:8px}.wb-glass .wb-submit{position:sticky;bottom:0}}
+
+/* compact quota summary */
+.wb-glass .mature-create-heading .mature-quota{display:flex;align-items:baseline;gap:8px;min-height:0}
+.wb-glass .mature-create-heading .mature-quota span{font-size:12px}
+.wb-glass .mature-create-heading .mature-quota strong{font-size:22px;line-height:1}
+.wb-glass .mature-create-heading .mature-quota svg{width:14px;margin-left:2px}
+.wb-glass .wb-create-page .mature-create-heading{height:44px;min-height:44px;padding:0;margin-bottom:10px}
+@media(max-width:767px){.wb-glass .wb-create-page .mature-create-heading{height:38px;min-height:38px}}
+
+/* Final flow fix: action bar must not overlap recent tasks. */
+@media (min-width:768px){.wb-glass .wb-submit{position:relative!important;inset:auto!important}.wb-glass .wb-recent{position:relative;z-index:1;margin-top:12px;margin-bottom:24px}}
+@media (max-width:767px){.wb-glass .wb-submit{position:sticky!important;bottom:0;z-index:20}.wb-glass .wb-recent{padding-bottom:12px;margin-bottom:18px}}
+
+/* Recent tasks removed from creation workspace. */
+.wb-glass .wb-recent{display:none!important}
+
+/* Media cards keep a stable preview even when a poster is unavailable. */
+.wb-glass .plaza-video-wrap{display:block;position:relative;width:100%;background:var(--wb-inset)}
+.wb-glass .plaza-video-shell{display:block;min-height:180px}
+.wb-glass .plaza-cover-image{display:block;object-fit:cover;background:var(--wb-inset)}
+
+/* Match preview frame to the actual output orientation. */
+.wb-glass .plaza-video-wrap.is-portrait .plaza-video-shell{aspect-ratio:9/16;min-height:0}
+.wb-glass .plaza-video-wrap.is-landscape .plaza-video-shell{aspect-ratio:16/9;min-height:0}
+.wb-glass .plaza-video-wrap .plaza-cover-image{object-fit:contain;background:var(--wb-inset)}
+
+/* Prevent grid/flex parents from collapsing the media frame. */
+.wb-glass .plaza-video-wrap.is-portrait .plaza-video-shell{height:clamp(360px,34vw,520px)!important}
+.wb-glass .plaza-video-wrap.is-landscape .plaza-video-shell{height:clamp(180px,18vw,320px)!important}
+
+.plaza-video-wrap.is-portrait .plaza-video-shell{height:clamp(300px,34vw,520px)!important;aspect-ratio:auto!important}.plaza-video-wrap.is-landscape .plaza-video-shell{height:clamp(170px,18vw,320px)!important;aspect-ratio:auto!important}
+
+/* Ensure the button and poster fill the frame; prevent native button sizing collapse. */
+.plaza-video-wrap .plaza-video-shell{width:100%!important;padding:0!important;border:0!important;display:block!important;line-height:0}
+.plaza-video-wrap .plaza-cover-image{display:block!important;width:100%!important;height:100%!important;inset:0;object-fit:cover!important}
+.plaza-video-wrap .plaza-poster{line-height:1.4}

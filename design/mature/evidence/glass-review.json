@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "examplePrompts": 3,
+  "exampleMaterials": 1,
+  "initialPostRequests": 0,
+  "materials": [
+    {
+      "theme": "light",
+      "normal": {
+        "background": "rgba(252, 252, 255, 0.68)",
+        "blur": "blur(20px)"
+      },
+      "increasedContrast": {
+        "background": "rgb(252, 252, 255)",
+        "blur": "none"
+      }
+    },
+    {
+      "theme": "dark",
+      "normal": {
+        "background": "rgba(32, 33, 49, 0.74)",
+        "blur": "blur(20px)"
+      },
+      "increasedContrast": {
+        "background": "rgb(30, 32, 44)",
+        "blur": "none"
+      }
+    }
+  ],
+  "errors": []
+}

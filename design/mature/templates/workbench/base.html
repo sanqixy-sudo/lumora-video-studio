@@ -1,0 +1,48 @@
+{% from 'workbench/icons.html' import icon %}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}工作台{% endblock %} · 流光 Lumora</title>
+  <script src="/static/mature/theme.js?v=20260908-lumora9-2"></script>
+  
+  
+  
+  
+<link rel="stylesheet" href="/static/scrollbars.css?v=20260908-lumora9-2">
+<link rel="icon" href="/static/brand/lumora.ico?v=20260908-lumora9-2" sizes="16x16 32x32 48x48"><link rel="icon" href="/static/brand/lumora-mark.svg?v=20260908-lumora9-2" type="image/svg+xml"><link rel="apple-touch-icon" href="/static/brand/lumora-180.png?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/brand/brand.css?v=20260908-lumora9-2">
+<link rel="stylesheet" href="/static/theme-controls.css?v=20260908-lumora9-2"><script defer src="/static/theme-controls.js?v=20260908-lumora9-2"></script>
+<link rel="stylesheet" href="/static/mature/tokens.css?v=mature-1"><link rel="stylesheet" href="/static/mature/components.css?v=mature-1"><link rel="stylesheet" href="/static/mature/pages.css?v=mature-1"><link rel="stylesheet" href="/static/mature/reports.css?v=mature-1"><link rel="stylesheet" href="/static/mature/login.css?v=mature-1"><link rel="stylesheet" href="/static/mature/motion.css?v=mature-1"><link rel="stylesheet" href="/static/mature/creation.css?v=mature-1"><link rel="stylesheet" href="/static/mature/glass.css?v=glass-2"></head>
+<body class="wb mature wb-glass {% block body_class %}{% endblock %}" data-role="{{ current_user.role }}">
+<a class="wb-skip" href="#main-content">跳至主要内容</a>
+{% set path=request.url.path %}
+<div class="wb-shell">
+  <aside class="wb-sidebar" id="wb-sidebar" aria-label="主导航">
+    <a aria-label="流光 Lumora 首页" class="wb-brand" href="{{ '/admin' if current_user.role == 'admin' else '/app' }}"><img class="lumora-logo" src="/static/brand/lumora-mark.svg" width="32" height="32" alt=""><span>流光<span class="wb-brand-caption lumora-caption">Lumora</span></span></a>
+    <nav class="wb-nav">
+    {% if current_user.role == 'admin' %}
+      {% set nav_groups=[('运营',[('/admin','概览','batch'),('/admin/jobs/page','任务管理','jobs'),('/admin/job-batches/page','批次管理','batch'),('/admin/queue/page','队列状态','clock'),('/admin/download-failures/page','下载异常','download'),('/admin/usage/monthly/page','用量统计','quota'),('/admin/rankings/page','用户排行','users')]),('用户与额度',[('/admin/users/page','用户管理','users'),('/admin/quota-requests/page','额度审批','quota'),('/admin/quota-plans/page','套餐设置','batch'),('/admin/quota-ledger/page','额度流水','jobs')]),('渠道与系统',[('/admin/provider-keys/page','上游密钥','settings'),('/admin/reference-images/page','参考图','image'),('/admin/risk-control/page','风控设置','settings'),('/admin/settings/page','系统设置','settings'),('/admin/api-call-logs/page','调用日志','jobs'),('/admin/audit-logs/page','审计日志','jobs')])] %}
+    {% elif current_user.role == 'sub_admin' %}
+      {% set nav_groups=[('管理',[('/admin/usage/monthly/page','用量统计','quota'),('/admin/quota-requests/page','额度审批','quota')])] %}
+    {% else %}
+      {% set nav_groups=[('工作空间',[('/app','开始创作','create'),('/app/jobs/page','任务记录','jobs'),('/app/job-batches/page','批次记录','batch'),('/app/library/page','我的作品','video')]),('资源',[('/app/reference-images/page','素材预设','image'),('/app/quota/page','我的额度','quota'),('/app/plaza/page','视频广场','video')])] %}
+    {% endif %}
+    {% for label,links in nav_groups %}
+      <div class="wb-nav-group"><span class="wb-nav-label">{{ label }}</span>{% for href,label,name in links %}<a class="wb-nav-link {% if path==href or (name=='jobs' and '/jobs/' in path and '/jobs/page' in href) %}is-active{% endif %}" href="{{ href }}" title="{{ label }}" {% if path==href %}aria-current="page"{% endif %}>{{ icon(name) }}<span>{{ label }}</span></a>{% endfor %}</div>
+    {% endfor %}
+    </nav>
+    <div class="wb-sidebar-bottom"><button type="button" class="wb-nav-link" data-collapse-nav aria-expanded="true">{{ icon('panel') }}<span>收起导航</span></button></div>
+  </aside>
+  <div class="wb-stage">
+    <header class="wb-topbar">
+      <div class="wb-location"><button type="button" class="icon-btn wb-mobile-trigger" data-open-nav aria-label="展开导航" aria-controls="wb-sidebar" aria-expanded="false">{{ icon('menu') }}</button><span class="wb-context">{{ '管理后台' if current_user.role != 'user' else '工作空间' }}</span><span class="wb-location-divider">/</span><span class="mature-breadcrumb">{{ self.title()|striptags }}</span></div>
+      <div class="wb-top-actions"><div class="glass-theme-control"><label>外观<select data-theme-select aria-label="外观主题"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label></div>{% block top_actions %}{% endblock %}<div class="wb-account"><button type="button" class="wb-account-trigger" data-account-toggle aria-expanded="false" aria-controls="wb-account-menu"><span class="wb-avatar">{{ current_user.username[:1]|upper }}</span><span>{{ current_user.username }}</span>{{ icon('chevron') }}</button><div id="wb-account-menu" class="wb-popover hidden"><div class="wb-account-heading"><strong>{{ current_user.username }}</strong><span>{{ role_label(current_user.role) }}</span></div><form action="/auth/logout" method="post" data-native-submit><button type="submit" class="ghost-btn">退出登录</button></form></div></div></div>
+    </header>
+    <main class="wb-main" id="main-content" tabindex="-1">{% block content %}{% endblock %}</main>
+  </div>
+</div>
+<script src="/static/ui.js?v=20260908-lumora9-2"></script>
+<script src="/static/app.js?v=20260908-lumora9-2"></script>
+<script src="/static/workbench/collections.js?v=20260908-lumora9-2"></script><script src="/static/workbench/micro-motion.js?v=20260908-lumora9-2"></script><script src="/static/workbench/interactions.js?v=20260908-lumora9-2"></script>
+{% block scripts %}{% endblock %}
+<script src="/static/workbench/guidelines.js?v=20260908-lumora9-2"></script><script src="/static/workbench/reports.js?v=20260908-lumora9-2"></script><script src="/static/mature/sample.js?v=glass-2"></script></body></html>

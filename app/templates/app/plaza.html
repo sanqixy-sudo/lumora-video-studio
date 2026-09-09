@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}视频广场{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>视频广场</h2>
+  </div>
+</section>
+
+<section class="wb-panel">
+  <div class="section-head">
+    <div>
+      <h2>公开作品</h2>
+    </div>
+  </div>
+
+  <form class="filter-bar modern-filter" method="get" action="/app/plaza/page">
+    <label><span>APP 名称</span><input autocomplete="off" type="search" name="product_name" value="{{ product_name }}" placeholder="输入 APP 关键词…" /></label>
+    <label><span>地区</span><input autocomplete="off" type="search" name="region_name" value="{{ region_name }}" placeholder="输入地区关键词…" /></label>
+    <input type="hidden" name="per_page" value="{{ per_page }}" />
+    <button class="primary-btn small-btn" type="submit">筛选</button>
+    {% if product_name or region_name %}<a class="ghost-btn small-btn" href="/app/plaza/page?per_page={{ per_page }}">重置</a>{% endif %}
+  </form>
+
+  {% if cards %}
+  <div class="plaza-grid plaza-fixed-grid">
+    {% for card in cards %}
+    {% set library = false %}{% include 'workbench/media_card.html' %}
+    {% endfor %}
+  </div>
+  {% include "partials/pagination_simple.html" %}
+  {% else %}
+  <div class="empty-panel">暂无内容</div>
+  {% endif %}
+</section>
+
+<div id="plaza-modal" class="plaza-modal hidden">
+  <div class="plaza-modal-backdrop" data-close-plaza></div>
+  <div class="plaza-modal-dialog wb-panel">
+    <div class="section-head">
+      <h2>作品详情</h2>
+      <button class="ghost-btn small-btn" type="button" data-close-plaza>关闭</button>
+    </div>
+    <div class="plaza-modal-grid">
+      <div class="player-wrap">
+        <video id="plaza-player" controls preload="metadata" playsinline></video>
+      </div>
+      <div class="plaza-detail-side">
+        <div class="meta-grid">
+          <div><div class="k">创作者</div><div class="v" id="plaza-creator">-</div></div>
+          <div><div class="k">APP 名称</div><div class="v" id="plaza-product-name">-</div></div>
+          <div><div class="k">地区</div><div class="v" id="plaza-region-name">-</div></div>
+          <div><div class="k">分辨率</div><div class="v" id="plaza-size">-</div></div>
+          <div><div class="k">时长</div><div class="v" id="plaza-seconds">-</div></div>
+          <div><div class="k">模型</div><div class="v" id="plaza-model">-</div></div>
+          <div><div class="k">创建时间</div><div class="v" id="plaza-created-at">-</div></div>
+          <div id="plaza-protection-row" class="protection-modal-row hidden"><div class="k">保护提示</div><div class="v"><span class="protection-badge">自用保护</span></div></div>
+        </div>
+        <div class="prompt-md-panel">
+          <div class="prompt-md-head">
+            <span>提示词</span>
+            <button class="ghost-btn small-btn" type="button" id="plaza-copy-prompt" data-copy-text="" data-copy-label="提示词">复制</button>
+          </div>
+          <pre id="plaza-prompt" class="prompt-md-box">-</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>window.PLAZA_PAGE = true;</script>{% endblock %}

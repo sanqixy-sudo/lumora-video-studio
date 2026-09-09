@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 700"><defs>
+<linearGradient id="room" x2="1" y2="1"><stop stop-color="#b2a58e"/><stop offset=".5" stop-color="#e9dec7"/><stop offset="1" stop-color="#9c9b89"/></linearGradient>
+<linearGradient id="skin" x2="1" y2=".3"><stop stop-color="#ba8768"/><stop offset=".55" stop-color="#e6bb95"/><stop offset="1" stop-color="#f2d0a4"/></linearGradient>
+<linearGradient id="shirt" x2="1" y2="1"><stop stop-color="#f3edde"/><stop offset=".55" stop-color="#d6cfc0"/><stop offset="1" stop-color="#8f9a8d"/></linearGradient>
+<linearGradient id="hair"><stop stop-color="#35352d"/><stop offset=".7" stop-color="#5d4d3b"/><stop offset="1" stop-color="#9d7e58"/></linearGradient>
+<filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="4"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".08"/></feComponentTransfer><feBlend in="SourceGraphic" mode="soft-light"/></filter></defs>
+<g filter="url(#grain)"><rect width="560" height="700" fill="url(#room)"/><path d="M370 0h190v700H160Z" fill="#fff5d8" opacity=".38"/><path d="M446 0h14L300 700h-21Z" fill="#c0b397"/><path d="M555 65v17L0 492v-30Z" fill="#8d8d7d" opacity=".23"/>
+<path d="M0 640Q40 547 91 429" stroke="#5a715b" stroke-width="8" fill="none"/><path d="M68 488q-112-11-56-83 56 23 56 83M69 486q113-66 98-119-90 23-98 119M41 562q-51-98-64-34 19 34 64 34" fill="#6b8064"/>
+<path d="M139 700q-9-155 48-258l63-52 88 6 68 74q45 83 42 230Z" fill="url(#shirt)"/>
+
+<path d="M259 350l-8 70q31 32 72-2l-10-95Z" fill="url(#skin)"/>
+<path d="M220 219q2-90 81-98 88-4 96 81 2 30-12 62l22 38-28 12q0 48-36 64-57 18-89-45Z" fill="url(#skin)"/>
+<path d="M265 135q-71 13-77 100-13 63 27 108 31 26 43 3l-12-86q-5-32 19-40 25-12 44-62 40 27 87 48-2-85-83-89Z" fill="url(#hair)"/>
+<path d="M207 287q-58 48-28 92 38 31 73-21Z" fill="#494335"/><path d="M248 254q-21-5-18 24t24 30" fill="#cf9c77"/>
+<path d="M349 256l20 2" stroke="#68533b" stroke-width="3" stroke-linecap="round"/><path d="M363 259l8 3" stroke="#4c4734" stroke-width="2"/><path d="M377 323l-17 2" stroke="#ab745b" stroke-width="3" stroke-linecap="round"/>
+<path d="M253 414l29 42-49 32-39-46M322 414l-40 42 55 23 30-41" fill="#f2e9d8"/><path d="M282 458l-12 242M204 478l-28 222M361 487l41 213" stroke="#8f998c" stroke-width="3" opacity=".5"/>
+<path d="M194 611q69-54 158-36l22 55q-124 12-159 32Z" fill="url(#shirt)"/><path d="M341 578q36-37 59-34l-6 13 18-2-4 15 18 2-11 12-40 25Z" fill="url(#skin)"/>
+<circle cx="279" cy="491" r="3" fill="#a9a795"/><circle cx="276" cy="533" r="3" fill="#a9a795"/>
+</g></svg>

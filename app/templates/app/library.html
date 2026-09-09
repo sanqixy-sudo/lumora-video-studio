@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}我的作品{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>我的作品</h2>
+  </div>
+  <a class="primary-btn small-btn" href="/app">创建任务</a>
+</section>
+
+<section class="wb-panel">
+  <form class="filter-bar modern-filter" method="get" action="/app/library/page">
+    <label><span>开始日期</span><input autocomplete="off" type="date" name="start_date" value="{{ start_date }}" /></label>
+    <label><span>结束日期</span><input autocomplete="off" type="date" name="end_date" value="{{ end_date }}" /></label>
+    <label><span>APP 名称</span><input autocomplete="off" type="search" name="product_name" value="{{ product_name }}" placeholder="输入 APP 关键词…" /></label>
+    <label><span>地区</span><input autocomplete="off" type="search" name="region_name" value="{{ region_name }}" placeholder="输入地区关键词…" /></label>
+    {% if starred %}<input type="hidden" name="starred" value="1" />{% endif %}
+    <input type="hidden" name="per_page" value="{{ pagination.per_page }}" />
+    <button class="primary-btn small-btn" type="submit">筛选</button>
+    {% if start_date or end_date or product_name or region_name or starred %}<a class="ghost-btn small-btn" href="/app/library/page?per_page={{ pagination.per_page }}">重置</a>{% endif %}
+    <div class="library-filter-tabs" role="group" aria-label="素材筛选">
+      <a class="filter-pill {{ '' if starred else 'active' }}" href="{{ request.url.remove_query_params(['starred', 'page']).include_query_params(page=1) }}">全部</a>
+      <a class="filter-pill {{ 'active' if starred else '' }}" href="{{ request.url.remove_query_params(['starred', 'page']).include_query_params(starred=1, page=1) }}">收藏</a>
+    </div>
+  </form>
+
+  {% if cards %}
+  <div class="library-bulk-toolbar" data-library-bulk-toolbar>
+    <label class="bulk-select-all"><input autocomplete="off" type="checkbox" id="library-select-all" /> <span>全选当前页</span></label>
+    <button class="ghost-btn small-btn" type="button" id="library-clear-selection">取消选择</button>
+    <button class="primary-btn small-btn" type="button" id="library-download-selected">下载选中 ZIP</button>
+    <span class="muted tiny" id="library-selected-count">已选择 0 个</span>
+  </div>
+  <div class="plaza-grid plaza-fixed-grid">
+    {% for card in cards %}
+    {% set library = true %}{% include 'workbench/media_card.html' %}
+    {% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty-state compact-empty">{{ '暂无收藏素材' if starred else '暂无成品' }}</div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}<script>window.PLAZA_PAGE = true; window.LIBRARY_PAGE = true; window.LIBRARY_STARRED_ONLY = {{ 'true' if starred else 'false' }};</script>{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}套餐设置{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>套餐设置</h2></div>
+</section>
+
+<form data-create-editor="新增套餐" action="/admin/quota-plans/form" method="post" class="stack-form refined-form">
+    <label>套餐名称<input autocomplete="off" name="name" required placeholder="例如：周套餐 A…" /></label>
+    <label>周期<select name="period_type"><option value="daily">日套餐</option><option value="weekly">周套餐</option><option value="monthly">月套餐</option></select></label>
+    <label>周期额度<input inputmode="numeric" autocomplete="off" name="quota_amount" type="number" min="0" required /></label>
+    <div class="inline-actions"><button class="primary-btn" type="submit">新增套餐</button></div>
+  </form>
+
+<section class="wb-panel top-gap">
+  
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table">
+      <thead><tr><th>ID</th><th>名称</th><th>周期</th><th>额度</th><th>绑定人数</th><th>状态</th><th class="action-col">操作</th></tr></thead>
+      <tbody>
+        {% for item in rows %}
+        {% set plan = item.plan %}
+        <tr>
+          <td>#{{ plan.id }}</td>
+          <td>{{ plan.name }}</td>
+          <td>{{ quota_plan_period_label(plan.period_type) }}</td>
+          <td>{{ plan.quota_amount }}</td>
+          <td>{{ item.assignment_count }}</td>
+          <td><span class="badge status-{{ 'active' if plan.status == 'active' else 'disabled' }}">{{ '启用' if plan.status == 'active' else '停用' }}</span></td>
+          <td class="action-cell">
+            <details class="row-editor">
+              <summary class="ghost-btn small-btn">编辑</summary>
+              <form action="/admin/quota-plans/{{ plan.id }}/update/form" method="post" class="stack-form action-card">
+                <label>套餐名称<input autocomplete="off" name="name" value="{{ plan.name }}" required /></label>
+                <label>周期<select name="period_type"><option value="daily" {{ 'selected' if plan.period_type == 'daily' else '' }}>日套餐</option><option value="weekly" {{ 'selected' if plan.period_type == 'weekly' else '' }}>周套餐</option><option value="monthly" {{ 'selected' if plan.period_type == 'monthly' else '' }}>月套餐</option></select></label>
+                <label>周期额度<input inputmode="numeric" autocomplete="off" name="quota_amount" type="number" min="0" value="{{ plan.quota_amount }}" required /></label>
+                <button class="primary-btn small-btn" type="submit">保存</button>
+              </form>
+            </details>
+            <form action="/admin/quota-plans/{{ plan.id }}/toggle/form" method="post" class="inline-form" {% if plan.status == 'active' %}data-confirm-submit="停用套餐会自动解绑所有用户，确定继续？"{% endif %}>
+              <button class="ghost-btn small-btn" type="submit">{{ '停用' if plan.status == 'active' else '启用' }}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state compact-empty">暂无套餐</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

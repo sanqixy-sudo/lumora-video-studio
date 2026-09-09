@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}任务管理{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>任务管理</h2>
+  </div>
+  {% if can_manage %}
+  <div class="inline-actions">
+    <form action="/admin/jobs/delete-failed/form" method="post" data-confirm-message="确认删除全站全部失败任务？此操作不受当前筛选或分页限制。">
+      <button class="danger-ghost-btn small-btn" type="submit">清理全部失败任务</button>
+    </form>
+    <form action="/admin/jobs/delete-stuck/form" method="post" data-confirm-message="确认删除全站全部卡住任务？此操作不受当前筛选或分页限制。">
+      <button class="danger-btn small-btn" type="submit">清理全部卡住任务</button>
+    </form>
+  </div>
+  {% endif %}
+</section>
+
+{% if selected_batch %}<section class="batch-overview"><div class="batch-overview-main"><h2>{{ selected_batch.batch_name or selected_batch.batch_code }}</h2><p class="muted">{{ selected_batch.batch_code }} · {{ selected_batch.product_name or '-' }} / {{ selected_batch.region_name or '-' }}</p><a class="text-link" href="/admin/job-batches/page">返回批次记录</a></div>{% for key,label in [('completed_count','已完成'),('active_count','处理中'),('failed_count','失败')] %}<div class="batch-stat"><strong>{{ selected_batch_summary.get(key,0) }}</strong><span>{{ label }}</span></div>{% endfor %}</section>{% endif %}
+<section class="metric-row">
+  <article class="metric-card accent-blue"><span>运行中</span><strong>{{ queue_stats.running }} / {{ queue_stats.max_running }}</strong></article>
+  <article class="metric-card accent-amber"><span>排队中</span><strong>{{ queue_stats.queued }}</strong></article>
+  <article class="metric-card"><span>当前页</span><strong>{{ pagination.page }} / {{ pagination.total_pages }}</strong></article>
+</section>
+
+<section class="wb-panel">
+  <div class="status-tabs">
+    {% for tab in status_tabs %}
+    <a class="status-tab {{ 'active' if tab.active else '' }}" href="{{ request.url.include_query_params(status=tab.key, page=1) }}">
+      <span>{{ tab.label }}</span><strong>{{ tab.count }}</strong>
+    </a>
+    {% endfor %}
+  </div>
+
+  <form class="filter-bar modern-filter" method="get" action="/admin/jobs/page">
+    <label>
+      <span>用户</span>
+      <input autocomplete="off" type="text" name="user" value="{{ user_filter or '' }}" placeholder="账号 / ID / APP / 地区…" />
+    </label>
+    {% if selected_batch %}<input type="hidden" name="batch_id" value="{{ selected_batch.id }}">{% endif %}<input type="hidden" name="status" value="{{ status_filter }}" />
+    <input type="hidden" name="per_page" value="{{ pagination.per_page }}" />
+    <button class="primary-btn small-btn" type="submit">查询</button>
+    {% if user_filter %}<a class="ghost-btn small-btn" href="{{ request.url.remove_query_params(['user','page']) }}">重置</a>{% endif %}
+  </form>
+
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table">
+      <thead>
+        <tr><th>ID</th><th>用户</th><th>APP / 地区</th><th>状态</th><th>队列</th><th>进度</th><th>规格</th><th>提交时间</th><th>更新时间</th><th>操作</th></tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        {% set job_user = job_user_map.get(job.user_id) %}
+        <tr>
+          <td>
+            <div class="user-cell">
+              <strong>#{{ job.id }}</strong>
+              {% if job.batch_id and job_batch_map.get(job.batch_id) %}
+              <span class="batch-chip">{{ job_batch_map.get(job.batch_id).batch_code }}</span>
+              {% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="user-cell">
+              <strong>{{ user_display_name(job_user) if job_user else '-' }}</strong>
+              <span>{{ job_user.username if job_user else '用户' }} / ID: {{ job.user_id }}</span>
+            </div>
+          </td>
+          <td><div class="meta-stack"><strong>{{ job.product_name or '-' }}</strong><span>{{ job.region_name or '-' }}</span></div></td>
+          <td><span class="badge status-{{ job.status }}">{{ status_label(job.status) }}</span></td>
+          <td>{{ queue_map.get(job.id, "-") }}</td>
+          <td>
+            <div class="mini-progress"><span style="width: {{ job.progress }}%"></span></div>
+            <span class="tiny muted">{{ job.progress }}%</span>
+          </td>
+          <td><div class="meta-stack"><strong>{{ job.model or '-' }}</strong><span>{{ job.size }} / {{ job.seconds }} 秒</span></div></td>
+          <td><time data-ui-time>{{ (job.queued_at or job.created_at)|dt }}</time></td>
+          <td><time data-ui-time>{{ job.updated_at|dt }}</time></td>
+          <td>
+            <div class="row-menu">
+              <a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">详情</a>
+              {% if selected_batch %}{% set output = batch_files.get(job.id) %}{% if output %}<a class="primary-btn small-btn" href="/app/files/{{ output.id }}/download">下载</a>{% else %}<span class="muted tiny">文件未就绪</span>{% endif %}{% endif %}
+              {% if can_manage %}
+              <button class="ghost-btn small-btn wb-row-trigger" type="button">更多</button>
+              <div class="menu-panel">
+                <form action="/admin/jobs/{{ job.id }}/delete/form" method="post" data-confirm-message="确认删除这个任务？">
+                  <button class="menu-danger" type="submit">删除任务</button>
+                </form>
+              </div>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="10"><div class="empty-state compact-empty">暂无任务</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

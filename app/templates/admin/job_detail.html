@@ -1,0 +1,6 @@
+{% extends "workbench/base.html" %}
+{% block title %}任务详情{% endblock %}
+{% block content %}
+{% include "workbench/job_detail_block.html" %}
+{% endblock %}
+{% block scripts %}<script>window.JOB_DATA_ENDPOINT={{ data_endpoint|tojson }};</script>{% endblock %}

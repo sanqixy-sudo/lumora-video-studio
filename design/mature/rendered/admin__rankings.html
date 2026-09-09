@@ -1,0 +1,345 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>用户排行 · 流光 Lumora</title>
+  <script src="/static/theme.js?v=20260908-lumora9-2"></script>
+  
+  <link rel="stylesheet" href="/static/workbench/tokens.css?v=20260908-lumora9-2">
+  <link rel="stylesheet" href="/static/workbench/components.css?v=20260908-lumora9-2">
+  <link rel="stylesheet" href="/static/workbench/pages.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/workbench/motion.css?v=20260908-lumora9-2">
+<link rel="stylesheet" href="/static/workbench/collections.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/scrollbars.css?v=20260908-lumora9-2">
+<link rel="icon" href="/static/brand/lumora.ico?v=20260908-lumora9-2" sizes="16x16 32x32 48x48"><link rel="icon" href="/static/brand/lumora-mark.svg?v=20260908-lumora9-2" type="image/svg+xml"><link rel="apple-touch-icon" href="/static/brand/lumora-180.png?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/brand/brand.css?v=20260908-lumora9-2">
+<link rel="stylesheet" href="/static/theme-controls.css?v=20260908-lumora9-2"><script defer src="/static/theme-controls.js?v=20260908-lumora9-2"></script>
+<link rel="stylesheet" href="/static/workbench/guidelines.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/workbench/reports.css?v=20260908-lumora9-2"><link rel="stylesheet" href="/static/workbench/mobile.css?v=20260908-lumora9-2"></head>
+<body class="wb " data-role="admin">
+<a class="wb-skip" href="#main-content">跳至主要内容</a>
+
+<div class="wb-shell">
+  <aside class="wb-sidebar" id="wb-sidebar" aria-label="主导航">
+    <a aria-label="流光 Lumora 首页" class="wb-brand" href="/admin"><img class="lumora-logo" src="/static/brand/lumora-mark.svg" width="32" height="32" alt=""><span>流光<span class="wb-brand-caption lumora-caption">Lumora · 创作工作台</span></span></a>
+    <nav class="wb-nav">
+    
+      
+    
+    
+      <div class="wb-nav-group"><span class="wb-nav-label">运营</span><a class="wb-nav-link " href="/admin" title="概览" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m12 3 9 4.5-9 4.5-9-4.5L12 3Zm-9 9 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>
+
+</svg><span>概览</span></a><a class="wb-nav-link " href="/admin/jobs/page" title="任务管理" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75zm0 5.25h.008v.008H3.75zm0 5.25h.008v.008H3.75z"/>
+
+</svg><span>任务管理</span></a><a class="wb-nav-link " href="/admin/job-batches/page" title="批次管理" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m12 3 9 4.5-9 4.5-9-4.5L12 3Zm-9 9 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>
+
+</svg><span>批次管理</span></a><a class="wb-nav-link " href="/admin/queue/page" title="队列状态" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="8.25"/><path stroke-linecap="round" d="M12 7.5V12l3 1.5"/>
+</svg><span>队列状态</span></a><a class="wb-nav-link " href="/admin/download-failures/page" title="下载异常" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m-4.5-4.5L12 15l4.5-4.5M3 15.75v3A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75v-3"/>
+
+</svg><span>下载异常</span></a><a class="wb-nav-link " href="/admin/usage/monthly/page" title="用量统计" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25H3m18 0v10.5A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25v3ZM16.5 15h.008v.008H16.5Z"/>
+
+</svg><span>用量统计</span></a><a class="wb-nav-link is-active" href="/admin/rankings/page" title="用户排行" aria-current="page"><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25v-1.5a7.5 7.5 0 0 1 15 0v1.5m-16.5-9a3 3 0 1 1 0-6m18 6a3 3 0 1 0 0-6"/>
+
+</svg><span>用户排行</span></a></div>
+    
+      <div class="wb-nav-group"><span class="wb-nav-label">用户与额度</span><a class="wb-nav-link " href="/admin/users/page" title="用户管理" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25v-1.5a7.5 7.5 0 0 1 15 0v1.5m-16.5-9a3 3 0 1 1 0-6m18 6a3 3 0 1 0 0-6"/>
+
+</svg><span>用户管理</span></a><a class="wb-nav-link " href="/admin/quota-requests/page" title="额度审批" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25H3m18 0v10.5A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25v3ZM16.5 15h.008v.008H16.5Z"/>
+
+</svg><span>额度审批</span></a><a class="wb-nav-link " href="/admin/quota-plans/page" title="套餐设置" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m12 3 9 4.5-9 4.5-9-4.5L12 3Zm-9 9 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>
+
+</svg><span>套餐设置</span></a><a class="wb-nav-link " href="/admin/quota-ledger/page" title="额度流水" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75zm0 5.25h.008v.008H3.75zm0 5.25h.008v.008H3.75z"/>
+
+</svg><span>额度流水</span></a></div>
+    
+      <div class="wb-nav-group"><span class="wb-nav-label">渠道与系统</span><a class="wb-nav-link " href="/admin/provider-keys/page" title="上游密钥" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12M5.64 18.36l2.12-2.12m8.48-8.48 2.12-2.12"/><circle cx="12" cy="12" r="5.25"/>
+
+</svg><span>上游密钥</span></a><a class="wb-nav-link " href="/admin/reference-images/page" title="参考图" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z"/><circle cx="16.5" cy="7.5" r=".75" fill="currentColor"/>
+
+</svg><span>参考图</span></a><a class="wb-nav-link " href="/admin/risk-control/page" title="风控设置" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12M5.64 18.36l2.12-2.12m8.48-8.48 2.12-2.12"/><circle cx="12" cy="12" r="5.25"/>
+
+</svg><span>风控设置</span></a><a class="wb-nav-link " href="/admin/settings/page" title="系统设置" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12M5.64 18.36l2.12-2.12m8.48-8.48 2.12-2.12"/><circle cx="12" cy="12" r="5.25"/>
+
+</svg><span>系统设置</span></a><a class="wb-nav-link " href="/admin/api-call-logs/page" title="调用日志" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75zm0 5.25h.008v.008H3.75zm0 5.25h.008v.008H3.75z"/>
+
+</svg><span>调用日志</span></a><a class="wb-nav-link " href="/admin/audit-logs/page" title="审计日志" ><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75zm0 5.25h.008v.008H3.75zm0 5.25h.008v.008H3.75z"/>
+
+</svg><span>审计日志</span></a></div>
+    
+    </nav>
+    <div class="wb-sidebar-bottom"><button type="button" class="wb-nav-link" data-collapse-nav aria-expanded="true"><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<rect x="3" y="4.5" width="18" height="15" rx="2.25"/><path d="M9 4.5v15"/>
+
+</svg><span>收起导航</span></button></div>
+  </aside>
+  <div class="wb-stage">
+    <header class="wb-topbar">
+      <div class="wb-location"><button type="button" class="icon-btn wb-mobile-trigger" data-open-nav aria-label="展开导航" aria-controls="wb-sidebar" aria-expanded="false"><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+
+</svg></button><span class="wb-context">管理后台</span><span class="wb-location-divider">/</span><h1>用户排行</h1></div>
+      <div class="wb-top-actions"><div class="wb-account"><button type="button" class="wb-account-trigger" data-account-toggle aria-expanded="false" aria-controls="wb-account-menu"><span class="wb-avatar">A</span><span>admin</span><svg class="wb-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<path stroke-linecap="round" stroke-linejoin="round" d="m9 5.25 6.75 6.75L9 18.75"/>
+
+</svg></button><div id="wb-account-menu" class="wb-popover hidden"><div class="wb-account-heading"><strong>admin</strong><span>Admin</span></div><label>外观<select data-theme-select aria-label="外观主题"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label><form action="/auth/logout" method="post" data-native-submit><button type="submit" class="ghost-btn">退出登录</button></form></div></div></div>
+    </header>
+    <main class="wb-main" id="main-content" tabindex="-1">
+<section class="wb-page-heading rankings-heading">
+  <div><h2>用户排行</h2><p>比较所选周期内的使用次数与任务结果。</p></div><a class="secondary-btn" href="/admin/usage/monthly/page">查看每日用量</a>
+</section>
+
+<section class="wb-panel rankings-panel">
+  <form class="filter-bar modern-filter rankings-filter" method="get" action="/admin/rankings/page">
+    <label><span>周期</span><select name="period"><option value="today" >今日</option><option value="week" >本周</option><option value="month" selected>本月</option><option value="custom" >自定义</option></select></label>
+    <label><span>开始日期</span><input autocomplete="off" type="date" name="start_date" value="" /></label>
+    <label><span>结束日期</span><input autocomplete="off" type="date" name="end_date" value="" /></label>
+    <button class="primary-btn small-btn" type="submit">查询</button>
+  </form>
+  <div class="section-head"><h2>本月</h2></div>
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table rankings-table"><colgroup><col class="rank-col"><col class="rank-user-col"><col class="rank-number-col"><col class="rank-number-col"><col class="rank-number-col"><col class="rank-number-col"></colgroup>
+      <thead><tr><th scope="col">排名</th><th scope="col">用户</th><th scope="col">扣费次数</th><th scope="col">完成</th><th scope="col">失败</th><th scope="col">下载失败</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td><strong class="rank-top">1</strong></td>
+          <td><div class="user-cell"><strong title="内容制作组 · 03">内容制作组 · 03</strong><span title="creator03 / ID: 4" translate="no">creator03 / ID: 4</span></div></td>
+          <td><strong>989</strong></td>
+          <td>977</td>
+          <td>8</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="rank-top">2</strong></td>
+          <td><div class="user-cell"><strong title="品牌视觉组 · 02">品牌视觉组 · 02</strong><span title="creator02 / ID: 3" translate="no">creator02 / ID: 3</span></div></td>
+          <td><strong>967</strong></td>
+          <td>954</td>
+          <td>9</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="rank-top">3</strong></td>
+          <td><div class="user-cell"><strong title="创作一组 · 01">创作一组 · 01</strong><span title="creator01 / ID: 2" translate="no">creator01 / ID: 2</span></div></td>
+          <td><strong>945</strong></td>
+          <td>931</td>
+          <td>10</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">4</strong></td>
+          <td><div class="user-cell"><strong title="广告投放组 · 24">广告投放组 · 24</strong><span title="creator24 / ID: 25" translate="no">creator24 / ID: 25</span></div></td>
+          <td><strong>935</strong></td>
+          <td>920</td>
+          <td>11</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">5</strong></td>
+          <td><div class="user-cell"><strong title="内容制作组 · 23">内容制作组 · 23</strong><span title="creator23 / ID: 24" translate="no">creator23 / ID: 24</span></div></td>
+          <td><strong>913</strong></td>
+          <td>897</td>
+          <td>12</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">6</strong></td>
+          <td><div class="user-cell"><strong title="创作一组 · 05">创作一组 · 05</strong><span title="creator05 / ID: 6" translate="no">creator05 / ID: 6</span></div></td>
+          <td><strong>897</strong></td>
+          <td>880</td>
+          <td>13</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">7</strong></td>
+          <td><div class="user-cell"><strong title="品牌视觉组 · 22">品牌视觉组 · 22</strong><span title="creator22 / ID: 23" translate="no">creator22 / ID: 23</span></div></td>
+          <td><strong>891</strong></td>
+          <td>873</td>
+          <td>14</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">8</strong></td>
+          <td><div class="user-cell"><strong title="创作一组 · 09">创作一组 · 09</strong><span title="creator09 / ID: 10" translate="no">creator09 / ID: 10</span></div></td>
+          <td><strong>881</strong></td>
+          <td>862</td>
+          <td>15</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">9</strong></td>
+          <td><div class="user-cell"><strong title="广告投放组 · 12">广告投放组 · 12</strong><span title="creator12 / ID: 13" translate="no">creator12 / ID: 13</span></div></td>
+          <td><strong>879</strong></td>
+          <td>859</td>
+          <td>16</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">10</strong></td>
+          <td><div class="user-cell"><strong title="广告投放组 · 04">广告投放组 · 04</strong><span title="creator04 / ID: 5" translate="no">creator04 / ID: 5</span></div></td>
+          <td><strong>875</strong></td>
+          <td>854</td>
+          <td>17</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">11</strong></td>
+          <td><div class="user-cell"><strong title="内容制作组 · 19">内容制作组 · 19</strong><span title="creator19 / ID: 20" translate="no">creator19 / ID: 20</span></div></td>
+          <td><strong>861</strong></td>
+          <td>839</td>
+          <td>18</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">12</strong></td>
+          <td><div class="user-cell"><strong title="广告投放组 · 08">广告投放组 · 08</strong><span title="creator08 / ID: 9" translate="no">creator08 / ID: 9</span></div></td>
+          <td><strong>859</strong></td>
+          <td>836</td>
+          <td>19</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">13</strong></td>
+          <td><div class="user-cell"><strong title="内容制作组 · 11">内容制作组 · 11</strong><span title="creator11 / ID: 12" translate="no">creator11 / ID: 12</span></div></td>
+          <td><strong>857</strong></td>
+          <td>833</td>
+          <td>20</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">14</strong></td>
+          <td><div class="user-cell"><strong title="创作一组 · 21">创作一组 · 21</strong><span title="creator21 / ID: 22" translate="no">creator21 / ID: 22</span></div></td>
+          <td><strong>854</strong></td>
+          <td>829</td>
+          <td>21</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">15</strong></td>
+          <td><div class="user-cell"><strong title="品牌视觉组 · 14">品牌视觉组 · 14</strong><span title="creator14 / ID: 15" translate="no">creator14 / ID: 15</span></div></td>
+          <td><strong>853</strong></td>
+          <td>827</td>
+          <td>22</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">16</strong></td>
+          <td><div class="user-cell"><strong title="内容制作组 · 07">内容制作组 · 07</strong><span title="creator07 / ID: 8" translate="no">creator07 / ID: 8</span></div></td>
+          <td><strong>852</strong></td>
+          <td>825</td>
+          <td>23</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">17</strong></td>
+          <td><div class="user-cell"><strong title="品牌视觉组 · 18">品牌视觉组 · 18</strong><span title="creator18 / ID: 19" translate="no">creator18 / ID: 19</span></div></td>
+          <td><strong>839</strong></td>
+          <td>811</td>
+          <td>24</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">18</strong></td>
+          <td><div class="user-cell"><strong title="品牌视觉组 · 10">品牌视觉组 · 10</strong><span title="creator10 / ID: 11" translate="no">creator10 / ID: 11</span></div></td>
+          <td><strong>835</strong></td>
+          <td>806</td>
+          <td>25</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">19</strong></td>
+          <td><div class="user-cell"><strong title="创作一组 · 13">创作一组 · 13</strong><span title="creator13 / ID: 14" translate="no">creator13 / ID: 14</span></div></td>
+          <td><strong>827</strong></td>
+          <td>797</td>
+          <td>26</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">20</strong></td>
+          <td><div class="user-cell"><strong title="品牌视觉组 · 06">品牌视觉组 · 06</strong><span title="creator06 / ID: 7" translate="no">creator06 / ID: 7</span></div></td>
+          <td><strong>826</strong></td>
+          <td>795</td>
+          <td>27</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">21</strong></td>
+          <td><div class="user-cell"><strong title="创作一组 · 17">创作一组 · 17</strong><span title="creator17 / ID: 18" translate="no">creator17 / ID: 18</span></div></td>
+          <td><strong>817</strong></td>
+          <td>785</td>
+          <td>28</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">22</strong></td>
+          <td><div class="user-cell"><strong title="广告投放组 · 16">广告投放组 · 16</strong><span title="creator16 / ID: 17" translate="no">creator16 / ID: 17</span></div></td>
+          <td><strong>795</strong></td>
+          <td>762</td>
+          <td>29</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">23</strong></td>
+          <td><div class="user-cell"><strong title="内容制作组 · 15">内容制作组 · 15</strong><span title="creator15 / ID: 16" translate="no">creator15 / ID: 16</span></div></td>
+          <td><strong>773</strong></td>
+          <td>739</td>
+          <td>30</td>
+          <td>4</td>
+        </tr>
+        
+        <tr>
+          <td><strong class="">24</strong></td>
+          <td><div class="user-cell"><strong title="广告投放组 · 20">广告投放组 · 20</strong><span title="creator20 / ID: 21" translate="no">creator20 / ID: 21</span></div></td>
+          <td><strong>760</strong></td>
+          <td>725</td>
+          <td>31</td>
+          <td>4</td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+</section>
+</main>
+  </div>
+</div>
+<script src="/static/ui.js?v=20260908-lumora9-2"></script>
+<script src="/static/app.js?v=20260908-lumora9-2"></script>
+<script src="/static/workbench/collections.js?v=20260908-lumora9-2"></script><script src="/static/workbench/micro-motion.js?v=20260908-lumora9-2"></script><script src="/static/workbench/interactions.js?v=20260908-lumora9-2"></script>
+
+<script src="/static/workbench/guidelines.js?v=20260908-lumora9-2"></script><script src="/static/workbench/reports.js?v=20260908-lumora9-2"></script></body></html>

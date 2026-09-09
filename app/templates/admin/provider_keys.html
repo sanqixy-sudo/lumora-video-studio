@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}密钥管理{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>密钥管理</h2>
+  </div>
+  <a class="ghost-btn small-btn" href="/admin/reference-images/page">参考图预设</a>
+</section>
+
+<form data-create-editor="新增渠道密钥" action="/admin/provider-keys/form" method="post" class="stack-form refined-form provider-key-form-grid provider-key-config-form">
+    <label>名称<input autocomplete="off" name="name" required placeholder="主密钥…" /></label>
+    <label>原始密钥<input autocomplete="new-password" name="raw_key" type="password" required placeholder="sk-…" /></label>
+    <label>调用地址<input type="url" autocomplete="off" name="api_base_url" value="https://niubi.zeabur.app" required placeholder="https://niubi.zeabur.app…" /></label>
+    <label>渠道
+      <select name="provider_name" required>
+        <option value="sora_api">Sora</option>
+        <option value="seedance">Seedance</option>
+        <option value="veo_omni">Veo Omni</option>
+        <option value="wuyin_omni">Wuyin Omni</option>
+      </select>
+    </label>
+    <label data-provider-model-field="seedance">5 秒模型 ID<input autocomplete="off" name="model_id_5s" placeholder="seedance-1.5-pro…" /></label>
+    <label data-provider-model-field="sora_api">8 秒模型 ID<input autocomplete="off" name="model_id_8s" placeholder="sora-2-8s…" /></label>
+    <label data-provider-model-field="seedance veo_omni">10 秒模型 ID<input autocomplete="off" name="model_id_10s" placeholder="seedance-1.5-pro-10s / veo-omni-flash-1080p…" /></label>
+    <label data-provider-model-field="sora_api seedance">12 秒模型 ID<input autocomplete="off" name="model_id_12s" placeholder="sora-2-12s / seedance-1.5-pro-12s…" /></label>
+    <label>权重<input inputmode="numeric" autocomplete="off" name="weight" type="number" value="100" min="1" /></label>
+    <label>日调用上限<input inputmode="numeric" autocomplete="off" name="daily_limit" type="number" min="1" placeholder="不限…" /></label>
+    <label>渠道并发上限<input inputmode="numeric" autocomplete="off" name="concurrent_limit" type="number" min="1" placeholder="不限…" /></label>
+    <div class="form-submit-cell"><button class="primary-btn" type="submit">保存密钥</button></div>
+  </form>
+
+<section class="wb-panel top-gap">
+  
+  <div class="table-wrap surface-table provider-key-table-wrap">
+    <table class="table provider-key-table">
+      <thead><tr><th>ID</th><th>名称 / 提供方</th><th>调用配置</th><th>密钥</th><th>调度</th><th>健康</th><th>操作</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>#{{ row.id }}</td>
+          <td><strong>{{ row.name }}</strong><br><span class="muted tiny">{{ row.provider_name }}</span></td>
+          <td>
+            <span class="mono-line">{{ row.api_base_url or '-' }}</span><br>
+            <span class="muted tiny">
+              {{ ('4s ' ~ row.model_id_4s ~ ' / ') if row.is_retired and row.model_id_4s else '' }}5s {{ row.model_id_5s or '-' }} / 8s {{ row.model_id_8s or '-' }} / 10s {{ row.model_id_10s or '-' }} / 12s {{ row.model_id_12s or '-' }}{{ (' / 15s ' ~ row.model_id_15s) if row.is_retired and row.model_id_15s else '' }}
+            </span>
+          </td>
+          <td>{{ row.key_masked }}</td>
+          <td><span class="badge status-{{ row.status }}">{{ '已下线' if row.is_retired else ('启用' if row.status == 'active' else '暂停') }}</span><br><span class="muted tiny">权重 {{ row.weight }} / 日限 {{ row.daily_limit or '不限' }} / 并发 {{ row.concurrent_limit or '不限' }}</span></td>
+          <td><span>失败 {{ row.consecutive_failures or 0 }}</span><br><span class="muted tiny">最近使用 {{ row.last_used_at or '-' }}</span></td>
+          <td class="provider-actions">
+            {% if row.is_retired %}<span class="retired-note">已下线 · 历史记录</span>{% else %}
+            <form action="/admin/provider-keys/{{ row.id }}/toggle-status/form" method="post">
+              <button class="{{ 'danger-ghost-btn' if row.status == 'active' else 'ghost-btn' }} small-btn" type="submit">{{ '暂停' if row.status == 'active' else '启用' }}</button>
+            </form>
+            <button class="ghost-btn small-btn" type="button" data-toggle-edit="key-edit-{{ row.id }}">修改</button>
+            <form action="/admin/provider-keys/{{ row.id }}/delete/form" method="post" data-confirm-message="确认删除这个密钥？">
+              <button class="danger-btn small-btn" type="submit">删除</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% if not row.is_retired %}<tr id="key-edit-{{ row.id }}" class="inline-edit-row hidden">
+          <td colspan="7">
+            <form action="/admin/provider-keys/{{ row.id }}/update/form" method="post" class="stack-form refined-form provider-key-form-grid provider-key-config-form">
+              <label>名称<input autocomplete="off" name="name" value="{{ row.name }}" required /></label>
+              <label>新密钥<input autocomplete="new-password" name="raw_key" type="password" placeholder="可选…" /></label>
+              <label>调用地址<input type="url" autocomplete="off" name="api_base_url" value="{{ row.api_base_url or 'https://niubi.zeabur.app' }}" required /></label>
+              <label>渠道
+                <select name="provider_name" required>
+                  <option value="sora_api" {{ 'selected' if (row.provider_name or 'sora_api') == 'sora_api' else '' }}>Sora</option>
+                  <option value="seedance" {{ 'selected' if row.provider_name == 'seedance' else '' }}>Seedance</option>
+                  <option value="veo_omni" {{ 'selected' if row.provider_name == 'veo_omni' else '' }}>Veo Omni</option>
+                  <option value="wuyin_omni" {{ 'selected' if row.provider_name in ['wuyin_omni', 'google_omni'] else '' }}>Wuyin Omni</option>
+                </select>
+              </label>
+              <label data-provider-model-field="seedance">5 秒模型 ID<input autocomplete="off" name="model_id_5s" value="{{ row.model_id_5s or '' }}" placeholder="seedance-1.5-pro…" /></label>
+              <label data-provider-model-field="sora_api">8 秒模型 ID<input autocomplete="off" name="model_id_8s" value="{{ row.model_id_8s or '' }}" placeholder="sora-2-8s…" /></label>
+              <label data-provider-model-field="seedance veo_omni">10 秒模型 ID<input autocomplete="off" name="model_id_10s" value="{{ row.model_id_10s or '' }}" placeholder="seedance-1.5-pro-10s / veo-omni-flash-1080p…" /></label>
+              <label data-provider-model-field="sora_api seedance">12 秒模型 ID<input autocomplete="off" name="model_id_12s" value="{{ row.model_id_12s or '' }}" placeholder="sora-2-12s / seedance-1.5-pro-12s…" /></label>
+              <label>权重<input inputmode="numeric" autocomplete="off" name="weight" type="number" value="{{ row.weight or 100 }}" min="1" /></label>
+              <label>日调用上限<input inputmode="numeric" autocomplete="off" name="daily_limit" type="number" min="1" value="{{ row.daily_limit or '' }}" /></label>
+              <label>渠道并发上限<input inputmode="numeric" autocomplete="off" name="concurrent_limit" type="number" min="1" value="{{ row.concurrent_limit or '' }}" placeholder="不限…" /></label>
+              <div class="form-submit-cell"><button class="primary-btn" type="submit">保存修改</button></div>
+            </form>
+          </td>
+        </tr>
+        {% endif %}
+        {% else %}
+        <tr><td colspan="7"><div class="empty-panel">暂无密钥</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

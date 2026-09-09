@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}批量记录{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div>
+    <h2>批量记录</h2>
+  </div>
+  <a class="primary-btn small-btn" href="/app">继续创作</a>
+</section>
+
+<section class="wb-panel batch-list-card">
+  <div class="section-head">
+    <div>
+      <h2>批次列表</h2>
+    </div>
+  </div>
+  <div class="table-wrap surface-table clean-table-wrap">
+    <table class="table clean-table">
+      <thead>
+        <tr><th>批次</th><th>APP / 地区</th><th>创建时间</th><th>任务数</th><th>状态</th><th>概览</th><th>操作</th></tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+        {% set summary = summary_map.get(batch.id, {}) %}
+        <tr>
+          <td><div class="user-cell"><strong>{{ batch.batch_name or batch.batch_code }}</strong><span>{{ batch.batch_code }} / ID: {{ batch.id }}</span></div></td>
+          <td><div class="meta-stack"><strong>{{ batch.product_name or '-' }}</strong><span>{{ batch.region_name or '-' }}</span></div></td>
+          <td><time data-ui-time>{{ batch.created_at|dt }}</time></td>
+          <td>{% if summary.get('total') is not none and summary.get('total') != batch.total_count %}{{ summary.get('total') }} / {{ batch.total_count }} 条{% else %}{{ batch.total_count }} 条{% endif %}</td>
+          <td><span class="badge {{ summary.get('state_class', 'status-queued') }}">{{ summary.get('state_label', '处理中') }}</span></td>
+          <td class="batch-summary-text">{{ summary.get('text', '-') }}</td>
+          <td>
+            <div class="inline-actions compact-actions">
+              <a class="ghost-btn small-btn" href="/app/job-batches/{{ batch.id }}/result">查看</a>
+              {% if summary.get("downloadable_count", 0) %}<a class="primary-btn small-btn" href="/app/job-batches/{{ batch.id }}/download-zip">下载已完成 {{ summary.downloadable_count }} 个</a>{% else %}<button type="button" class="ghost-btn small-btn" disabled>暂无可下载作品</button>{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state compact-empty">暂无批量记录</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}下载失败{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>下载失败中心</h2></div>
+
+</section>
+
+<section class="wb-panel">
+  <div class="failure-list">
+    {% for row in rows %}
+    {% set job = row.job %}
+    <article class="failure-card">
+      <div class="failure-head">
+        <div><strong>#{{ job.id }}</strong><span>{{ user_display_name(row.user) if row.user else ('用户 #' ~ job.user_id) }}</span></div>
+        <span class="badge status-download_failed">下载失败</span>
+      </div>
+      <div class="meta-grid compact-meta">
+        <div><div class="k">远端任务</div><div class="v mono-cell">{{ job.remote_task_id or '-' }}</div></div>
+        <div><div class="k">APP 名称</div><div class="v">{{ job.product_name or '-' }}</div></div>
+        <div><div class="k">地区</div><div class="v">{{ job.region_name or '-' }}</div></div>
+        <div><div class="k">失败次数</div><div class="v">{{ job.download_attempts }}</div></div>
+        <div><div class="k">更新时间</div><div class="v"><time data-ui-time>{{ job.updated_at|dt }}</time></div></div>
+        <div><div class="k">错误信息</div><div class="v">{{ job.error_text or '-' }}</div></div>
+      </div>
+      <div class="inline-actions top-gap">
+        <a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">查看详情</a>
+        {% if job.remote_task_id %}<a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/remote-download" target="_blank">远端直下</a>{% endif %}
+        {% if can_manage %}<button class="primary-btn small-btn" data-action-post="/admin/jobs/{{ job.id }}/redownload" type="button">重新下载</button>{% endif %}
+      </div>
+      <details class="top-gap">
+        <summary>失败日志</summary>
+        <div class="log-columns">
+          <div><h3>事件日志</h3><pre class="logs mini-logs">{% for event in row.events %}[{{ event.created_at|dt }}] {{ event.message }}
+{% else %}暂无事件日志{% endfor %}</pre></div>
+          <div><h3>调用日志</h3><pre class="logs mini-logs">{% for call in row.calls %}[{{ call.created_at|dt }}] {{ call.method }} {{ call.endpoint }} => {{ call.status_code or '-' }} {{ call.error_text or '' }}
+{% else %}暂无调用日志{% endfor %}</pre></div>
+        </div>
+      </details>
+    </article>
+    {% else %}
+    <div class="empty-state compact-empty">暂无下载失败任务</div>
+    {% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

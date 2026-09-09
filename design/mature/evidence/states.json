@@ -1,0 +1,58 @@
+[
+  {
+    "name": "register light",
+    "violations": []
+  },
+  {
+    "name": "drawer failure light",
+    "violations": []
+  },
+  {
+    "name": "material drawer light",
+    "violations": []
+  },
+  {
+    "name": "usage modal light",
+    "violations": []
+  },
+  {
+    "name": "register dark",
+    "violations": []
+  },
+  {
+    "name": "drawer failure dark",
+    "violations": []
+  },
+  {
+    "name": "material drawer dark",
+    "violations": []
+  },
+  {
+    "name": "usage modal dark",
+    "violations": []
+  },
+  {
+    "name": "mobile 100 focus",
+    "box": {
+      "x": 32,
+      "y": 462.703125,
+      "width": 326,
+      "height": 168
+    },
+    "footer": {
+      "x": 12,
+      "y": 664.703125,
+      "width": 366,
+      "height": 89.171875
+    },
+    "passed": true
+  },
+  {
+    "name": "mock video playback",
+    "time": 0.361341,
+    "ready": 4,
+    "width": 720,
+    "height": 1280,
+    "passed": true
+  }
+]

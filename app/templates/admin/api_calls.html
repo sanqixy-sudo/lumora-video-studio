@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}调用日志{% endblock %}
+{% block content %}
+<section class="wb-page-heading">
+  <div><h2>调用日志</h2></div>
+  <form action="/admin/api-call-logs/clear/form" method="post" data-confirm-message="确认清空全部调用日志？">
+    <button class="danger-btn small-btn" type="submit">清空调用日志</button>
+  </form>
+</section>
+
+<section class="wb-panel">
+  <div class="table-wrap surface-table">
+    <table class="table">
+      <thead><tr><th>ID</th><th>用户</th><th>任务</th><th>接口</th><th>状态码</th><th>成功</th><th>耗时</th><th>摘要</th><th>时间</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>#{{ row.id }}</td>
+          <td>{{ row.user_id or '-' }}</td>
+          <td>{{ row.job_id or '-' }}</td>
+          <td>{{ row.method }} {{ row.endpoint }}</td>
+          <td>{{ row.status_code or '-' }}</td>
+          <td>{{ '是' if row.success else '否' }}</td>
+          <td>{{ row.latency_ms or '-' }}ms</td>
+          <td class="wide-cell">
+            {% if row.request_summary %}<div><strong>请求：</strong>{{ row.request_summary }}</div>{% endif %}
+            {% if row.response_summary %}<details><summary>响应</summary><pre class="mini-pre">{{ row.response_summary }}</pre></details>{% endif %}
+            {% if row.error_text %}<div class="danger-text"><strong>错误：</strong>{{ row.error_text }}</div>{% endif %}
+          </td>
+          <td><time data-ui-time>{{ row.created_at|dt }}</time></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty-state compact-empty">暂无调用日志</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

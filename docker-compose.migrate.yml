@@ -1,0 +1,50 @@
+services:
+  pgdata-import:
+    image: ${BASE_IMAGE:-public.ecr.aws/docker/library/postgres:16-bookworm}
+    user: root
+    volumes:
+      - ./data/postgres:/source:ro
+      - postgres-data:/target
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+
+        if [ ! -s /source/PG_VERSION ]; then
+          echo "No PostgreSQL data directory found at ./data/postgres" >&2
+          exit 1
+        fi
+
+        if [ -s /target/PG_VERSION ]; then
+          echo "Target Docker volume already contains PostgreSQL data; refusing to overwrite." >&2
+          exit 1
+        fi
+
+        postgres_bin="$(command -v postgres || true)"
+        if [ -z "$${postgres_bin}" ]; then
+          postgres_bin="$(find /usr/lib/postgresql -type f -name postgres | sort -V | tail -n 1)"
+        fi
+        if [ -z "$${postgres_bin}" ]; then
+          echo "PostgreSQL server binary was not found in the image." >&2
+          exit 1
+        fi
+
+        source_version="$(cat /source/PG_VERSION)"
+        target_major="$($${postgres_bin} -V | awk '{print $$3}' | cut -d. -f1)"
+        if [ "$${source_version}" != "$${target_major}" ]; then
+          echo "PostgreSQL major version mismatch: source=$${source_version}, image=$${target_major}" >&2
+          echo "Use a BASE_IMAGE with the same major version as the old data directory." >&2
+          exit 1
+        fi
+
+        tar -C /source -cpf - . | tar -C /target -xpf -
+        rm -f /target/postmaster.pid /target/postmaster.opts
+        find /target -maxdepth 1 -type s -delete || true
+        chown -R postgres:postgres /target
+        chmod 700 /target
+
+        echo "PostgreSQL data copied into Docker volume postgres-data."
+
+volumes:
+  postgres-data:

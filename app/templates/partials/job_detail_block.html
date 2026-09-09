@@ -1,0 +1,136 @@
+<section class="page-head clean-head task-head">
+  <div>
+    <span class="eyebrow">Task Detail</span>
+    <h2>任务 #{{ job.id }}</h2>
+  </div>
+  <div class="inline-actions">
+    <span id="job-status" class="badge big-badge status-{{ job.status }}">{{ job.status_label or status_label(job.status) }}</span>
+    <span id="auto-refresh-state" class="chip quiet-chip">自动刷新中</span>
+    <button id="toggle-refresh-btn" class="ghost-btn small-btn" type="button">暂停刷新</button>
+  </div>
+</section>
+
+<section class="card feature-card clean-card result-card result-card-wide">
+  <div class="section-head"><h2>结果视频</h2></div>
+  <div id="player-wrap" class="player-wrap {% if not output_file %}hidden{% endif %}">
+    {% if output_file %}
+    <video id="job-player" controls preload="metadata" playsinline src="/app/files/{{ output_file.id }}/stream"></video>
+    {% else %}
+    <video id="job-player" controls preload="metadata" playsinline class="hidden"></video>
+    {% endif %}
+  </div>
+  <div id="player-empty" class="empty-state result-empty {% if output_file %}hidden{% endif %}">
+    <strong>本地视频尚未就绪</strong>
+  </div>
+</section>
+
+<section class="card feature-card clean-card task-status-card">
+  <div class="task-status-grid">
+    <div class="progress-wrap modern-progress">
+      <div class="progress-top">
+        <strong>处理进度</strong>
+        <span id="job-progress-text">{{ job.progress }}%</span>
+      </div>
+      <div class="progress-bar"><span id="job-progress-bar" style="width: {{ job.progress }}%"></span></div>
+    </div>
+    <div class="task-actions">
+      {% if output_file %}
+      <a id="download-btn" class="primary-btn" href="/app/files/{{ output_file.id }}/download">下载本地视频</a>
+      {% else %}
+      <a id="download-btn" class="primary-btn hidden" href="#">下载本地视频</a>
+      {% endif %}
+      <a id="remote-download-btn" class="ghost-btn {% if not remote_download_url %}hidden{% endif %}" href="{{ remote_download_url or '#' }}" target="_blank" rel="noopener">远端直下</a>
+      <button id="copy-remote-link-btn" class="ghost-btn {% if not public_remote_download_url %}hidden{% endif %}" type="button" data-url="{{ public_remote_download_url or '' }}">复制临时链接</button>
+      <button id="redownload-btn" class="ghost-btn {% if not can_redownload %}hidden{% endif %}" type="button">重新下载到本地</button>
+      <button id="resume-btn" class="ghost-btn {% if not can_resume %}hidden{% endif %}" type="button">继续重试</button>
+      <button id="pause-btn" class="danger-btn {% if not can_pause %}hidden{% endif %}" type="button">暂停自动重试</button>
+    </div>
+  </div>
+
+  <div class="meta-grid task-meta-grid top-gap">
+    <div><div class="k">远端任务编号</div><div class="v mono-cell" id="job-remote">{{ job.remote_task_id or '-' }}</div></div>
+    <div><div class="k">队列状态</div><div class="v" id="job-queue">{{ job.queue_text or '-' }}</div></div>
+    <div><div class="k">模型</div><div class="v">{{ job.model }}</div></div>
+    <div><div class="k">APP 名称</div><div class="v">{{ job.product_name or '-' }}</div></div>
+    <div><div class="k">地区</div><div class="v">{{ job.region_name or '-' }}</div></div>
+    <div><div class="k">分辨率</div><div class="v">{{ job.size }}</div></div>
+    <div><div class="k">时长</div><div class="v">{{ job.seconds }} 秒</div></div>
+    <div><div class="k">下载重试</div><div class="v"><span id="job-download-attempts">{{ job.download_attempts or 0 }}</span> 次</div></div>
+    <div><div class="k">提交时间</div><div class="v"><time data-ui-time>{{ (job.queued_at or job.created_at)|dt }}</time></div></div>
+    <div><div class="k">开始时间</div><div class="v"><time data-ui-time>{{ job.started_at|dt if job.started_at else '-' }}</time></div></div>
+  </div>
+  {% set displayed_error = job.error_message or job.error_text %}
+  <div id="job-error-panel" class="task-error-panel {% if not displayed_error %}hidden{% endif %}">
+    <strong>错误信息</strong>
+    <span id="job-error">{{ displayed_error or '-' }}</span>
+    {% if can_manage and job.error_code %}<span id="job-error-code" class="mono-cell">错误码：{{ job.error_code }}</span>{% endif %}
+  </div>
+  {% if can_manage and job.upstream_response %}
+  <details id="job-upstream-response" class="top-gap">
+    <summary>完整上游响应</summary>
+    <pre>{{ job.upstream_response|tojson(indent=2) }}</pre>
+  </details>
+  {% endif %}
+</section>
+
+
+
+{% set show_api_calls_first = job.error_message or job.error_text %}
+<section class="card feature-card clean-card task-tabs-card">
+  <div class="tab-nav" role="tablist">
+    <button class="tab-button {{ '' if show_api_calls_first else 'active' }}" type="button" data-tab-target="events">事件日志</button>
+    <button class="tab-button" type="button" data-tab-target="prompt">提示词</button>
+    <button class="tab-button" type="button" data-tab-target="files">文件列表</button>
+    <button class="tab-button {{ 'active' if show_api_calls_first else '' }}" type="button" data-tab-target="api-calls">上游调用</button>
+  </div>
+
+  <div class="tab-panel {{ '' if show_api_calls_first else 'active' }}" data-tab-panel="events">
+    <div class="section-head compact-section-head">
+      <h2>事件日志</h2>
+      <div class="inline-actions">
+        <button id="copy-logs-btn" class="ghost-btn small-btn" type="button">复制日志</button>
+        <button id="toggle-follow-btn" class="ghost-btn small-btn" type="button">暂停跟随</button>
+      </div>
+    </div>
+    <pre id="job-logs" class="logs modern-logs">{% for event in events %}[{{ event.created_at|dt }}] {{ event.message }}
+{% endfor %}</pre>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="prompt">
+    <pre class="prompt-box">{{ job.prompt }}</pre>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="files">
+    <div class="table-wrap surface-table compact-file-table clean-table-wrap">
+      <table class="table clean-table">
+        <thead><tr><th>类型</th><th>文件名</th><th>大小</th></tr></thead>
+        <tbody>
+          {% for file in files %}
+          <tr><td>{{ file.file_type }}</td><td>{{ file.file_name }}</td><td>{{ file.file_size or '-' }}</td></tr>
+          {% else %}
+          <tr><td colspan="3"><div class="empty-state compact-empty">暂无文件</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tab-panel {{ 'active' if show_api_calls_first else '' }}" data-tab-panel="api-calls">
+    <div class="section-head compact-section-head">
+      <h2>上游调用记录</h2>
+    </div>
+    <div id="api-call-list" class="api-call-list">
+      {% for call in api_calls %}
+      <div class="api-call-card {{ 'success' if call.success else 'failed' }}">
+        <div class="api-call-head"><strong>#{{ call.id }} {{ call.method }} {{ call.endpoint }}</strong><span>{{ call.created_at }}</span></div>
+        <div class="api-call-meta">状态码：{{ call.status_code or '-' }} / 成功：{{ '是' if call.success else '否' }} / 耗时：{{ call.latency_ms or '-' }}ms</div>
+        {% if call.request_summary %}<pre>请求：{{ call.request_summary }}</pre>{% endif %}
+        {% if call.response_summary %}<pre>响应：{{ call.response_summary }}</pre>{% endif %}
+        {% if call.error_text %}<pre>错误：{{ call.error_text }}</pre>{% endif %}
+      </div>
+      {% else %}
+      <div class="empty-state compact-empty">暂无记录</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
