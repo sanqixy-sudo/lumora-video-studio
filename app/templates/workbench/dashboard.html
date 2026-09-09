@@ -4,7 +4,6 @@
 {% block top_actions %}{% endblock %}
 {% block content %}
 <div class="wb-creator">
-<section class="mature-create-heading"><div><span class="mature-eyebrow">创作空间</span><h1>开始创作</h1></div><a class="mature-quota" href="/app/quota/page"><span>可用额度</span><strong>{{ quota_stats.total_available }}<small> 次</small></strong>{{ icon('chevron') }}</a></section>
 <form action="/app/jobs/batch/form" method="post" enctype="multipart/form-data" id="create-job-form" data-async-formdata="/app/jobs/batch" data-available-quota="{{ quota_stats.total_available }}" class="wb-creation-form">
 <input type="hidden" name="batch_request_id" value="{{ new_request_id }}">
 <div class="glass-workbench"><section class="wb-settings" aria-label="共享生成设置">
@@ -47,7 +46,7 @@
 </div>
 </div>
 <div id="studio-form-error" class="form-error hidden" role="alert" tabindex="-1"></div>
-<footer class="wb-submit"><div class="wb-submit-summary"><strong id="prompt-count-text" aria-live="polite">0 个视频待生成</strong><span id="quota-cost-text">填写提示词后计算预计额度</span></div><span class="wb-available">可用 <strong>{{ quota_stats.total_available }}</strong> 次</span><button class="primary-btn" type="submit" data-loading-text="正在提交…" {% if not model_options %}disabled{% endif %}>生成视频 {{ icon('arrow') }}</button></footer>
+<footer class="wb-submit"><div class="wb-submit-summary"><strong id="prompt-count-text" aria-live="polite">0 个视频待生成</strong><span id="quota-cost-text">填写提示词后计算预计额度</span></div><a class="wb-available" href="/app/quota/page">可用 <strong>{{ quota_stats.total_available }}</strong> 次</a><button class="primary-btn" type="submit" data-loading-text="正在提交…" {% if not model_options %}disabled{% endif %}>生成视频 {{ icon('arrow') }}</button></footer>
 </form>
 
 </div>
