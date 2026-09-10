@@ -1000,13 +1000,16 @@ def admin_deduct_quota(user_id: int, payload: AdminGrantQuotaRequest, admin: Use
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Job not found")
-    wallet = deduct_quota(db, user, payload.amount, admin.id, payload.note)
+    try:
+        wallet = deduct_quota(db, user, payload.amount, admin.id, payload.note)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     db.commit()
     return {"user_id": user.id, "remaining_quota": wallet.remaining_quota}
 
 
 @router.post("/users/{user_id}/grant-quota/form")
-def admin_grant_quota_form(user_id: int, amount: int = Form(...), note: str = Form(""), admin: User = Depends(require_super_admin), db: Session = Depends(get_db)):
+def admin_grant_quota_form(user_id: int, amount: int = Form(..., gt=0), note: str = Form(""), admin: User = Depends(require_super_admin), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -1016,11 +1019,14 @@ def admin_grant_quota_form(user_id: int, amount: int = Form(...), note: str = Fo
 
 
 @router.post("/users/{user_id}/deduct-quota/form")
-def admin_deduct_quota_form(user_id: int, amount: int = Form(...), note: str = Form(""), admin: User = Depends(require_super_admin), db: Session = Depends(get_db)):
+def admin_deduct_quota_form(user_id: int, amount: int = Form(..., gt=0), note: str = Form(""), admin: User = Depends(require_super_admin), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Job not found")
-    deduct_quota(db, user, amount, admin.id, note or None)
+    try:
+        deduct_quota(db, user, amount, admin.id, note or None)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     db.commit()
     return RedirectResponse("/admin/users/page?notice=quota_deducted", status_code=303)
 
@@ -1055,7 +1061,7 @@ def update_user_quota_plan_custom_form(
         raise HTTPException(status_code=404, detail="套餐绑定不存在")
     assignment, plan = row
     value_text = str(custom_quota_amount or "").strip()
-    value = None if not value_text else int(value_text)
+    value = _parse_optional_int(value_text)
     if value is not None and value < 0:
         raise HTTPException(status_code=400, detail="额度不能小于 0")
     update_assignment_custom_quota(db, assignment, plan, value, admin.id)
@@ -1192,6 +1198,7 @@ def delete_user_form(
     db.query(QuotaLedger).filter(QuotaLedger.operator_user_id == user.id).update({QuotaLedger.operator_user_id: None}, synchronize_session=False)
     db.query(DailyUsageOverride).filter(DailyUsageOverride.operator_user_id == user.id).update({DailyUsageOverride.operator_user_id: None}, synchronize_session=False)
     db.query(AuditLog).filter(AuditLog.actor_user_id == user.id).update({AuditLog.actor_user_id: None}, synchronize_session=False)
+    db.query(RiskControlRule).filter(RiskControlRule.operator_user_id == user.id).update({RiskControlRule.operator_user_id: None}, synchronize_session=False)
     write_audit(db, admin.id, "delete_user", "user", user.id, {"username": username, "role": user_role})
     db.delete(user)
     db.commit()
@@ -1357,19 +1364,23 @@ def list_provider_keys(_: User = Depends(require_super_admin), db: Session = Dep
 
 
 def _parse_optional_int(value, default: int | None = None) -> int | None:
-    text = str(value or "").strip()
+    text = "" if value is None else str(value).strip()
     if not text:
         return default
-    parsed = int(text)
+    try:
+        parsed = int(text)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="请输入有效的整数") from exc
+    if not 0 <= parsed <= 2147483647:
+        raise HTTPException(status_code=400, detail="数值需在 0 到 2147483647 之间")
     return parsed
 
 
 def _parse_positive_int(value, default: int = 1) -> int:
-    try:
-        parsed = int(str(value or "").strip() or default)
-    except (TypeError, ValueError):
-        parsed = default
-    return max(parsed, 1)
+    parsed = _parse_optional_int(value, default)
+    if parsed < 1:
+        raise HTTPException(status_code=400, detail="数值必须是大于 0 的整数")
+    return parsed
 
 
 def _provider_base_url(provider_name: str | None, api_base_url: str | None) -> str:
@@ -1647,8 +1658,6 @@ def toggle_reference_image_form(preset_id: int, admin: User = Depends(require_su
     row = db.query(ReferenceImagePreset).filter(ReferenceImagePreset.id == preset_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Job not found")
-    if provider_is_retired(row.provider_name):
-        raise HTTPException(status_code=400, detail="该渠道已下线，不能重新启用")
     row.status = "disabled" if row.status == "active" else "active"
     db.add(row)
     write_audit(db, admin.id, "update_reference_image_preset", "reference_image_preset", row.id, {"status": row.status})
@@ -2375,8 +2384,6 @@ def toggle_risk_rule_form(rule_id: int, admin: User = Depends(require_super_admi
     row = db.query(RiskControlRule).filter(RiskControlRule.id == rule_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="规则不存在")
-    if provider_is_retired(row.provider_name):
-        raise HTTPException(status_code=400, detail="该渠道已下线，不能重新启用")
     row.status = "disabled" if row.status == "active" else "active"
     row.operator_user_id = admin.id
     db.add(row)
