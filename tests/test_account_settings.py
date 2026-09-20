@@ -248,5 +248,40 @@ class SessionVersionMigrationTests(unittest.TestCase):
         engine.dispose()
 
 
+    def test_alembic_upgrades_github_and_nas_database_histories(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from alembic import command
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+
+        config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+        self.assertEqual(ScriptDirectory.from_config(config).get_heads(), ["0024_merge_account_legacy_quota"])
+        for revision in ["0022_upstream_errors", "0023_model_quota_costs", "0023_user_session_version"]:
+            with self.subTest(revision=revision), TemporaryDirectory() as directory:
+                url = "sqlite:///" + str(Path(directory) / "migration.sqlite")
+                engine = create_engine(url)
+                with engine.begin() as connection:
+                    connection.exec_driver_sql("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT)")
+                    connection.exec_driver_sql("INSERT INTO users VALUES (1, 'existing')")
+                    connection.exec_driver_sql("CREATE TABLE jobs (id INTEGER PRIMARY KEY)")
+                    connection.exec_driver_sql("CREATE TABLE provider_keys (id INTEGER PRIMARY KEY)")
+                    connection.exec_driver_sql("CREATE TABLE alembic_version (version_num VARCHAR(32) PRIMARY KEY)")
+                    connection.exec_driver_sql("INSERT INTO alembic_version VALUES (?)", (revision,))
+                    with Operations.context(MigrationContext.configure(connection)):
+                        if revision == "0023_model_quota_costs":
+                            importlib.import_module("migrations.versions.0023_model_quota_costs").upgrade()
+                        elif revision == "0023_user_session_version":
+                            importlib.import_module("migrations.versions.0023_user_session_version").upgrade()
+                with patch.object(settings, "database_url", url):
+                    command.upgrade(config, "head")
+                with engine.connect() as connection:
+                    self.assertEqual(connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar(),
+                                     "0024_merge_account_legacy_quota")
+                    self.assertEqual(connection.exec_driver_sql("SELECT session_version FROM users WHERE id=1").scalar(), 0)
+                    self.assertIn("quota_cost", [column["name"] for column in inspect(connection).get_columns("jobs")])
+                engine.dispose()
+
+
 if __name__ == "__main__":
     unittest.main()

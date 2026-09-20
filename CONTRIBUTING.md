@@ -40,3 +40,5 @@ Dockerfile             # 镜像构建
 个人设置写接口校验 Origin（缺失时使用 Referer）。反向代理应保留外部 Host，并正确传递协议，Uvicorn 仅信任受控代理的转发头。
 
 验证个人设置可运行 `python -m unittest discover -s tests -p "test_*.py"`。浏览器验收运行 `node tests/account_settings_browser.cjs`（需要 Playwright，可用 `SORA_PLAYWRIGHT` 指定模块位置、`SORA_TEST_PYTHON` 指定 Python）。脚本会启动隔离 SQLite 测试服务，退出时关闭服务，截图保存在 `runtime/account-settings/`，不连接业务数据库或上游生成服务。
+
+旧 NAS 数据库可能停留在 `0023_model_quota_costs`。仓库保留该历史迁移，并通过 `0024_merge_account_legacy_quota` 合并为单一迁移头；无需手动修改或重置 `alembic_version`，也不会删除历史额度字段。
