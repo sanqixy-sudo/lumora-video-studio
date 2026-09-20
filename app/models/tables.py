@@ -12,6 +12,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(Text)
+    session_version: Mapped[int] = mapped_column(Integer, default=0, server_default='0', nullable=False)
     role: Mapped[str] = mapped_column(String(16), default='user')
     status: Mapped[str] = mapped_column(String(16), default='active')
     showcase_enabled: Mapped[bool] = mapped_column(Boolean, default=False)

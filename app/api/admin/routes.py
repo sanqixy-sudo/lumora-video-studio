@@ -75,6 +75,8 @@ AUDIT_ACTION_LABELS = {
     "set_user_status": "修改用户状态",
     "set_user_role": "修改用户角色",
     "reset_password": "重置密码",
+    "change_own_password": "自行修改密码",
+    "update_user_display_name": "修改显示姓名",
     "grant_quota": "增加额度",
     "approve_quota_request": "通过额度申请",
     "reject_quota_request": "拒绝额度申请",

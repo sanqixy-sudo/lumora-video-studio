@@ -94,7 +94,7 @@ const SoraUI = (() => {
       } else {
         const page = new DOMParser().parseFromString(await response.text(), 'text/html');
         if (!response.redirected) throw new Error('服务器未确认保存结果，请刷新页面后重试。');
-        const alert = page.querySelector('.login-alert,[data-form-error]:not(.hidden)');
+        const alert = page.querySelector('.login-alert:not(.wb-login-notice),[data-form-error]:not(.hidden)');
         if (alert) throw new Error(alert.textContent);
         if (response.redirected && new URL(response.url).pathname === '/login') { window.location.assign(response.url); return; }
       }

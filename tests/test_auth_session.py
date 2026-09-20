@@ -19,6 +19,7 @@ class AuthSessionTests(unittest.TestCase):
         self.user = SimpleNamespace(id=1, username='mock-user', password_hash=self.password_hash, status='active', role='user')
         self.db = MagicMock()
         self.db.query.return_value.filter.return_value.first.return_value = self.user
+        self.db.query.return_value.filter.return_value.populate_existing.return_value.with_for_update.return_value.first.return_value = self.user
         app = FastAPI()
         app.include_router(router)
         app.dependency_overrides[get_db] = lambda: self.db

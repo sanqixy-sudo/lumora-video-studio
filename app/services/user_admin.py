@@ -84,7 +84,9 @@ def set_user_showcase(db: Session, user: User, enabled: bool, actor_user_id: int
 
 
 def reset_user_password(db: Session, user: User, password: str, actor_user_id: int | None) -> None:
+    user = db.query(User).filter(User.id == user.id).populate_existing().with_for_update().one()
     user.password_hash = hash_password(password)
+    user.session_version = (user.session_version or 0) + 1
     db.add(user)
     write_audit(db, actor_user_id, "reset_password", "user", user.id, None)
 

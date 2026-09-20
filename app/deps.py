@@ -1,9 +1,10 @@
 from fastapi import Cookie, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.config import settings
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, session_version_matches
 from app.db import SessionLocal
 from app.models.tables import User
+from app.services.user_admin import attach_display_names
 
 
 def get_db():
@@ -20,22 +21,30 @@ def _extract_token(authorization: str | None, cookie_token: str | None) -> str |
     return cookie_token
 
 
+def user_for_token(db: Session, token: str | None) -> User | None:
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        subject = payload['sub']
+    except (ValueError, KeyError, TypeError):
+        return None
+    user = db.query(User).filter(User.username == subject).first()
+    if not user or user.status != 'active' or not session_version_matches(payload, user):
+        return None
+    return user
+
+
 def get_current_user(
     authorization: str | None = Header(default=None),
     cookie_token: str | None = Cookie(default=None, alias=settings.session_cookie_name),
     db: Session = Depends(get_db),
 ) -> User:
-    token = _extract_token(authorization, cookie_token)
-    if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Missing authentication token')
-    try:
-        payload = decode_access_token(token)
-        subject = payload['sub']
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token') from exc
-    user = db.query(User).filter(User.username == subject).first()
-    if not user or user.status != 'active':
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Inactive or missing user')
+    user = user_for_token(db, _extract_token(authorization, cookie_token))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid or expired session')
+    if user.role == 'user':
+        attach_display_names(db, [user])
     return user
 
 
@@ -44,15 +53,7 @@ def get_optional_user(
     cookie_token: str | None = Cookie(default=None, alias=settings.session_cookie_name),
     db: Session = Depends(get_db),
 ) -> User | None:
-    token = _extract_token(authorization, cookie_token)
-    if not token:
-        return None
-    try:
-        payload = decode_access_token(token)
-        subject = payload['sub']
-    except Exception:
-        return None
-    return db.query(User).filter(User.username == subject, User.status == 'active').first()
+    return user_for_token(db, _extract_token(authorization, cookie_token))
 
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:

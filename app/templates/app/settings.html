@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}个人设置{% endblock %}
+{% block content %}
+<div class="account-settings-page">
+  <section class="wb-page-heading"><div><h2>个人设置</h2><p>管理你的显示姓名和登录密码。</p></div></section>
+  <section class="wb-panel account-settings-panel" aria-labelledby="profile-heading">
+    <div class="section-head"><h2 id="profile-heading">基本资料</h2></div>
+    <form action="/app/settings/profile/form" method="post" class="stack-form" data-account-profile>
+      {% if profile_saved %}<div class="toast-inline success-toast" role="status" data-profile-saved>姓名已保存。</div>{% endif %}
+      <div class="form-error hidden" data-form-error role="alert" tabindex="-1"></div>
+      <label for="account-username">登录账号<input id="account-username" value="{{ current_user.username }}" readonly autocomplete="username" aria-describedby="username-help"></label>
+      <small id="username-help" class="muted">登录账号不可修改，显示姓名不会影响登录。</small>
+      <label for="account-display-name">显示姓名<input id="account-display-name" name="display_name" value="{{ current_user.display_name|default('', true) }}" minlength="2" maxlength="128" required autocomplete="name" aria-describedby="display-name-help"></label>
+      <small id="display-name-help" class="muted">2–128 个字符，用于账户菜单、作品作者和后台报表。</small>
+      <div class="form-footer"><button class="primary-btn" type="submit">保存姓名</button></div>
+    </form>
+  </section>
+  <section class="wb-panel account-settings-panel" aria-labelledby="password-heading">
+    <div class="section-head"><h2 id="password-heading">修改密码</h2></div>
+    <form action="/app/settings/password/form" method="post" class="stack-form" data-account-password>
+      <p class="muted" id="password-session-help">修改后，所有设备都需要重新登录。正在生成的视频会继续处理。</p>
+      <input type="hidden" name="username" value="{{ current_user.username }}" autocomplete="username">
+      <div class="form-error hidden" data-form-error role="alert" tabindex="-1"></div>
+      {% for field, label, autocomplete in [('current_password', '当前密码', 'current-password'), ('new_password', '新密码', 'new-password'), ('confirm_password', '确认新密码', 'new-password')] %}
+      <div class="account-password-field">
+        <label for="account-{{ field }}">{{ label }}</label>
+        <div class="account-password-control">
+          <input id="account-{{ field }}" type="password" name="{{ field }}" autocomplete="{{ autocomplete }}" required {% if field != 'current_password' %}minlength="6" aria-describedby="password-rules"{% endif %}>
+          <button type="button" class="ghost-btn" data-password-toggle aria-controls="account-{{ field }}" aria-pressed="false" aria-label="显示{{ label }}">显示</button>
+        </div>
+      </div>
+      {% endfor %}
+      <small id="password-rules" class="muted">新密码至少 6 位，不超过 72 字节，且不能与当前密码相同。中文等字符会占用多个字节。</small>
+      <div class="form-footer"><button class="primary-btn" type="submit" aria-describedby="password-session-help">修改密码并重新登录</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/workbench/account-settings.js?v=20260920-1"></script>{% endblock %}

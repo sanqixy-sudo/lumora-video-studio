@@ -54,15 +54,15 @@ def _set_auth_cookie(response, token: str):
 
 
 def _login_user(username: str, password: str, db: Session) -> tuple[User, str]:
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(User.username == username).populate_existing().with_for_update().first()
     if not user or not verify_password(password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
     if user.status != "active":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="账号已被禁用")
     user.last_login_at = datetime.now(UTC)
     db.add(user)
+    token = create_access_token(user.username, session_version=getattr(user, 'session_version', 0) or 0)
     db.commit()
-    token = create_access_token(user.username)
     return user, token
 
 
@@ -118,7 +118,7 @@ def register_form(
     except ValueError as exc:
         query = urlencode({"error": str(exc), "username": username})
         return RedirectResponse(f"/login?{query}", status_code=303)
-    token = create_access_token(user.username)
+    token = create_access_token(user.username, session_version=user.session_version or 0)
     response = RedirectResponse(url=_target_for_user(user, next), status_code=303)
     _set_auth_cookie(response, token)
     return response

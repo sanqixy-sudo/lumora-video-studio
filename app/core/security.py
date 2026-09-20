@@ -20,9 +20,9 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(subject: str, expires_minutes: int | None = None) -> str:
+def create_access_token(subject: str, expires_minutes: int | None = None, *, session_version: int = 0) -> str:
     expire = datetime.now(UTC) + timedelta(minutes=expires_minutes or settings.access_token_expire_minutes)
-    payload: dict[str, Any] = {'sub': subject, 'exp': expire}
+    payload: dict[str, Any] = {'sub': subject, 'exp': expire, 'session_version': session_version}
     return jwt.encode(payload, settings.app_secret_key, algorithm=ALGORITHM)
 
 
@@ -31,3 +31,9 @@ def decode_access_token(token: str) -> dict[str, Any]:
         return jwt.decode(token, settings.app_secret_key, algorithms=[ALGORITHM])
     except JWTError as exc:
         raise ValueError('Invalid token') from exc
+
+
+def session_version_matches(payload: dict[str, Any], user) -> bool:
+    # Legacy tokens stay valid until this account changes its password.
+    version = payload.get('session_version', 0)
+    return type(version) is int and version >= 0 and version == (getattr(user, 'session_version', 0) or 0)

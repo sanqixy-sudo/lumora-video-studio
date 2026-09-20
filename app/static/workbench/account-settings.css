@@ -1,0 +1,26 @@
+/* Account menu and self-service settings; shared theme tokens keep both themes aligned. */
+.wb-account-trigger .account-display-name {max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.wb-account-heading .account-identity {min-width:0;display:grid;gap:6px}
+.wb-account-heading .account-identity strong {overflow-wrap:anywhere}
+.wb-account-heading .account-identity small {font-size:12px;color:var(--wb-muted);overflow-wrap:anywhere}
+.wb-account-heading>span {flex-shrink:0}
+.wb-popover .account-settings-link {display:flex;align-items:center;gap:10px;min-height:44px;width:100%;justify-content:flex-start}
+.account-settings-page {max-width:760px;margin:0 auto}
+.account-settings-page .account-settings-panel {margin-bottom:24px;padding:24px}
+.account-settings-panel .section-head {margin-bottom:20px}
+.account-settings-panel .stack-form {display:grid;gap:12px}
+.account-settings-panel label {display:grid;gap:8px}
+.account-settings-panel input {width:100%;min-width:0}
+.account-settings-panel input[readonly] {color:var(--wb-muted);background:var(--wb-inset)}
+.account-settings-panel small,.account-settings-panel p {line-height:1.6}
+.account-settings-panel .form-footer {display:flex;justify-content:flex-start;margin-top:8px}
+.account-password-field {display:grid;gap:8px}
+.account-password-control {display:flex;align-items:center;gap:8px;min-width:0}
+.account-password-control input {flex:1}
+.account-password-control button {flex-shrink:0;min-width:56px;min-height:44px}
+.account-settings-panel [data-form-error] {overflow-wrap:anywhere}
+@media(max-width:767px) {
+  .account-settings-page .account-settings-panel {padding:18px;margin-bottom:16px}
+  .account-settings-panel .form-footer button {width:100%}
+  .wb-account .wb-popover {max-width:calc(100vw - 32px)}
+}

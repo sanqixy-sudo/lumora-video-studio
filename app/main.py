@@ -15,10 +15,10 @@ from app.api.admin.routes import router as admin_router
 from app.api.auth.routes import router as auth_router
 from app.api.files.routes import router as files_router
 from app.api.user.routes import router as user_router
+from app.api.user.settings import router as account_settings_router
 from app.core.config import settings
-from app.core.security import decode_access_token
 from app.db import SessionLocal
-from app.deps import get_db
+from app.deps import get_db, user_for_token
 from app.models.tables import User, Job, JobFile
 from app.services.bootstrap import ensure_bootstrap_admin, ensure_dirs
 from app.core.timezone import format_shanghai_datetime, format_shanghai_datetime_short
@@ -104,13 +104,8 @@ def _home_for_cookie(request: Request) -> str | None:
     token = request.cookies.get(settings.session_cookie_name)
     if not token:
         return None
-    try:
-        payload = decode_access_token(token)
-        username = payload.get("sub")
-    except Exception:
-        return None
     with SessionLocal() as db:
-        user = db.query(User).filter(User.username == username, User.status == "active").first()
+        user = user_for_token(db, token)
         if not user:
             return None
         if user.role == "admin":
@@ -161,6 +156,8 @@ def login_page(request: Request):
     if target:
         return RedirectResponse(next_url or target, status_code=303)
     login_notice = "登录已过期，请重新登录。" if request.query_params.get("expired") else None
+    if request.query_params.get("notice") == "password_changed":
+        login_notice = "密码已修改，请使用新密码重新登录。"
     db = SessionLocal()
     try:
         registration_enabled = get_system_setting_bool(db, "registration_enabled", False)
@@ -197,6 +194,7 @@ def readyz() -> dict[str, str]:
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(account_settings_router)
 app.include_router(admin_router)
 app.include_router(files_router)
 
