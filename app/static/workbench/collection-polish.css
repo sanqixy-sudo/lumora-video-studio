@@ -96,3 +96,21 @@
  .wb-collection-page .wb-page-heading{flex-wrap:wrap}
  .wb-glass.wb-collection-page .plaza-video-wrap .plaza-video-shell{height:320px!important}
 }
+
+/* Detail video owns its aspect ratio; metadata must not stretch the player. */
+.wb #plaza-modal{--plaza-ratio:.5625;--plaza-preview-height:min(70dvh,calc(100dvh - 160px))}
+.wb #plaza-modal .plaza-modal-dialog{margin:0;max-height:calc(100dvh - 48px)}
+.wb #plaza-modal .plaza-modal-grid{align-items:start;grid-template-columns:minmax(0,min(50%,calc(var(--plaza-preview-height)*var(--plaza-ratio)))) minmax(0,1fr)}
+.wb #plaza-modal .player-wrap{position:relative;display:block;flex:none;min-height:0;width:100%;aspect-ratio:var(--plaza-ratio);background:#11121c;align-self:start}
+.wb #plaza-modal #plaza-player{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;object-fit:contain}
+.wb #plaza-modal .plaza-detail-side{max-height:var(--plaza-preview-height);overflow:auto;overscroll-behavior:contain;padding-right:4px}
+.wb #plaza-modal .meta-grid .v{overflow-wrap:anywhere}
+@media(max-width:767px){
+ .wb #plaza-modal{--plaza-preview-height:62dvh}
+ .wb #plaza-modal .plaza-modal-dialog{max-height:calc(100dvh - 24px);padding:16px}
+ .wb #plaza-modal .plaza-modal-grid{grid-template-columns:minmax(0,1fr);gap:20px}
+ .wb #plaza-modal .player-wrap{width:min(100%,calc(var(--plaza-preview-height)*var(--plaza-ratio)));justify-self:center}
+ .wb #plaza-modal .plaza-detail-side{max-height:none;overflow:visible;padding:0}
+ .wb #plaza-modal .section-head{position:sticky;top:-16px;z-index:2;background:var(--wb-surface);padding-block:8px}
+ .wb #plaza-modal [data-close-plaza]:is(button){min-height:44px}
+}

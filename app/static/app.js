@@ -1257,6 +1257,13 @@ function initPlazaPage() {
   const copyPrompt = document.getElementById("plaza-copy-prompt");
   const protectionRow = document.getElementById("plaza-protection-row");
 
+  function setDetailRatio(width, height) {
+    const ratio = Number(width) / Number(height);
+    modal?.style.setProperty('--plaza-ratio', String(Number.isFinite(ratio) && ratio > 0 ? ratio : 9 / 16));
+  }
+  player?.addEventListener('loadedmetadata', () => {
+    if (player.videoWidth && player.videoHeight) setDetailRatio(player.videoWidth,player.videoHeight);
+  });
   let modalEpoch=0,previewEpoch=0;
   async function openModal(jobId,origin) {
     const request=++modalEpoch;
@@ -1273,6 +1280,12 @@ function initPlazaPage() {
     prompt.textContent = payload.prompt || "-";
     if (copyPrompt) copyPrompt.dataset.copyText = payload.prompt || "";
     protectionRow?.classList.toggle("hidden", !payload.is_private_protected);
+    // Stop the card preview before opening another player, avoiding duplicate audio.
+    previewEpoch++;
+    document.querySelectorAll('.plaza-video-shell').forEach(stopInlinePreview);
+    const dimensions = String(payload.size || '').toLowerCase().split(/[x×]/);
+    setDetailRatio(dimensions[0],dimensions[1]);
+    player.poster = payload.output_file ? `/app/files/${payload.output_file.id}/poster` : '';
     player.src = payload.output_file ? `/app/files/${payload.output_file.id}/stream` : "";
     SoraUI.setModalOrigin(modal,origin);
     modal.classList.remove("hidden");
@@ -1284,6 +1297,7 @@ function initPlazaPage() {
     modal.classList.add("hidden");
     player.pause();
     player.removeAttribute("src");
+    player.removeAttribute("poster");
     player.load();
     document.body.style.overflow = "";
   }
