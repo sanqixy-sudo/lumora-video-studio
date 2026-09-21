@@ -130,6 +130,14 @@ class DownloadDeadlineTests(unittest.TestCase):
                 with self.assertRaises(sora_api.UpstreamError):
                     first.result(timeout=1)
 
+    def test_proxy_is_scoped_to_transfer_and_kept_out_of_process_arguments(self):
+        result = subprocess.CompletedProcess([], 28, "000\n", "")
+        with tempfile.TemporaryDirectory() as folder, patch.object(sora_api.settings, "video_download_proxy", "http://user:password@127.0.0.1:20171"), patch.object(sora_api.subprocess, "run", return_value=result) as run:
+            with self.assertRaises(sora_api.UpstreamError):
+                sora_api._download_url(self.url + "/ok", Path(folder) / "v.mp4", time.perf_counter())
+            self.assertIn('proxy = "http://user:password@127.0.0.1:20171"', run.call_args.kwargs["input"])
+            self.assertNotIn("password", " ".join(run.call_args.args[0]))
+
     def test_hung_process_is_bounded_and_signed_url_not_in_error(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(sora_api.subprocess, "run", side_effect=subprocess.TimeoutExpired("curl", 125)) as run:
             with self.assertRaises(sora_api.UpstreamError) as raised:

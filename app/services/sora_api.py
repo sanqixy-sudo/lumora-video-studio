@@ -638,6 +638,13 @@ def _download_url_locked(video_url: str, dest_path: Path, started: float) -> tup
         if any(char in video_url for char in ("\r", "\n", "\x00")):
             raise UpstreamError("Invalid video download URL")
         config_url = video_url.replace("\\", "\\\\").replace('"', '\\"')
+        transfer_config = 'url = "' + config_url + '"\n'
+        proxy = settings.video_download_proxy.strip()
+        if proxy:
+            if any(char in proxy for char in ("\r", "\n", "\x00")):
+                raise UpstreamError("Invalid video download proxy")
+            config_proxy = proxy.replace("\\", "\\\\").replace('"', '\\"')
+            transfer_config += 'proxy = "' + config_proxy + '"\nnoproxy = ""\n'
         result = subprocess.run(
             ["curl", "--disable", "--silent", "--show-error", "--location",
              "--fail", "--proto", "=http,https", "--proto-redir", "=http,https",
@@ -645,7 +652,7 @@ def _download_url_locked(video_url: str, dest_path: Path, started: float) -> tup
              "--speed-limit", "1024", "--speed-time", "20",
              "--user-agent", "Mozilla/5.0", "--continue-at", "-", "--output", str(temp_path),
              "--write-out", "%{http_code}\n%{content_type}", "--config", "-"],
-            input='url = "' + config_url + '"\n', capture_output=True, text=True,
+            input=transfer_config, capture_output=True, text=True,
             timeout=DOWNLOAD_TOTAL_TIMEOUT_SECONDS + 5,
         )
         latency_ms = int((time.perf_counter() - started) * 1000)

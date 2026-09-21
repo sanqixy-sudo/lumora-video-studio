@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     sora_api_base_url: str = 'https://niubi.zeabur.app'
     sora_api_http_timeout: int = 120
     sora_api_status_http_timeout: int = 30
+    # Optional proxy for video file transfers only; API requests stay unchanged.
+    video_download_proxy: str = ""
     worker_poll_interval: int = 2
     max_running_jobs: int = 3
     submit_max_attempts: int = 3
