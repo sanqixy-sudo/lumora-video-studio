@@ -1,0 +1,55 @@
+/* Shared form surfaces: native values, consistent presentation. */
+.wb .soft-select{position:relative;display:block;width:100%;min-width:0;text-transform:none;letter-spacing:normal}
+.wb select.soft-select-native{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;border:0!important;opacity:0;pointer-events:none;clip-path:inset(50%)}
+.wb .soft-select-trigger{
+ display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px 13px;box-sizing:border-box;
+ border:1px solid var(--wb-line);border-radius:11px;background:var(--wb-surface);color:var(--wb-ink);
+ font:inherit;font-size:14px;font-weight:400;line-height:1.5;text-align:left;cursor:pointer;touch-action:manipulation;
+ transition:border-color 130ms,background-color 130ms,box-shadow 130ms;
+}
+.soft-select-value{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.soft-select-arrow{flex:none;width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);color:var(--wb-muted);transition:transform 180ms cubic-bezier(.22,1,.36,1)}
+.soft-select-trigger[aria-expanded=true] .soft-select-arrow{transform:translateY(2px) rotate(225deg)}
+.wb .soft-select-trigger:is(:focus-visible,[aria-expanded=true]){outline:0;border-color:var(--wb-accent);box-shadow:0 0 0 3px var(--wb-selection)}
+.wb .soft-select-trigger[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+.wb .soft-select-trigger[aria-invalid=true]{border-color:var(--wb-danger,#c84657)}
+.wb .soft-select-error{color:var(--wb-danger,#c84657);font-size:12px;line-height:1.6;margin-top:5px}
+.wb .soft-select-error[hidden]{display:none}
+.wb .soft-select-menu{
+ position:fixed;inset:auto;margin:0;padding:6px;box-sizing:border-box;z-index:200;overflow:auto;overscroll-behavior:contain;
+ background:var(--wb-raised);color:var(--wb-ink);border:1px solid var(--wb-line);border-radius:14px;
+ box-shadow:0 14px 40px #15152622,0 3px 8px #1515260a;font-size:14px;line-height:1.5;
+ opacity:0;translate:0 -5px;visibility:hidden;pointer-events:none;
+ transition:opacity 120ms ease-out,translate 120ms ease-out,visibility 120ms,display 120ms allow-discrete,overlay 120ms allow-discrete;
+}
+.wb .soft-select-menu.is-open{opacity:1;translate:0 0;visibility:visible;pointer-events:auto;transition-duration:170ms;transition-timing-function:cubic-bezier(.22,1,.36,1)}
+.wb .soft-select-menu[data-side=top]:not(.is-open){translate:0 5px}
+@starting-style{.wb .soft-select-menu.is-open{opacity:0;translate:0 -5px}.wb .soft-select-menu.is-open[data-side=top]{translate:0 5px}}
+.soft-select-group{padding:9px 11px 5px;color:var(--wb-muted);font-size:11px;font-weight:600}
+.soft-select-menu [role=group]+[role=group]{border-top:1px solid var(--wb-line);margin-top:5px;padding-top:2px}
+.soft-select-option{position:relative;display:flex;align-items:center;min-height:42px;padding:9px 34px 9px 11px;border-radius:9px;box-sizing:border-box;cursor:pointer;overflow-wrap:anywhere;transition:background-color 90ms,color 90ms}
+.soft-select-option[aria-selected=true]{color:var(--wb-accent);background:var(--wb-selection);font-weight:500}
+.soft-select-option[aria-selected=true]::after{content:"";position:absolute;right:14px;width:5px;height:9px;border:solid currentColor;border-width:0 1.7px 1.7px 0;transform:rotate(45deg)}
+.soft-select-option.is-active{outline:1px solid var(--wb-accent);outline-offset:-1px;background:var(--wb-selection)}
+.soft-select-option[aria-disabled=true]{opacity:.4;cursor:not-allowed}
+.wb [data-per-page-form] .soft-select{width:auto;min-width:78px}
+@media(hover:hover) and (pointer:fine){
+ .wb .soft-select-trigger:not([aria-disabled=true]):hover{border-color:var(--wb-accent)}
+ .soft-select-option:not([aria-disabled=true]):hover{background:var(--wb-selection)}
+}
+/* Match the softer entrance on the account and record menus. */
+.wb .wb-popover:not(.hidden),.wb .menu-panel.wb-floating-menu:not(.hidden){transition-duration:160ms;transition-timing-function:cubic-bezier(.22,1,.36,1)}
+.wb .menu-panel.wb-floating-menu{border-radius:12px;translate:0 0;transition:opacity 110ms ease-out,translate 110ms ease-out,display 110ms allow-discrete}
+.wb .menu-panel.wb-floating-menu.hidden{translate:0 -4px}
+@starting-style{.wb .wb-popover:not(.hidden),.wb .menu-panel.wb-floating-menu:not(.hidden){opacity:0;translate:0 -5px}}
+.wb input[type=file]::file-selector-button{margin-right:12px;border:0;border-radius:8px;padding:8px 12px;background:var(--wb-selection);color:var(--wb-accent);font:inherit;cursor:pointer}
+.wb .checkline{min-height:44px;align-items:center;gap:9px}
+.wb .wb-aspect label>span{transition:background-color 130ms,border-color 130ms,color 130ms}
+@media(max-width:767px){.soft-select-option{min-height:44px}.wb .soft-select-menu{max-width:calc(100vw - 24px)}}
+@media(prefers-reduced-motion:reduce){.wb :is(.soft-select-trigger,.soft-select-menu,.soft-select-arrow,.soft-select-option,.wb-popover,.menu-panel.wb-floating-menu,.wb-aspect label>span){transition:none!important}}
+@media(forced-colors:active){.soft-select-option[aria-selected=true]{outline:2px solid Highlight}.soft-select-option.is-active{outline:2px dashed Highlight}.wb .soft-select-trigger{border-color:ButtonText}}
+
+/* Quiet resting borders; focus remains explicit. */
+.wb-glass :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),textarea):not(:focus):not([aria-invalid=true]){border-color:var(--wb-line)}
+.wb-glass :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),textarea):focus-visible{outline:0;border-color:var(--wb-accent);box-shadow:0 0 0 3px var(--wb-selection)}
+@media(hover:hover) and (pointer:fine){.wb-glass :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),textarea):not(:focus):not(:disabled):hover{border-color:var(--wb-line-strong)}}

@@ -29,21 +29,66 @@ const SoraUI = (() => {
     clearTimeout(toastTimer);
     if (type !== 'error') toastTimer = setTimeout(() => element.classList.add('hidden'), 3500);
   }
-  function formError(form, error) {
-    let block = form.querySelector('[data-form-error],#studio-form-error');
-    if (!block) { block = document.createElement('div'); block.dataset.formError = ''; block.className = 'form-error'; block.setAttribute('role', 'alert'); block.tabIndex = -1; form.prepend(block); }
-    block.setAttribute('aria-live','polite');block.textContent = message(error?.message || error); block.classList.remove('hidden'); block.focus({preventScroll:true}); block.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
-    form.querySelectorAll('.field-error').forEach(note => {
-      form.querySelectorAll('[aria-describedby]').forEach(control=>{const ids=control.getAttribute('aria-describedby').split(/\s+/).filter(id=>id!==note.id);if(ids.length)control.setAttribute('aria-describedby',ids.join(' '));else control.removeAttribute('aria-describedby');});note.remove();
-    });
-    form.querySelectorAll('[aria-invalid=true]').forEach(node => node.removeAttribute('aria-invalid'));
-    if (Array.isArray(error?.detail)) error.detail.forEach(item => {
-      const control = form.elements.namedItem(item.loc?.[item.loc.length - 1]);
-      if (!(control instanceof HTMLElement)) return;
-      control.setAttribute('aria-invalid','true');queueMicrotask(()=>{const first=form.querySelector('[aria-invalid=true]'),panel=first?.closest('[data-tab-panel]');if(panel&&!panel.classList.contains('active'))form.querySelector('[data-tab-target='+panel.dataset.tabPanel+']')?.click();first?.focus();});
-      const note = document.createElement('small'); note.className = 'field-error'; note.textContent = item.msg; note.id=`field-error-${++fieldErrorId}`;control.setAttribute('aria-describedby',[control.getAttribute('aria-describedby'),note.id].filter(Boolean).join(' '));control.after(note);
-    });
+  function clearFieldError(control) {
+    const id = control.dataset.fieldErrorId;
+    if (id) document.getElementById(id)?.remove();
+    const display = control.closest('.soft-select')?.querySelector('.soft-select-trigger') || control._flatpickr?.altInput || control;
+    for (const el of new Set([control,display])) {
+      el.removeAttribute('aria-invalid');
+      const ids = (el.getAttribute('aria-describedby') || '').split(/\s+/).filter(value => value && value !== id);
+      if (ids.length) el.setAttribute('aria-describedby',ids.join(' ')); else el.removeAttribute('aria-describedby');
+    }
+    delete control.dataset.fieldErrorId;
+    const form = control.form;
+    if (form && !form.querySelector('[data-field-error-id]')) form.querySelector('[data-field-summary="true"]')?.classList.add('hidden');
   }
+  function fieldError(control, text) {
+    clearFieldError(control);
+    const display = control.closest('.soft-select')?.querySelector('.soft-select-trigger') || control._flatpickr?.altInput || control;
+    const note = document.createElement('small'); note.className = 'field-error'; note.textContent = text; note.id = `field-error-${++fieldErrorId}`;
+    control.dataset.fieldErrorId = note.id;
+    for (const el of new Set([control,display])) {
+      el.setAttribute('aria-invalid','true');
+      el.setAttribute('aria-describedby',[el.getAttribute('aria-describedby'),note.id].filter(Boolean).join(' '));
+    }
+    (control.closest('.soft-select,.account-password-control') || display).after(note);
+    return display;
+  }
+  function formError(form, error) {
+    form.querySelectorAll('[data-field-error-id]').forEach(clearFieldError);
+    let block = form.querySelector('[data-form-error],#studio-form-error');
+    if (!block) { block = document.createElement('div'); block.dataset.formError = ''; block.className = 'form-error'; block.setAttribute('role','alert'); block.tabIndex = -1; form.prepend(block); }
+    block.setAttribute('aria-live','polite'); block.textContent = message(error?.message || error); block.classList.remove('hidden');
+    let first;
+    if (Array.isArray(error?.detail)) error.detail.forEach(item => {
+      const path = (item.loc || []).filter(part => !['body','query','form'].includes(part));
+      const field = [...form.elements].find(el => el.name === path[0]);
+      if (!field) return;
+      const peers = [...form.elements].filter(el => el.name === field.name);
+      const control = Number.isInteger(path[1]) ? peers[path[1]] : field;
+      if (!(control instanceof HTMLElement)) return;
+      const display = fieldError(control,item.msg);
+      first ||= display;
+    });
+    block.dataset.fieldSummary = String(Boolean(first));
+    const target = first || block;
+    const panel = target.closest('[data-tab-panel]');
+    if (panel && !panel.classList.contains('active')) form.querySelector(`[data-tab-target="${panel.dataset.tabPanel}"]`)?.click();
+    // Expand closed link fields before focusing their error.
+    for (let parent=target.parentElement; parent && parent!==form; parent=parent.parentElement) if (parent.tagName === 'DETAILS') parent.open=true;
+    target.focus({preventScroll:true}); target.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});
+  }
+  document.addEventListener('invalid', event => {
+    const control = event.target;
+    if (!document.body.classList.contains('wb') || !control.form || !control.matches('input,textarea') || control.type === 'hidden') return;
+    // Enhanced selects already present their own validation; date alt inputs stay visible.
+    event.preventDefault(); const display = fieldError(control,control.validationMessage);
+    if (control.form.querySelector('input:invalid,select:invalid,textarea:invalid') === control) queueMicrotask(()=>display.focus());
+    for (let parent=control.parentElement;parent&&parent!==control.form;parent=parent.parentElement) if(parent.tagName==='DETAILS') parent.open=true;
+  },true);
+  for (const type of ['input','change']) document.addEventListener(type,event => {
+    if (event.target instanceof HTMLElement && event.target.dataset.fieldErrorId) clearFieldError(event.target);
+  });
   function confirmDialog(text, options = {}) {
     if (pendingDialog) return Promise.resolve(false);
     return new Promise(resolve => {

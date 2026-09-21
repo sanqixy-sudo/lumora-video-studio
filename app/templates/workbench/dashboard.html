@@ -7,6 +7,11 @@
 <form action="/app/jobs/batch/form" method="post" enctype="multipart/form-data" id="create-job-form" data-async-formdata="/app/jobs/batch" data-available-quota="{{ quota_stats.total_available }}" class="wb-creation-form">
 <input type="hidden" name="batch_request_id" value="{{ new_request_id }}">
 <div class="glass-workbench"><section class="wb-settings" aria-label="共享生成设置">
+ <ol class="wb-create-guide" aria-label="创作准备">
+ <li><button type="button" data-create-step="settings"><span class="wb-step-number">1</span><span>选择模型<span class="wb-step-detail">填写 APP 与地区</span></span></button></li>
+ <li><button type="button" data-create-step="materials"><span class="wb-step-number">2</span><span>参考素材<span class="wb-step-detail" id="material-step-hint">按模型要求添加</span></span></button></li>
+ <li><button type="button" data-create-step="prompts"><span class="wb-step-number">3</span><span>编写提示词<span class="wb-step-detail">每条生成一个视频</span></span></button></li>
+ </ol>
  <div class="wb-settings-fields">
   <label class="wb-model-label">生成模型<select name="model_choice" id="job-model-select" required><option value="">选择模型与时长</option>{% for group in model_options|groupby('provider_name') %}<optgroup label="{{ {'sora_api':'Sora','seedance':'Seedance','veo_omni':'VEO Omni','wuyin_omni':'Wuyin Omni'}.get(group.grouper,group.grouper) }}">{% for option in group.list %}<option value="{{ option.value }}" data-seconds="{{ option.seconds }}" data-provider="{{ option.provider_name }}" data-model-id="{{ option.model_id }}">{{ option.label }}</option>{% endfor %}</optgroup>{% endfor %}</select><input type="hidden" name="seconds" id="job-seconds-select"></label>
   <label>APP 名称<input autocomplete="off" name="product_name" maxlength="80" placeholder="例如 NiceReels…" required></label>
@@ -46,7 +51,7 @@
 </div>
 </div>
 <div id="studio-form-error" class="form-error hidden" role="alert" tabindex="-1"></div>
-<footer class="wb-submit"><div class="wb-submit-summary"><strong id="prompt-count-text" aria-live="polite">0 个视频待生成</strong><span id="quota-cost-text">填写提示词后计算预计额度</span></div><a class="wb-available" href="/app/quota/page">可用 <strong>{{ quota_stats.total_available }}</strong> 次</a><button class="primary-btn" type="submit" data-loading-text="正在提交…" {% if not model_options %}disabled{% endif %}>生成视频 {{ icon('arrow') }}</button></footer>
+<footer class="wb-submit"><p id="create-readiness" class="wb-create-readiness" role="status">请先选择模型，填写 APP 名称、地区和提示词。</p><div class="wb-submit-summary"><strong id="prompt-count-text" aria-live="polite">0 个视频待生成</strong><span id="quota-cost-text">填写提示词后计算预计额度</span></div><a class="wb-available" href="/app/quota/page">可用 <strong>{{ quota_stats.total_available }}</strong> 次</a><button class="primary-btn" type="submit" aria-describedby="create-readiness" data-loading-text="正在提交…" {% if not model_options %}disabled{% endif %}>生成视频 {{ icon('arrow') }}</button></footer>
 </form>
 
 </div>

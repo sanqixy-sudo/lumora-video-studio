@@ -1,18 +1,15 @@
 {% extends "base.html" %}
 {% block title %}视频广场{% endblock %}
+{% block body_class %}wb-collection-page wb-plaza-page{% endblock %}
 {% block content %}
 <section class="wb-page-heading">
   <div>
-    <h2>视频广场</h2>
+    <h1>视频广场</h1>
+    <p>浏览公开作品，发现新的创作灵感。</p>
   </div>
 </section>
 
 <section class="wb-panel">
-  <div class="section-head">
-    <div>
-      <h2>公开作品</h2>
-    </div>
-  </div>
 
   <form class="filter-bar modern-filter" method="get" action="/app/plaza/page">
     <label><span>APP 名称</span><input autocomplete="off" type="search" name="product_name" value="{{ product_name }}" placeholder="输入 APP 关键词…" /></label>
@@ -23,6 +20,7 @@
   </form>
 
   {% if cards %}
+  <div class="collection-summary"><h2>公开作品</h2><span>本页 {{ cards|length }} 个 · 点击封面预览</span></div>
   <div class="plaza-grid plaza-fixed-grid">
     {% for card in cards %}
     {% set library = false %}{% include 'workbench/media_card.html' %}
@@ -30,7 +28,16 @@
   </div>
   {% include "partials/pagination_simple.html" %}
   {% else %}
-  <div class="empty-panel">暂无内容</div>
+  <div class="empty-panel collection-empty">
+    {{ icon('globe') }}
+    {% if product_name or region_name %}
+    <h2>没有找到相关作品</h2><p>换个 APP 名称或地区试试，也可以浏览全部公开作品。</p>
+    <a class="secondary-btn" href="/app/plaza/page?per_page={{ per_page }}">清除筛选</a>
+    {% else %}
+    <h2>这里还没有公开作品</h2><p>公开作品会展示在这里。你也可以先开始自己的创作。</p>
+    <a class="primary-btn" href="/app">开始创作</a>
+    {% endif %}
+  </div>
   {% endif %}
 </section>
 

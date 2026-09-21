@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}我的任务{% endblock %}
+{% block body_class %}wb-collection-page wb-jobs-page{% endblock %}
 {% block content %}
 <section class="wb-page-heading">
   <div>
-    <h2>我的任务</h2>
+    <h1>我的任务</h1>
+    <p>查看生成状态，继续处理你的任务。</p>
   </div>
   <a class="primary-btn small-btn" href="/app">创建任务</a>
 </section>
@@ -11,14 +13,14 @@
 <section class="wb-panel">
   
   <div class="table-wrap surface-table">
-    <table class="table clean-table job-list-table">
-      <thead>
-        <tr><th>ID</th><th>APP / 地区</th><th>状态</th><th>队列</th><th>进度</th><th>生成规格</th><th>提交时间</th><th>更新时间</th><th class="action-col">操作</th></tr>
+    <table class="table clean-table job-list-table" role="table" aria-label="我的任务">
+      <thead role="rowgroup">
+        <tr role="row"><th scope="col" role="columnheader">ID</th><th scope="col" role="columnheader">APP / 地区</th><th scope="col" role="columnheader">状态</th><th scope="col" role="columnheader">队列</th><th scope="col" role="columnheader">进度</th><th scope="col" role="columnheader">生成规格</th><th scope="col" role="columnheader">提交时间</th><th scope="col" role="columnheader">更新时间</th><th scope="col" role="columnheader" class="action-col">操作</th></tr>
       </thead>
-      <tbody>
+      <tbody role="rowgroup">
         {% for job in jobs %}
-        <tr>
-          <td>
+        <tr role="row">
+          <td role="cell">
             <div class="user-cell">
               <strong>#{{ job.id }}</strong>
               {% if job.batch_id and batch_map.get(job.batch_id) %}
@@ -26,20 +28,24 @@
               {% endif %}
             </div>
           </td>
-          <td><div class="meta-stack"><strong>{{ job.product_name or '-' }}</strong><span>{{ job.region_name or '-' }}</span></div></td>
-          <td><span class="badge status-{{ job.status }}">{{ status_label(job.status) }}</span></td>
-          <td>{{ queue_map.get(job.id, "-") }}</td>
-          <td>
+          <td role="cell"><div class="meta-stack"><strong>{{ job.product_name or '-' }}</strong><span>{{ job.region_name or '-' }}</span></div></td>
+          <td role="cell"><span class="badge status-{{ job.status }}">{{ {'queued':'排队中','polling':'生成中','remote_completed':'待下载','download_waiting':'等待下载','downloading':'下载中','download_failed':'下载失败','interrupted':'已暂停'}.get(job.status, status_label(job.status)) }}</span></td>
+          <td role="cell" data-label="队列">{{ queue_map.get(job.id, "-") }}</td>
+          <td role="cell" data-label="进度">
             <div class="mini-progress"><span style="width: {{ job.progress }}%"></span></div>
             <span class="tiny muted">{{ job.progress }}%</span>
           </td>
-          <td><div class="meta-stack"><strong>{{ job.seconds }} 秒 · {{ job.size }}</strong><span>{{ job.model }}</span></div></td>
-          <td><time data-ui-time>{{ (job.queued_at or job.created_at)|dt }}</time></td>
-          <td><time data-ui-time>{{ job.updated_at|dt }}</time></td>
-          <td class="action-cell"><a class="ghost-btn small-btn" href="/app/jobs/{{ job.id }}/page">详情</a></td>
+          <td role="cell" data-label="生成规格"><div class="meta-stack"><strong>{{ job.seconds }} 秒 · {{ job.size }}</strong><span>{{ job.model }}</span></div></td>
+          <td role="cell" data-label="提交时间"><time data-ui-time>{{ (job.queued_at or job.created_at)|dt }}</time></td>
+          <td role="cell" data-label="更新时间"><time data-ui-time>{{ job.updated_at|dt }}</time></td>
+          <td role="cell" class="action-cell">
+            {% if job.status in ['failed','download_failed','interrupted'] %}
+            <div class="wb-job-recovery"><p>{{ job.error_message or job.error_text or ('自动重试已暂停。' if job.status == 'interrupted' else '任务遇到异常，请查看详情。') }}</p><a class="secondary-btn small-btn" href="/app/jobs/{{ job.id }}/page#job-recovery">查看原因与处理</a></div>
+            {% else %}<a class="ghost-btn small-btn" href="/app/jobs/{{ job.id }}/page">{{ '查看结果' if job.status == 'completed' else '查看进度' }}</a>{% endif %}
+          </td>
         </tr>
         {% else %}
-        <tr><td colspan="9"><div class="empty-state compact-empty">暂无任务</div></td></tr>
+        <tr role="row"><td role="cell" colspan="9" class="empty-cell"><div class="empty-state collection-empty">{{ icon("jobs") }}<h2>还没有生成任务</h2><p>准备好提示词和素材，就可以开始你的第一份创作。</p><a class="primary-btn" href="/app">开始创作</a></div></td></tr>
         {% endfor %}
       </tbody>
     </table>

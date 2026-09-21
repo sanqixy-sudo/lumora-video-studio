@@ -1,10 +1,43 @@
-.theme-icon-switch{--theme-icon-bg:var(--wb-inset);--theme-icon-ink:var(--wb-muted);--theme-icon-active:var(--wb-accent);--theme-icon-selected:var(--wb-surface);--theme-icon-line:var(--wb-line-strong);display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--theme-icon-line);border-radius:8px;background:var(--theme-icon-bg);width:max-content;flex-shrink:0}
-.theme-icon-switch select[hidden]{display:none!important}
-.theme-icon-switch .theme-icon-button{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;min-height:36px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--theme-icon-ink);cursor:pointer;touch-action:manipulation;flex-shrink:0;transform:none;transition:background-color 100ms ease-out,color 100ms ease-out}
-.theme-icon-switch .theme-icon-button[aria-pressed=true]{background:var(--theme-icon-selected);color:var(--theme-icon-active);box-shadow:0 1px 2px #1018280a}
-.theme-icon-button svg{display:block;width:19px;height:19px;flex-shrink:0}
-.theme-icon-switch .theme-icon-button:focus-visible{outline:2px solid var(--theme-icon-active);outline-offset:2px}
-.theme-icon-switch .theme-icon-button:active{opacity:.75}
-@media(hover:hover) and (pointer:fine){.theme-icon-switch .theme-icon-button:hover{background:var(--theme-icon-selected)}}
-@media(max-width:767px){.theme-icon-switch .theme-icon-button{width:44px;height:44px;min-height:44px}}
-@media(prefers-reduced-motion:reduce){.theme-icon-switch .theme-icon-button{transition:none}}
+/* A compact three-state control, shared by workbench, login and error pages. */
+.theme-cycle-control{display:inline-flex;align-items:center;flex:none}
+.theme-cycle-control select[hidden]{display:none!important}
+.wb .theme-cycle-button{
+ display:inline-grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;
+ border:1px solid var(--wb-line);border-radius:12px;background:var(--wb-surface);color:var(--wb-muted);
+ cursor:pointer;touch-action:manipulation;flex:none;
+ transition:background-color 120ms,color 120ms,border-color 120ms;
+}
+.wb .theme-cycle-button[data-mode=light]{color:var(--wb-accent)}
+.wb .theme-cycle-button[data-mode=dark]{color:var(--wb-accent)}
+.wb .theme-cycle-button:focus-visible{outline:2px solid var(--wb-accent);outline-offset:3px}
+.wb .theme-cycle-button:active .theme-icon-stack{scale:.92}
+.theme-icon-stack{display:block;position:relative;width:21px;height:21px;transition:scale 100ms}
+.theme-toggle-icon{position:absolute;inset:0;display:block;opacity:0;transform:rotate(-55deg) scale(.65);transition:opacity 160ms ease-out,transform 200ms cubic-bezier(.22,1,.36,1)}
+.theme-toggle-icon svg{display:block;width:21px;height:21px}
+.theme-cycle-button[data-mode=light] [data-icon=light],
+.theme-cycle-button[data-mode=dark] [data-icon=dark],
+.theme-cycle-button[data-mode=system] [data-icon=system]{opacity:1;transform:rotate(0) scale(1)}
+.theme-cycle-status{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(hover:hover) and (pointer:fine){.wb .theme-cycle-button:hover{background:var(--wb-selection);border-color:var(--wb-accent);color:var(--wb-accent)}}
+/* Crossfade the page as a whole, including gradients; keep the small icon independent. */
+html[data-theme-transition=view] .theme-toggle-icon{transition:none}
+html[data-theme-transition=view]::view-transition{pointer-events:none}
+html[data-theme-transition=view]::view-transition-group(root){animation:none}
+html[data-theme-transition=view]::view-transition-old(root){animation:none;mix-blend-mode:normal}
+html[data-theme-transition=view]::view-transition-new(root){animation:theme-page-in 180ms ease-out both;mix-blend-mode:normal}
+html[data-theme-transition=view]::view-transition-group(theme-mode-icon){animation-duration:200ms}
+html[data-theme-transition=view]::view-transition-old(theme-mode-icon){animation:theme-icon-out 160ms ease-out both;mix-blend-mode:normal}
+html[data-theme-transition=view]::view-transition-new(theme-mode-icon){animation:theme-icon-in 200ms cubic-bezier(.22,1,.36,1) both;mix-blend-mode:normal}
+@keyframes theme-page-in{from{opacity:0}to{opacity:1}}
+@keyframes theme-icon-out{to{opacity:0;transform:rotate(-55deg) scale(.65)}}
+@keyframes theme-icon-in{from{opacity:0;transform:rotate(55deg) scale(.65)}to{opacity:1;transform:rotate(0) scale(1)}}
+/* Older browsers interpolate surface colors and retain the icon's CSS transition. */
+html[data-theme-transition=css] body,
+html[data-theme-transition=css] body *:not(.theme-toggle-icon){
+ transition-property:background-color,color,border-color,box-shadow,fill,stroke!important;
+ transition-duration:180ms!important;transition-timing-function:ease-out!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .theme-toggle-icon,.theme-icon-stack,.wb .theme-cycle-button{transition:none!important}
+ ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}

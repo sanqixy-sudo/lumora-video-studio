@@ -1,0 +1,69 @@
+/* Workflow feedback uses the existing theme tokens and native controls. */
+.wb-create-guide{list-style:none;margin:0 0 16px;padding:0;display:flex;gap:24px;flex-wrap:wrap}
+.wb-create-guide li{min-width:0}
+.wb-create-guide button{display:flex;gap:9px;align-items:center;text-align:left;background:transparent;color:var(--wb-ink);padding:4px 0;font:inherit;font-size:13px;border:0;border-radius:6px}
+.wb-step-number{display:grid;place-items:center;width:25px;height:25px;flex:none;background:var(--wb-selection);color:var(--wb-accent);border-radius:8px;font-size:12px}
+.wb-step-detail{display:block;color:var(--wb-muted);font-size:11px;line-height:1.6}
+.wb-glass.wb-create-page .wb-submit{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 20px}
+.wb-create-readiness{grid-column:1/-1;grid-row:2;margin:0;color:var(--wb-muted);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.wb-create-readiness[data-ready=true]{color:var(--wb-success)}
+.wb-glass.wb-create-page .wb-submit-summary{grid-column:1;grid-row:1;min-width:0}
+.wb-glass.wb-create-page .wb-available{grid-column:2;grid-row:1}
+.wb-glass.wb-create-page .wb-submit>.primary-btn{grid-column:3;grid-row:1}
+.wb :is(.field-error,.form-error){overflow-wrap:anywhere}
+.wb .field-error{display:block;margin:6px 0 2px;color:var(--wb-error);font-size:12px;line-height:1.5}
+.wb :is(input,textarea,.soft-select-trigger)[aria-invalid=true]{border-color:var(--wb-error);outline-color:var(--wb-error)}
+.wb .prompt-card:has(textarea[aria-invalid=true]){border-color:var(--wb-error)}
+.wb .prompt-card>.field-error{padding:0 14px 10px}
+.wb .wb-recovery-hint{margin:14px 0 0;color:var(--wb-muted);font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.wb .wb-task-error{overflow-wrap:anywhere}
+.wb .wb-job-recovery{min-width:150px;max-width:260px;white-space:normal;display:grid;gap:8px;justify-items:start}
+.wb .wb-job-recovery p{margin:0;line-height:1.6;color:var(--wb-error);font-size:12px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.wb .job-list-table .badge{white-space:nowrap}
+.wb .status-queued{background:var(--wb-warning-bg);color:var(--wb-warning)}
+.wb .status-polling,.wb .status-downloading{background:var(--wb-selection);color:var(--wb-accent)}
+.wb .status-failed,.wb .status-download_failed{background:var(--wb-error-bg);color:var(--wb-error)}
+.wb .status-completed{background:var(--wb-success-bg);color:var(--wb-success)}
+.wb-library-page .library-bulk-toolbar{position:sticky;top:84px;z-index:20;background:var(--wb-raised);box-shadow:0 4px 12px #16132c0c}
+.wb-library-page .library-card:has(.library-select-checkbox:checked){border-color:var(--wb-accent);box-shadow:0 0 0 1px var(--wb-accent)}
+.wb-library-page .library-card:has(.library-select-checkbox:checked) .plaza-card-body{background:var(--wb-selection)}
+.wb-library-page .library-card-check:has(:checked){background:var(--wb-accent);color:var(--wb-on-accent);border-color:var(--wb-accent)}
+.wb-library-page .library-card-check:focus-within{outline:2px solid var(--wb-accent);outline-offset:3px}
+.wb-library-page .library-card{scroll-margin-top:160px}
+.wb .wb-filter-toggle{display:none}
+.wb .filter-bar[hidden]{display:none!important}
+@media(max-width:767px){
+ .wb .wb-filter-toggle:not([hidden]){display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;margin-bottom:14px}
+ .wb-create-guide{gap:8px;justify-content:space-between;margin-bottom:14px}
+ .wb-create-guide button{min-height:48px;font-size:12px;gap:6px}
+ .wb-create-guide .wb-step-detail{display:none}
+ .wb-create-guide .wb-step-number{width:22px;height:22px;border-radius:6px}
+ .wb-glass.wb-create-page .wb-submit{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}
+ .wb-glass.wb-create-page .wb-submit>.primary-btn{grid-column:2;grid-row:1/3;min-height:48px;min-width:112px}
+ .wb-glass.wb-create-page .wb-available{grid-column:1;grid-row:2;min-height:26px}
+ .wb-glass.wb-create-page .wb-create-readiness{grid-column:1/-1;grid-row:3;font-size:12px}
+ .wb-glass.wb-create-page #quota-cost-text{min-height:0}
+ .wb-glass.wb-create-page .wb-settings-fields{grid-template-columns:minmax(0,1fr)}
+ .wb-glass.wb-create-page :is(input:not([type=checkbox],[type=radio]),textarea,.soft-select-value){font-size:16px}
+ .wb-glass.wb-create-page .wb-pane-title{height:auto;min-height:56px;flex-wrap:wrap;gap:6px}
+ .wb-glass.wb-create-page .wb-prompt-actions{flex-wrap:wrap}
+ .wb-library-page .library-bulk-toolbar{top:76px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}
+ .wb-library-page .bulk-select-all{min-height:48px}
+ .wb-library-page #library-selected-count{grid-column:1;grid-row:2}
+ .wb-library-page #library-download-selected{grid-column:2;grid-row:2;min-height:48px}
+ .wb-library-page #library-clear-selection{min-height:48px}
+ .wb .library-card-check{min-height:44px;padding-inline:10px}
+ .wb-jobs-page .job-list-table .wb-job-recovery{max-width:none;width:100%}
+ .wb-jobs-page .job-list-table .action-cell{justify-content:stretch}
+ .wb-jobs-page .action-cell a{min-height:48px}
+ .wb-collection-page .filter-bar>label{flex-basis:100%}
+ .wb :is(.wb-recovery-hint,.wb-job-recovery p,.field-error){font-size:14px}
+ .wb .wb-task-status .wb-result-actions :is(button,a){min-height:48px}
+ .wb .wb-task-heading .inline-actions{flex-wrap:wrap}
+ .wb-result-layout:is([data-task-status=failed],[data-task-status=download_failed],[data-task-status=interrupted]) .wb-task-status{order:-1}
+}
+@media(max-height:540px) and (max-width:767px){
+ .wb-glass.wb-create-page :is(.wb-shell,.wb-stage){height:auto;min-height:100dvh}
+ .wb-glass.wb-create-page .glass-workbench{overflow:visible}
+ .wb-glass.wb-create-page .wb-submit{position:relative}
+}

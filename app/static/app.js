@@ -79,20 +79,83 @@ function initToasts() {
 function initLoginModeSwitch() {
   const loginForm = document.querySelector("[data-login-form]");
   const registerForm = document.querySelector("[data-register-form]");
-  const switchRow = document.querySelector("[data-login-switch-row]");
   if (!loginForm || !registerForm) return;
+  const viewport = document.querySelector("[data-auth-panels]");
   const title = document.getElementById("login-panel-title");
   const subtitle = document.getElementById("login-panel-subtitle");
-  const setMode = (mode) => {
-    const isRegister = mode === "register";
-    loginForm.classList.toggle("hidden", isRegister);
-    registerForm.classList.toggle("hidden", !isRegister);
-    switchRow?.classList.toggle("hidden", isRegister);
-    if (title) title.textContent = isRegister ? "注册新账号" : "登录控制台";
-    if (subtitle) subtitle.textContent = isRegister ? "填写信息后进入创作工作台" : "继续你的创作工作台";
+  const panels = {
+    login: document.querySelector('[data-auth-panel="login"]'),
+    register: document.querySelector('[data-auth-panel="register"]'),
   };
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  let mode = "login", animations = [], revision = 0;
+
+  function settle() {
+    revision++;
+    animations.forEach(animation => animation.cancel());
+    animations = [];
+    viewport?.classList.remove("is-transitioning");
+    Object.entries(panels).forEach(([name, panel]) => {
+      if (!panel) return;
+      const hidden = name !== mode;
+      panel.classList.toggle("hidden", hidden);
+      panel.classList.remove("is-exiting");
+      panel.inert = hidden;
+      panel.setAttribute("aria-hidden", String(hidden));
+    });
+  }
+
+  function setMode(nextMode) {
+    if (nextMode === mode) return;
+    const outgoing = panels[mode], incoming = panels[nextMode];
+    const moving = viewport && outgoing && incoming && !reduced.matches && viewport.animate;
+    const fromHeight = viewport?.getBoundingClientRect().height;
+    // Capture the painted state before cancelling an interrupted transition.
+    const oldStyle = outgoing && getComputedStyle(outgoing);
+    const oldFrame = oldStyle && {opacity: oldStyle.opacity, transform: oldStyle.transform};
+    const incomingVisible = incoming && !incoming.classList.contains("hidden");
+    const nextStyle = incomingVisible && getComputedStyle(incoming);
+    const nextFrame = nextStyle && {opacity: nextStyle.opacity, transform: nextStyle.transform};
+    mode = nextMode;
+    settle();
+    const currentRevision = revision;
+    const isRegister = mode === "register";
+    if (title) title.textContent = isRegister ? "创建你的账号" : "欢迎回来";
+    if (subtitle) subtitle.textContent = isRegister ? "填写信息，开启你的创作。" : "登录流光，继续你的创作。";
+    if (!viewport) {
+      loginForm.classList.toggle("hidden", isRegister);
+      registerForm.classList.toggle("hidden", !isRegister);
+      document.querySelector("[data-login-switch-row]")?.classList.toggle("hidden", isRegister);
+    }
+    if (moving) {
+      const direction = isRegister ? 1 : -1;
+      const toHeight = incoming.offsetHeight;
+      outgoing.classList.remove("hidden");
+      outgoing.classList.add("is-exiting");
+      viewport.classList.add("is-transitioning");
+      const easing = "cubic-bezier(.22,1,.36,1)";
+      const height = viewport.animate([{height: fromHeight + "px"}, {height: toHeight + "px"}],
+        {duration: 280, easing});
+      animations.push(height,
+        outgoing.animate([oldFrame, {opacity: 0, transform: `translateX(${-direction * 10}px)`}],
+          {duration: 130, easing: "ease-out", fill: "both"}),
+        incoming.animate([nextFrame || {opacity: 0, transform: `translateX(${direction * 12}px)`},
+          {opacity: 1, transform: "translateX(0)"}], {duration: 220, easing}));
+      if (title?.parentElement) animations.push(title.parentElement.animate(
+        [{opacity: .45, transform: "translateY(3px)"}, {opacity: 1, transform: "translateY(0)"}],
+        {duration: 200, easing}));
+      height.finished.then(() => { if (revision === currentRevision) settle(); }).catch(() => {});
+    }
+    // Focus and editing are ready immediately; animation never gates input.
+    const form = isRegister ? registerForm : loginForm;
+    if (innerWidth >= 768) form.querySelector("input:not([type=hidden])")?.focus({preventScroll: true});
+    else if (title) { title.tabIndex = -1; title.focus({preventScroll: true}); }
+  }
+  settle();
   document.querySelector("[data-show-register]")?.addEventListener("click", () => setMode("register"));
   document.querySelector("[data-show-login]")?.addEventListener("click", () => setMode("login"));
+  reduced.addEventListener("change", () => { if (reduced.matches) settle(); });
+  addEventListener("resize", settle);
 }
 
 function currentLoginUrl() {
@@ -180,6 +243,7 @@ function updateProgressDisplay(job) {
   const progressText = document.getElementById("job-progress-text");
   const progressBar = document.getElementById("job-progress-bar");
   if (!progressText || !progressBar) return;
+  const track = progressBar.closest("[role=progressbar]");
   if (shouldShowIndeterminateProgress(job)) {
     const labelMap = {
       queued: "排队中",
@@ -191,10 +255,15 @@ function updateProgressDisplay(job) {
       downloading: "下载中",
     };
     progressText.textContent = labelMap[job.status] || "处理中…";
+    track?.removeAttribute("aria-valuenow");
+    track?.setAttribute("aria-valuetext", progressText.textContent);
     progressBar.classList.add("indeterminate");
     if (document.body.classList.contains("wb")) progressBar.style.transform = "scaleX(.38)"; else progressBar.style.width = "38%";
   } else {
-    progressText.textContent = `${job.progress}%`;
+    const percent = Math.max(0, Math.min(100, Number(job.progress) || 0));
+    progressText.textContent = `${percent}%`;
+    track?.setAttribute("aria-valuenow", String(percent));
+    track?.removeAttribute("aria-valuetext");
     progressBar.classList.remove("indeterminate");
     if (document.body.classList.contains("wb")) progressBar.style.transform = `scaleX(${Math.max(0,Math.min(100,Number(job.progress)||0))/100})`; else progressBar.style.width = `${job.progress}%`;
   }
@@ -202,6 +271,8 @@ function updateProgressDisplay(job) {
 
 function updateJobView(payload) {
   const job = payload.job;
+  const resultLayout = document.querySelector(".wb-result-layout");
+  if (resultLayout) resultLayout.dataset.taskStatus = job.status;
   document.getElementById("job-status").className = `badge big-badge ${statusClass(job.status)}`;
   document.getElementById("job-status").textContent = job.status_label || job.status;
   updateProgressDisplay(job);
@@ -248,7 +319,10 @@ function updateJobView(payload) {
   }
   if (hasFile) {
     if (downloadBtn) downloadBtn.href = fileDownloadUrl(job);
-    if (player && player.getAttribute("src") !== fileStreamUrl(job)) player.src = fileStreamUrl(job);
+    if (player && player.getAttribute("src") !== fileStreamUrl(job)) {
+      player.poster = `/app/files/${job.output_file.id}/poster`;
+      player.src = fileStreamUrl(job);
+    }
     player?.classList.remove("hidden");
     playerWrap?.classList.remove("hidden");
     playerEmpty?.classList.add("hidden");
@@ -261,6 +335,10 @@ function updateJobView(payload) {
   document.getElementById("redownload-btn")?.classList.toggle("hidden", !payload.can_redownload);
   document.getElementById("resume-btn")?.classList.toggle("hidden", !payload.can_resume);
   document.getElementById("pause-btn")?.classList.toggle("hidden", !payload.can_pause);
+  const recovery = document.getElementById('job-recovery-hint');
+  if (recovery) {
+    recovery.textContent = payload.can_redownload ? '生成结果可重新下载，无需重新生成。' : payload.can_resume ? '可继续查询或重试当前任务，无需重复提交。' : ['failed','download_failed','interrupted','cancelled'].includes(job.status) ? '请根据原因检查素材和提示词；如需重新创建，可先复制下方提示词。' : hasFile ? '视频已就绪，可以预览或下载。' : '任务会在后台继续处理，你可以离开此页稍后查看。';
+  }
   return job;
 }
 
@@ -334,14 +412,28 @@ function initJobDetailPage() {
 
   let autoRefresh = true;
   let timer = null;
-  let lastJobStatus = null;
+  const progressWrap = document.querySelector(".wb-task-status .progress-wrap");
+  let lastJobStatus = progressWrap?.dataset.jobStatus || null;
   let refreshFailures = 0;
 
   function refreshDelay() {
     return Math.min(5000 * 2 ** refreshFailures, 60000);
   }
 
+  function syncProgressActivity() {
+    const active = ["queued", "submitting", "submitted", "polling", "remote_completed", "download_waiting", "downloading"].includes(lastJobStatus);
+    progressWrap?.classList.toggle("is-working", active && autoRefresh && !document.hidden && refreshFailures === 0);
+  }
+
+  if (progressWrap && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(entries => {
+      progressWrap.classList.toggle("is-offscreen", !entries[0].isIntersecting);
+    });
+    observer.observe(progressWrap);
+  }
+
   function updateRefreshState(text) {
+    syncProgressActivity();
     if (refreshState) refreshState.textContent = text;
     if (toggleRefreshBtn) toggleRefreshBtn.textContent = autoRefresh ? "暂停刷新" : "恢复刷新";
   }
@@ -369,6 +461,7 @@ function initJobDetailPage() {
       refreshFailures = 0;
       const job = updateJobView(payload);
       lastJobStatus = job.status;
+      syncProgressActivity();
       if (["completed", "cancelled", "interrupted", "failed", "download_failed"].includes(job.status)) {
         autoRefresh = false;
         stopAuto("已停止刷新");
@@ -433,39 +526,42 @@ function initJobDetailPage() {
   redownloadBtn?.addEventListener("click", async () => {
     if (redownloadBtn.disabled) return;
     redownloadBtn.disabled = true;
+    document.getElementById("job-action-error")?.classList.add("hidden");
     try {
     if (!await SoraUI.confirm("确认重新下载这个任务的结果文件吗？这不会重新创建任务，也不会再次扣费。")) return;
     await fetchJSON(`${window.JOB_DATA_ENDPOINT}/redownload`, { method: "POST" });
     autoRefresh = true;
     await refresh();
     scheduleAuto();
-    } catch (error) { showToast(error.message, "error"); }
+    } catch (error) { const note = document.getElementById("job-action-error"); if (note) { note.textContent = error.message; note.classList.remove("hidden"); } else showToast(error.message, "error"); }
     finally { redownloadBtn.disabled = false; }
   });
 
   resumeBtn?.addEventListener("click", async () => {
     if (resumeBtn.disabled) return;
     resumeBtn.disabled = true;
+    document.getElementById("job-action-error")?.classList.add("hidden");
     try {
     if (!await SoraUI.confirm("确认继续重试这个任务吗？如果远端视频已经可下载，系统会直接尝试保存到本地。")) return;
     await fetchJSON(`${window.JOB_DATA_ENDPOINT}/resume`, { method: "POST" });
     autoRefresh = true;
     await refresh();
     scheduleAuto();
-    } catch (error) { showToast(error.message, "error"); }
+    } catch (error) { const note = document.getElementById("job-action-error"); if (note) { note.textContent = error.message; note.classList.remove("hidden"); } else showToast(error.message, "error"); }
     finally { resumeBtn.disabled = false; }
   });
 
   pauseBtn?.addEventListener("click", async () => {
     if (pauseBtn.disabled) return;
     pauseBtn.disabled = true;
+    document.getElementById("job-action-error")?.classList.add("hidden");
     try {
     if (!await SoraUI.confirm("确认暂停这个任务的自动重试吗？暂停后不会继续自动查询，直到你再次点击继续重试。")) return;
     await fetchJSON(`${window.JOB_DATA_ENDPOINT}/pause`, { method: "POST" });
     autoRefresh = false;
     stopAuto("已停止刷新");
     await refresh();
-    } catch (error) { showToast(error.message, "error"); }
+    } catch (error) { const note = document.getElementById("job-action-error"); if (note) { note.textContent = error.message; note.classList.remove("hidden"); } else showToast(error.message, "error"); }
     finally { pauseBtn.disabled = false; }
   });
 
@@ -706,11 +802,11 @@ function initCreateJobForm() {
     const count = omniImageCount();
     const maximum = omniMaxImages();
     if (count > maximum) {
-      showToast(`当前渠道最多支持 ${maximum} 张参考图。`, "error");
+      SoraUI.formError(form, `当前渠道最多支持 ${maximum} 张参考图。`);
       return false;
     }
     if (provider === "veo_omni" && count < 1) {
-      showToast("VEO Omni 至少需要 1 张参考图。", "error");
+      SoraUI.formError(form, "VEO Omni 至少需要 1 张参考图，请在参考素材中添加。");
       omniMaterialCard?.scrollIntoView({block:"center",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
       return false;
     }
@@ -770,7 +866,36 @@ function initCreateJobForm() {
     }
     if (submitButton && form.dataset.busy !== "true") submitButton.textContent = count ? `生成 ${count} 个视频 ↗` : "生成视频 ↗";
     if (addPromptBtn) addPromptBtn.disabled = cards.length >= 100;
+    refreshReadiness();
   }
+
+  function refreshReadiness() {
+    const status = document.getElementById('create-readiness');
+    if (!status) return;
+    const count = promptTextareas().filter(input => input.value.trim()).length;
+    const missing = [];
+    if (!modelSelect?.value) missing.push('选择模型');
+    for (const [name, label] of [['product_name','APP 名称'],['region_name','投放地区']]) {
+      if (!form.elements.namedItem(name)?.value.trim()) missing.push('填写' + label);
+    }
+    const requiresImage = selectedProvider() === 'veo_omni';
+    if (requiresImage && !omniImageCount()) missing.push('添加至少 1 张参考图');
+    if (!count) missing.push('填写提示词');
+    if (count > Number(form.dataset.availableQuota || 0)) missing.push('减少视频数量或申请额度');
+    if (['veo_omni','wuyin_omni'].includes(selectedProvider()) && omniImageCount() > omniMaxImages()) missing.push('减少参考图数量');
+    const text = missing.length ? '还需：' + missing.join('、') + '。' : '已准备好，提交后将确认视频数量与预计额度。';
+    if (status.textContent !== text) status.textContent = text;
+    status.dataset.ready = String(!missing.length);
+    const materialHint = document.getElementById('material-step-hint');
+    if (materialHint) materialHint.textContent = requiresImage ? '必需 · 1–6 张参考图' : modelSelect?.value ? '选填 · 可直接写提示词' : '按模型要求添加';
+  }
+  form.addEventListener('input', refreshReadiness);
+  form.addEventListener('change', refreshReadiness);
+  form.querySelectorAll('[data-create-step]').forEach(button => button.addEventListener('click', () => {
+    const target = button.dataset.createStep === 'settings' ? modelSelect : button.dataset.createStep === 'materials' ? form.querySelector('[data-open-materials]') : promptTextareas()[0];
+    target?.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});
+    target?.focus({preventScroll:true});
+  }));
 
   function createPromptCard(value = "") {
     const card = document.createElement("article");
@@ -1079,7 +1204,13 @@ function initCreateJobForm() {
       document.getElementById("studio-form-error")?.classList.add("hidden");
       if (!form.reportValidity()) return;
       const prompts = promptTextareas().map(item => item.value.trim()).filter(Boolean);
-      if (!prompts.length) { promptTextareas()[0]?.focus(); throw new Error("请至少填写一条提示词。"); }
+      const missingFields = ['product_name','region_name'].filter(name => !form.elements.namedItem(name)?.value.trim());
+      if (!prompts.length || missingFields.length) {
+        const error = new Error('请补全标出的内容后再提交。');
+        error.detail = missingFields.map(name => ({loc:['body',name],msg:name === 'product_name' ? '请填写 APP 名称。' : '请填写投放地区。'}));
+        if (!prompts.length) error.detail.push({loc:['body','prompts',0],msg:'请至少填写一条提示词。'});
+        throw error;
+      }
       if (prompts.length > 100) throw new Error("一次最多创建 100 个任务。");
       if (prompts.length > Number(form.dataset.availableQuota || 0)) throw new Error("当前可用额度不足，请减少任务数量或前往额度页申请。");
       if (!validateOmniMaterials()) return;
@@ -1366,13 +1497,14 @@ function initLibraryBulkDownload() {
     const selected = selectedBoxes();
     if (countEl) countEl.textContent = `已选择 ${selected.length} 个`;
     if (downloadBtn) downloadBtn.disabled = selected.length === 0;
+    if (clearBtn) clearBtn.disabled = selected.length === 0;
     if (selectAll) {
       selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
       selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
     }
     checkboxes.forEach((box) => {
-      box.closest(".library-card")?.classList.toggle("is-selected", box.checked);
-      box.closest(".library-card-check")?.classList.toggle("is-checked", box.checked);
+      const label = box.closest(".library-card-check")?.querySelector(".library-check-text");
+      if (label) label.textContent = box.checked ? "已选择" : "选择";
     });
   }
 

@@ -41,11 +41,6 @@
       if(closer) closeDialog(closer.closest('dialog'));
     });
 
-    document.querySelectorAll('[data-theme-select]').forEach(select=>select.addEventListener('change',()=>{
-      document.documentElement.setAttribute('data-theme-switching','');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.removeAttribute('data-theme-switching')));
-    },true));
-
     // Navigation settles its layout once, then animates painted positions. Mobile uses a native modal.
     try {document.body.classList.toggle('wb-nav-collapsed',localStorage.getItem('sora.nav.collapsed')==='true');} catch(_) {}
     const collapse=document.querySelector('[data-collapse-nav]');
@@ -155,7 +150,6 @@
     if(document.body.classList.contains('wb-auth-page')){
       let first=true;try{first=!sessionStorage.getItem('sora.studio.intro');sessionStorage.setItem('sora.studio.intro','1');}catch(_){}
       if(first)reveal(document.querySelector('.wb-cinema'),650,12);
-      document.querySelectorAll('[data-show-login],[data-show-register]').forEach(button=>button.addEventListener('click',()=>{const register=button.hasAttribute('data-show-register');const form=document.querySelector(register?'[data-register-form]':'[data-login-form]');reveal(form,160);if(innerWidth>=768)form?.querySelector('input:not([type=hidden])')?.focus({preventScroll:true});else{const title=document.getElementById('login-panel-title');title.tabIndex=-1;title.focus({preventScroll:true});}if(!register){document.getElementById('login-panel-title').textContent='欢迎回来';document.getElementById('login-panel-subtitle').textContent='登录流光，继续你的创作。';}}));
     }
   });
 })();

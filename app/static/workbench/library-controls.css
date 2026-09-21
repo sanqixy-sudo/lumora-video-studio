@@ -1,0 +1,102 @@
+/* Local flatpickr theme. Original date inputs remain usable if scripts fail. */
+.wb .date-field-ready{position:relative}
+.wb .date-field-ready::after{
+ content:"";position:absolute;right:13px;bottom:13px;width:17px;height:17px;
+ pointer-events:none;background:var(--wb-muted);
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M7 3v4m10-4v4M3 11h18'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.wb .lumora-date-input{cursor:pointer;padding-right:37px;text-overflow:ellipsis}
+.wb .lumora-date-input:focus{box-shadow:0 0 0 3px var(--wb-selection)}
+.wb-glass .lumora-calendar{
+ width:308px;max-width:calc(100vw - 24px);padding:10px;
+ background:var(--wb-surface);color:var(--wb-ink);border:1px solid var(--wb-line);
+ border-radius:16px;box-shadow:0 16px 48px #19152b26;overflow:hidden;font-size:13px;
+}
+.lumora-calendar::before,.lumora-calendar::after{display:none}
+.lumora-calendar .flatpickr-months{align-items:center;padding-bottom:8px}
+.lumora-calendar .flatpickr-month{height:42px;background:transparent;color:var(--wb-ink);fill:var(--wb-ink);overflow:visible}
+.wb-glass .lumora-calendar .flatpickr-current-month{
+ left:40px;width:calc(100% - 80px);height:42px;padding:0;
+ display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;
+}
+.lumora-calendar .flatpickr-current-month .cur-month{order:2;margin:0;font-weight:600;background:none}
+.lumora-calendar .flatpickr-current-month .numInputWrapper{order:1;width:62px}
+.wb-glass .lumora-calendar .numInputWrapper input.cur-year{
+ min-height:32px;height:32px;width:62px;padding:4px;border:0;border-radius:6px;
+ background:transparent;color:var(--wb-ink);font-size:14px;line-height:24px;font-weight:600;
+}
+.lumora-calendar .numInputWrapper:hover{background:var(--wb-inset);border-radius:6px}
+.lumora-calendar .numInputWrapper span{border:0;opacity:1}
+.lumora-calendar .numInputWrapper span.arrowUp::after{border-bottom-color:var(--wb-muted)}
+.lumora-calendar .numInputWrapper span.arrowDown::after{border-top-color:var(--wb-muted)}
+.wb-glass .lumora-calendar .flatpickr-prev-month,.wb-glass .lumora-calendar .flatpickr-next-month{
+ top:10px;width:38px;height:38px;padding:12px;color:var(--wb-muted);fill:currentColor;border-radius:10px;
+}
+.wb-glass .lumora-calendar .flatpickr-prev-month{left:10px}
+.wb-glass .lumora-calendar .flatpickr-next-month{right:10px}
+.lumora-calendar .flatpickr-months span[role=button]:hover{background:var(--wb-selection);color:var(--wb-accent)}
+.lumora-calendar .flatpickr-weekdays{height:32px;background:transparent}
+.lumora-calendar span.flatpickr-weekday{font-size:11px;font-weight:500;background:transparent;color:var(--wb-muted)}
+.lumora-calendar .flatpickr-innerContainer,.lumora-calendar .flatpickr-rContainer,.lumora-calendar .flatpickr-days{width:100%}
+.lumora-calendar .dayContainer{width:100%;min-width:0;max-width:none;padding:0}
+.lumora-calendar .flatpickr-day{
+ flex-basis:calc(100% / 7);max-width:none;height:39px;line-height:37px;border-radius:10px;
+ color:var(--wb-ink);border:1px solid transparent;font-size:13px;
+ transition:background-color 120ms,color 120ms;
+}
+.lumora-calendar .flatpickr-day:is(.prevMonthDay,.nextMonthDay){color:var(--wb-muted);opacity:.55}
+.lumora-calendar .flatpickr-day.today{border-color:var(--wb-accent);color:var(--wb-accent)}
+.lumora-calendar .flatpickr-day.today:is(:hover,:focus){color:var(--wb-accent)}
+.lumora-calendar .flatpickr-day:is(:hover,:focus){background:var(--wb-selection);border-color:transparent}
+.lumora-calendar .flatpickr-day.selected,.lumora-calendar .flatpickr-day.selected:is(:hover,:focus){
+ background:var(--wb-accent);border-color:var(--wb-accent);color:var(--wb-on-accent);opacity:1;
+}
+.lumora-calendar .flatpickr-day.flatpickr-disabled,.lumora-calendar .flatpickr-day.flatpickr-disabled:hover{
+ color:var(--wb-muted);opacity:.3;background:transparent;border-color:transparent;cursor:not-allowed;
+}
+.lumora-calendar .calendar-footer{display:flex;align-items:center;gap:4px;border-top:1px solid var(--wb-line);margin-top:9px;padding-top:9px}
+.lumora-calendar .calendar-footer>span{font-size:10px;color:var(--wb-muted);margin-right:auto}
+.lumora-calendar .calendar-footer button{font-size:12px;min-height:34px;padding:6px 9px;border:0;border-radius:8px;background:transparent;color:var(--wb-accent)}
+.lumora-calendar .calendar-footer button:hover{background:var(--wb-selection)}
+.lumora-calendar .calendar-footer button:disabled{opacity:.35;cursor:not-allowed}
+.lumora-calendar :is(button,input,[tabindex]):focus-visible{outline:2px solid var(--wb-accent);outline-offset:-2px}
+@media(max-width:767px){
+ .wb-glass .lumora-calendar{width:324px}
+ .lumora-calendar .flatpickr-day{height:42px;line-height:40px}
+ .lumora-calendar .calendar-footer button{min-height:44px;min-width:44px}
+}
+@media(prefers-reduced-motion:reduce){.lumora-calendar *{transition:none!important}}
+/* Native checkbox semantics, with a quieter visual treatment. */
+.wb input[type=checkbox]{
+ appearance:none;-webkit-appearance:none;width:20px;height:20px;min-width:20px;min-height:20px;
+ border:1.5px solid var(--wb-line-strong);border-radius:6px;background:var(--wb-surface);
+ color:var(--wb-on-accent);display:inline-grid;place-content:center;vertical-align:middle;cursor:pointer;
+ transition:background-color 130ms,border-color 130ms,box-shadow 130ms;
+}
+.wb input[type=checkbox]::before{
+ content:"";width:5px;height:9px;border:solid currentColor;border-width:0 2px 2px 0;
+ transform:translateY(-1px) rotate(45deg) scale(.6);opacity:0;
+ transition:transform 130ms cubic-bezier(.22,1,.36,1),opacity 130ms;
+}
+.wb input[type=checkbox]:is(:checked,:indeterminate){background:var(--wb-accent);border-color:var(--wb-accent)}
+.wb input[type=checkbox]:checked::before{opacity:1;transform:translateY(-1px) rotate(45deg) scale(1)}
+.wb input[type=checkbox]:indeterminate::before{width:9px;height:2px;border:0;border-radius:2px;background:currentColor;opacity:1;transform:none}
+.wb input[type=checkbox]:focus-visible{outline:2px solid var(--wb-accent);outline-offset:3px}
+.wb-library-page :is(.bulk-select-all,.library-card-check){min-height:44px;cursor:pointer;gap:9px}
+.wb-library-page .library-card-check{border-radius:11px;padding:8px 10px;box-shadow:0 2px 8px #1515260c}
+.wb-library-page .library-card-check.is-checked{border-color:var(--wb-accent);color:var(--wb-accent)}
+@media(hover:hover) and (pointer:fine){.wb input[type=checkbox]:hover{border-color:var(--wb-accent);box-shadow:0 0 0 3px var(--wb-selection)}}
+@media(forced-colors:active){.wb input[type=checkbox]{appearance:auto;-webkit-appearance:auto}.wb input[type=checkbox]::before{display:none}}
+
+/* Month grid shares the calendar palette and touch targets. */
+.wb .lumora-calendar .flatpickr-monthSelect-months{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.wb .lumora-calendar .flatpickr-monthSelect-month{width:auto;margin:0;padding:12px 4px;border:1px solid transparent;border-radius:10px;color:var(--wb-ink);background:transparent}
+.wb .lumora-calendar .flatpickr-monthSelect-month:is(:hover,:focus){background:var(--wb-selection);color:var(--wb-accent)}
+.wb .lumora-calendar .flatpickr-monthSelect-month.selected{background:var(--wb-accent);color:var(--wb-on-accent)}
+.wb .lumora-calendar .flatpickr-monthSelect-month.today{border-color:var(--wb-accent)}
+.wb .lumora-calendar.flatpickr-monthSelect .flatpickr-current-month .numInputWrapper{width:72px}
+.wb .lumora-calendar{display:none;visibility:visible;opacity:0;translate:0 -5px;pointer-events:none;transition:opacity 110ms ease-out,translate 110ms ease-out,display 110ms allow-discrete}
+.wb .lumora-calendar.open{display:block;visibility:visible;opacity:1;translate:0 0;pointer-events:auto;transition-duration:170ms;transition-timing-function:cubic-bezier(.22,1,.36,1)}
+@media(prefers-reduced-motion:reduce){.wb .lumora-calendar{transition:none!important}}
+
+@starting-style{.wb .lumora-calendar.open{opacity:0;translate:0 -5px}}

@@ -1,0 +1,47 @@
+/* The pending canvas and the completed video share the requested frame. */
+.wb-glass .wb-result-layout .wb-result-media{
+ width:min(100%,calc(64dvh * var(--job-ratio,1.777778)));
+ justify-self:center;align-self:start;
+}
+.wb-glass .wb-result-layout .wb-preview-canvas{
+ position:relative;width:100%;aspect-ratio:var(--job-ratio,1.777778);background:#11121c;
+}
+.wb-glass .wb-preview-canvas :is(.player-wrap,.wb-video-empty){
+ position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;margin:0;flex:none;
+}
+.wb-glass .wb-preview-canvas .player-wrap video{
+ width:100%;height:100%;min-height:0;max-height:none;object-fit:contain;
+}
+.wb-glass .wb-preview-canvas .wb-video-empty{padding:24px;gap:12px;line-height:1.7}
+.wb-glass .wb-result-layout .wb-task-status{align-self:start}
+.wb-glass .wb-result-media .wb-video-caption{gap:12px;flex-wrap:wrap}
+.wb-glass .wb-task-status .progress-bar{position:relative;height:7px}
+.wb-glass #job-progress-bar{position:relative;overflow:hidden;border-radius:inherit}
+.wb-glass .progress-wrap.is-working #job-progress-bar:not(.indeterminate)::after{
+ content:"";position:absolute;inset:0;
+ background:linear-gradient(90deg,transparent,#ffffff88,transparent);
+ transform:translateX(-100%);animation:job-progress-sheen 1.8s linear infinite;
+}
+.wb-glass .progress-wrap.is-working #job-progress-bar.indeterminate{
+ animation:job-progress-travel 1.8s cubic-bezier(.45,0,.55,1) infinite;opacity:.8;
+}
+.job-progress-label{display:inline-flex;align-items:center;gap:7px}
+.job-activity-dots{display:inline-flex;gap:3px;opacity:0}
+.job-activity-dots i{width:3px;height:3px;border-radius:50%;background:var(--wb-accent)}
+.progress-wrap.is-working .job-activity-dots{opacity:1}
+.progress-wrap.is-working .job-activity-dots i{animation:job-progress-dot 1.4s ease-in-out infinite}
+.progress-wrap.is-working .job-activity-dots i:nth-child(2){animation-delay:.15s}
+.progress-wrap.is-working .job-activity-dots i:nth-child(3){animation-delay:.3s}
+.progress-wrap.is-offscreen *,.progress-wrap.is-offscreen *::after{animation-play-state:paused!important}
+@keyframes job-progress-sheen{to{transform:translateX(100%)}}
+@keyframes job-progress-travel{from{transform:translateX(-38%) scaleX(.38)}to{transform:translateX(100%) scaleX(.38)}}
+@keyframes job-progress-dot{0%,80%,100%{opacity:.3}40%{opacity:1}}
+@media(max-width:767px){
+ .wb-glass .wb-result-layout .wb-result-media{width:min(100%,calc(62dvh * var(--job-ratio,1.777778)))}
+ .wb-glass .wb-preview-canvas .wb-video-empty{padding:16px;gap:8px}
+ .wb-glass .wb-preview-canvas .wb-video-empty .wb-icon{width:30px;height:30px;margin-bottom:4px}
+ .wb-glass .wb-preview-canvas .wb-video-empty strong{font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){
+ .progress-wrap *,.progress-wrap *::after{animation:none!important;transition:none!important}
+}

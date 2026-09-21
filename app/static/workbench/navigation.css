@@ -1,0 +1,42 @@
+/* Same-origin documents opt in; navigation and form submission stay native. */
+/* Opt-in lives early in the document head so it is available before first reveal. */
+html[data-page-transition] .wb-topbar{view-transition-name:wb-header}
+html[data-page-transition] .theme-icon-stack{view-transition-name:none!important}
+@media(min-width:768px){html[data-page-transition] .wb-sidebar{view-transition-name:wb-navigation}}
+html[data-page-transition]::view-transition{pointer-events:none}
+/* The root snapshot includes the full page background; avoid resizing content snapshots.
+   Header and sidebar remain still. Content enters fully opaque to avoid text/image ghosting. */
+html[data-page-transition]::view-transition-group(*){animation:none}
+html[data-page-transition]::view-transition-old(root){animation:none;opacity:0;mix-blend-mode:normal}
+html[data-page-transition]::view-transition-new(root){animation:wb-page-in 160ms cubic-bezier(.22,1,.36,1) both;opacity:1;mix-blend-mode:normal}
+html[data-page-transition]::view-transition-old(wb-header),
+html[data-page-transition]::view-transition-old(wb-navigation){animation:none;opacity:0}
+html[data-page-transition]::view-transition-new(wb-header),
+html[data-page-transition]::view-transition-new(wb-navigation){animation:none;opacity:1;mix-blend-mode:normal}
+html[data-page-enter]:not([data-page-transition]) .wb-main{animation:wb-page-in 160ms cubic-bezier(.22,1,.36,1) both}
+@keyframes wb-page-in{from{transform:translateY(4px)}to{transform:translateY(0)}}
+/* A continuous activity signal, independent of server progress. */
+.wb-navigation-progress{position:fixed;z-index:1000;inset:0 0 auto;height:2px;overflow:hidden;opacity:0;pointer-events:none;transition:opacity 100ms}
+.wb-navigation-progress::before{content:"";display:block;width:35%;height:100%;background:linear-gradient(90deg,transparent,var(--wb-accent),transparent);transform:translateX(-110%);animation:wb-navigation-flow 1100ms linear infinite;animation-play-state:paused}
+html[data-navigation-pending] .wb-navigation-progress{opacity:1}
+html[data-navigation-pending] .wb-navigation-progress::before{animation-play-state:running}
+.wb .wb-nav-link.is-navigating{background:var(--wb-selection);color:var(--wb-accent)}
+.wb-nav-link.is-navigating::after{content:"";flex:none;width:12px;height:12px;margin-left:auto;border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:wb-navigation-spin 750ms linear infinite}
+.wb-nav-collapsed .wb-nav-link.is-navigating::after{position:absolute;right:3px;width:8px;height:8px}
+.wb-nav-link.is-navigating{position:relative}
+.wb-navigation-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@keyframes wb-navigation-flow{to{transform:translateX(390%)}}
+@keyframes wb-navigation-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+ @view-transition{navigation:none}
+ html[data-page-enter] .wb-main,.wb-nav-link.is-navigating::after{animation:none!important}
+ .wb-navigation-progress{transition:none}
+ .wb-navigation-progress::before{animation:none;transform:none;width:100%;background:var(--wb-accent)}
+ html[data-page-transition]::view-transition-group(*),html[data-page-transition]::view-transition-old(*),html[data-page-transition]::view-transition-new(*){animation:none!important}
+}
+
+/* Longer waits get a readable label without obscuring the current page. */
+html[data-navigation-slow] .wb-navigation-status{position:fixed;z-index:999;top:78px;right:24px;width:auto;height:auto;max-width:calc(100vw - 48px);margin:0;padding:9px 13px;border:1px solid var(--wb-line);border-radius:10px;background:var(--wb-raised);color:var(--wb-muted);box-shadow:var(--wb-shadow);font-size:12px;clip-path:none;white-space:normal;pointer-events:none}
+html[data-navigation-hidden] .wb-navigation-progress::before,html[data-navigation-hidden] .wb-nav-link.is-navigating::after{animation-play-state:paused}
+@media(min-width:768px) and (max-width:1199px){.wb-nav-link.is-navigating::after{position:absolute;right:3px;width:8px;height:8px}}
+@media(max-width:767px){html[data-navigation-slow] .wb-navigation-status{top:72px;right:16px;max-width:calc(100vw - 32px)}}

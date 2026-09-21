@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}我的作品{% endblock %}
+{% block body_class %}wb-collection-page wb-library-page{% endblock %}
 {% block content %}
 <section class="wb-page-heading">
   <div>
-    <h2>我的作品</h2>
+    <h1>我的作品</h1>
+    <p>收藏、预览和下载你的创作成果。</p>
   </div>
   <a class="primary-btn small-btn" href="/app">创建任务</a>
 </section>
@@ -25,11 +27,12 @@
   </form>
 
   {% if cards %}
+  <div class="collection-summary"><h2>{{ '收藏作品' if starred else '作品库' }}</h2><span>本页 {{ cards|length }} 个 · 点击封面预览</span></div>
   <div class="library-bulk-toolbar" data-library-bulk-toolbar>
     <label class="bulk-select-all"><input autocomplete="off" type="checkbox" id="library-select-all" /> <span>全选当前页</span></label>
     <button class="ghost-btn small-btn" type="button" id="library-clear-selection">取消选择</button>
     <button class="primary-btn small-btn" type="button" id="library-download-selected">下载选中 ZIP</button>
-    <span class="muted tiny" id="library-selected-count">已选择 0 个</span>
+    <span class="muted tiny" id="library-selected-count" role="status">已选择 0 个</span>
   </div>
   <div class="plaza-grid plaza-fixed-grid">
     {% for card in cards %}
@@ -38,8 +41,21 @@
   </div>
   {% include "partials/pagination.html" %}
   {% else %}
-  <div class="empty-state compact-empty">{{ '暂无收藏素材' if starred else '暂无成品' }}</div>
+  <div class="empty-state collection-empty">
+    {{ icon('library') }}
+    {% if start_date or end_date or product_name or region_name %}
+    <h2>没有找到符合条件的作品</h2><p>试试其他关键词，或清除筛选查看作品。</p>
+    <a class="secondary-btn" href="/app/library/page?per_page={{ pagination.per_page }}{% if starred %}&amp;starred=1{% endif %}">清除筛选</a>
+    {% elif starred %}
+    <h2>还没有收藏作品</h2><p>在作品卡片上点击“收藏”，下次就能在这里快速找到。</p>
+    <a class="secondary-btn" href="/app/library/page">浏览我的作品</a>
+    {% else %}
+    <h2>你的作品库，等待第一份创意</h2><p>生成完成的作品会出现在这里，方便预览、收藏和下载。</p>
+    <a class="primary-btn" href="/app">开始创作</a>
+    {% endif %}
+  </div>
   {% endif %}
 </section>
 {% endblock %}
-{% block scripts %}<script>window.PLAZA_PAGE = true; window.LIBRARY_PAGE = true; window.LIBRARY_STARRED_ONLY = {{ 'true' if starred else 'false' }};</script>{% endblock %}
+{% block scripts %}
+<script>window.PLAZA_PAGE = true; window.LIBRARY_PAGE = true; window.LIBRARY_STARRED_ONLY = {{ 'true' if starred else 'false' }};</script>{% endblock %}

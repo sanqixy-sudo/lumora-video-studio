@@ -1,8 +1,23 @@
 {% from 'workbench/icons.html' import icon %}
 <section class="wb-page-heading wb-task-heading"><div><a href="{{ '/admin/jobs/page' if can_manage else '/app/jobs/page' }}" class="text-link">返回任务列表</a><h1>{{ job.product_name or '视频任务' }} <span class="wb-task-number">#{{ job.id }}</span></h1><p>{{ job.region_name or '-' }} · {{ job.model }} · {{ job.seconds }} 秒</p></div><div class="inline-actions"><span id="auto-refresh-state" class="chip">自动刷新中</span><button id="toggle-refresh-btn" class="ghost-btn small-btn" type="button">暂停刷新</button></div></section>
-<div class="wb-result-layout"><section class="wb-result-media" aria-label="结果视频"><div id="player-wrap" class="player-wrap {% if not output_file %}hidden{% endif %}"><video poster="/static/mature/city.svg" id="job-player" controls preload="metadata" playsinline {% if output_file %}src="/app/files/{{ output_file.id }}/stream"{% endif %}></video></div><div id="player-empty" class="wb-video-empty {% if output_file %}hidden{% endif %}">{{ icon('video') }}<strong>本地视频尚未就绪</strong><span>生成和下载完成后，视频将在这里显示。</span></div><div class="wb-video-caption"><span>结果预览</span><span>{{ job.size|replace('x',' × ') }}</span></div></section>
-<section class="wb-task-status"><div class="wb-status-heading"><h2>任务状态</h2><span id="job-status" class="badge status-{{ job.status }}">{{ job.status_label or status_label(job.status) }}</span></div><div class="progress-wrap"><div class="progress-top"><span>处理进度</span><strong id="job-progress-text">{{ job.progress }}%</strong></div><div class="progress-bar"><span id="job-progress-bar" style="transform:scaleX({{ (job.progress or 0)/100 }})"></span></div><div class="wb-queue-line"><span>队列状态</span><span id="job-queue">{{ job.queue_text or '-' }}</span></div></div>
+{% set dimensions = (job.size or '').lower().replace('×', 'x').split('x') %}
+{% set frame_width = dimensions[0]|int if dimensions|length == 2 else 0 %}
+{% set frame_height = dimensions[1]|int if dimensions|length == 2 else 0 %}
+{% set frame_ratio = frame_width / frame_height if frame_width > 0 and frame_height > 0 else 16 / 9 %}
+<div class="wb-result-layout" data-task-status="{{ job.status }}"><section class="wb-result-media" aria-label="结果视频" style="--job-ratio:{{ frame_ratio }}">
+  <div class="wb-preview-canvas">
+    <div id="player-wrap" class="player-wrap {% if not output_file %}hidden{% endif %}">
+      <video id="job-player" controls preload="metadata" playsinline {% if output_file %}src="/app/files/{{ output_file.id }}/stream" poster="/app/files/{{ output_file.id }}/poster"{% endif %}></video>
+    </div>
+    <div id="player-empty" class="wb-video-empty {% if output_file %}hidden{% endif %}">
+      {{ icon('video') }}<strong>本地视频尚未就绪</strong><span>生成和下载完成后，视频将在这里显示。</span>
+    </div>
+  </div>
+  <div class="wb-video-caption"><span>结果预览</span><span>{{ job.size|replace('x',' × ') }}</span></div>
+</section>
+<section class="wb-task-status" id="job-recovery"><div class="wb-status-heading"><h2>任务状态</h2><span id="job-status" class="badge status-{{ job.status }}">{{ job.status_label or status_label(job.status) }}</span></div><div class="progress-wrap" data-job-status="{{ job.status }}"><div class="progress-top"><span class="job-progress-label">处理进度<span class="job-activity-dots" aria-hidden="true"><i></i><i></i><i></i></span></span><strong id="job-progress-text">{{ job.progress }}%</strong></div><div class="progress-bar" role="progressbar" aria-label="处理进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ job.progress or 0 }}"><span id="job-progress-bar" style="transform:scaleX({{ (job.progress or 0)/100 }})"></span></div><div class="wb-queue-line"><span>队列状态</span><span id="job-queue">{{ job.queue_text or '-' }}</span></div></div>
 <div id="job-error-panel" class="wb-task-error {% if not (job.error_message or job.error_text) %}hidden{% endif %}"><strong>处理异常</strong><span id="job-error">{{ job.error_message or job.error_text or '' }}</span>{% if can_manage %}<span id="job-error-code">{{ job.error_code or '' }}</span>{% endif %}</div>
+<p id="job-recovery-hint" class="wb-recovery-hint">{% if can_redownload %}生成结果可重新下载，无需重新生成。{% elif can_resume %}可继续查询或重试当前任务，无需重复提交。{% elif job.status in ['failed','download_failed','interrupted','cancelled'] %}请根据原因检查素材和提示词；如需重新创建，可先复制下方提示词。{% elif output_file %}视频已就绪，可以预览或下载。{% else %}任务会在后台继续处理，你可以离开此页稍后查看。{% endif %}</p><div id="job-action-error" class="form-error hidden" role="alert"></div>
 <div class="wb-result-actions"><a id="download-btn" class="primary-btn {% if not output_file %}hidden{% endif %}" href="{{ '/app/files/' ~ output_file.id ~ '/download' if output_file else '#' }}">{{ icon('download') }}下载本地视频</a><button id="redownload-btn" class="secondary-btn {% if not can_redownload %}hidden{% endif %}" type="button">重新下载到本地</button><button id="resume-btn" class="secondary-btn {% if not can_resume %}hidden{% endif %}" type="button">继续重试</button><button id="pause-btn" class="danger-ghost-btn {% if not can_pause %}hidden{% endif %}" type="button">暂停自动重试</button><div class="inline-actions"><a id="remote-download-btn" class="ghost-btn {% if not remote_download_url %}hidden{% endif %}" href="{{ remote_download_url or '#' }}" target="_blank" rel="noopener">远端直下</a><button id="copy-remote-link-btn" class="ghost-btn {% if not public_remote_download_url %}hidden{% endif %}" type="button" data-url="{{ public_remote_download_url or '' }}">复制临时链接</button></div></div>
 <div class="wb-status-note">本地视频就绪后可预览与下载。上游生成完成不代表本地下载已完成。</div></section></div>
 <section class="wb-parameters"><div class="section-head"><h2>生成参数</h2><span class="muted tiny">本次任务使用的配置</span></div><dl class="wb-detail-fields"><div class="wb-detail-wide"><dt>远端任务编号</dt><dd><code id="job-remote">{{ job.remote_task_id or '-' }}</code><button type="button" class="icon-btn" data-copy-remote-id aria-label="复制远端任务编号">{{ icon('copy') }}</button></dd></div><div><dt>模型</dt><dd>{{ job.model }}</dd></div><div><dt>APP 名称</dt><dd>{{ job.product_name or '-' }}</dd></div><div><dt>地区</dt><dd>{{ job.region_name or '-' }}</dd></div><div><dt>分辨率</dt><dd>{{ job.size|replace('x',' × ') }}</dd></div><div><dt>时长</dt><dd>{{ job.seconds }} 秒</dd></div><div><dt>下载重试</dt><dd><span id="job-download-attempts">{{ job.download_attempts or 0 }}</span> 次</dd></div><div><dt>提交时间</dt><dd><time data-ui-time>{{ (job.queued_at or job.created_at)|dt_full }}</time></dd></div><div><dt>开始时间</dt><dd><time data-ui-time>{{ job.started_at|dt_full if job.started_at else '-' }}</time></dd></div></dl>{% if can_manage and job.upstream_response %}<details id="job-upstream-response"><summary>完整上游响应</summary><pre>{{ job.upstream_response|tojson(indent=2) }}</pre></details>{% endif %}</section>
@@ -28,7 +43,7 @@
   </div>
 
   <div class="tab-panel {{ '' if show_api_calls_first else 'active' }}" data-tab-panel="prompt">
-    <pre class="prompt-box">{{ job.prompt }}</pre>
+    <div data-copy-scope><div class="inline-actions"><button type="button" class="ghost-btn small-btn" data-copy-text="1" data-copy-source=".prompt-box" data-copy-label="提示词">复制提示词</button></div><pre class="prompt-box">{{ job.prompt }}</pre></div>
   </div>
 
   <div class="tab-panel" data-tab-panel="files">
@@ -57,3 +72,5 @@
 
 <link rel="stylesheet" href="/static/workbench/job-assets.css?v=20260909-assets">
 <script defer src="/static/workbench/job-assets.js?v=20260909-assets"></script>
+
+<link rel="stylesheet" href="/static/workbench/job-detail.css?v=20260921-1">

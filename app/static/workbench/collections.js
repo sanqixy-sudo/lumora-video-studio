@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!document.body.classList.contains('wb')) return;
   const search=new URLSearchParams(location.search);
   const hasFilters=['q','user','product_name','region_name','start_date','end_date','status','starred'].some(key=>search.has(key)&&search.get(key)&&search.get(key)!=='all');
-  if(hasFilters)document.querySelectorAll('.empty-state,.empty-panel').forEach(empty=>{if(empty.closest('.table-wrap,.plaza-grid,.wb-panel,.wb-user-directory'))empty.textContent='没有符合当前筛选的记录。请调整筛选条件后再试。';});
+  if(hasFilters)document.querySelectorAll('.empty-state,.empty-panel').forEach(empty=>{if(!empty.classList.contains('collection-empty')&&empty.closest('.table-wrap,.plaza-grid,.wb-panel,.wb-user-directory'))empty.textContent='没有符合当前筛选的记录。请调整筛选条件后再试。';});
   let sequence=0;
   function drawerFor(form,title,id) {
     const dialog=document.createElement('dialog');dialog.className='wb-drawer';dialog.id=id||`wb-editor-${++sequence}`;

@@ -29,3 +29,12 @@ html[data-theme=dark] .lumora-login-backdrop{background:#16151f}html[data-theme=
 html[data-theme=light] .wb-auth-form-region{--wb-muted:#444458}html[data-theme=dark] .wb-auth-form-region{--wb-muted:#CFCCDD}
 @media(max-width:767px){.lumora-wall-row{transition:none;transform:none!important;will-change:auto}}
 
+
+/* Login and registration share one surface; only the form panel changes. */
+.wb-auth-panels{position:relative;margin:-4px;isolation:isolate}
+.wb-auth-panel{padding:4px;width:100%;min-width:0}
+.wb-auth-panel.is-exiting{position:absolute;inset:0 auto auto 0;pointer-events:none}
+.wb-auth-panels.is-transitioning{overflow:hidden}
+.wb-auth-form-wrap .register-form label{gap:6px}
+.wb-auth-form-wrap .register-form>[data-show-login]{min-height:44px}
+@media(prefers-reduced-motion:reduce){.wb-auth-panels,.wb-auth-panel{animation:none!important;transition:none!important}}
