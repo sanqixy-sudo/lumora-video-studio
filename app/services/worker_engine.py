@@ -48,7 +48,8 @@ _SUBMIT_FUTURES: dict[object, int] = {}
 PROCESS_EXECUTOR = ThreadPoolExecutor(max_workers=max(16, int(settings.max_running_jobs) * 4))
 _PROCESS_FUTURES: dict[object, tuple[int, datetime]] = {}
 # Downloads must never occupy status-polling threads. Bound pending work too.
-DOWNLOAD_EXECUTOR = ThreadPoolExecutor(max_workers=3, thread_name_prefix="video-download")
+DOWNLOAD_CONCURRENCY = settings.video_download_concurrency
+DOWNLOAD_EXECUTOR = ThreadPoolExecutor(max_workers=DOWNLOAD_CONCURRENCY, thread_name_prefix="video-download")
 _DOWNLOAD_FUTURES: dict[int, object] = {}
 _DOWNLOAD_LOCK = Lock()
 _LAST_TEMP_CLEANUP_AT: datetime | None = None
@@ -63,7 +64,7 @@ def _schedule_download(job_id: int) -> bool:
                     future.result()
                 except Exception:
                     logger.exception("Background download crashed for job %s", jid)
-        if job_id in _DOWNLOAD_FUTURES or len(_DOWNLOAD_FUTURES) >= 3:
+        if job_id in _DOWNLOAD_FUTURES or len(_DOWNLOAD_FUTURES) >= DOWNLOAD_CONCURRENCY:
             return False
         _DOWNLOAD_FUTURES[job_id] = DOWNLOAD_EXECUTOR.submit(download_remote_job, job_id)
         return True
@@ -143,9 +144,9 @@ def _drop_process_futures_for_job(job_id: int) -> int:
     return dropped
 
 
-def _process_job_background(job_id: int) -> None:
+def _process_job_background(job_id: int, *, allow_download: bool = True) -> None:
     try:
-        process_job(job_id)
+        process_job(job_id, allow_download=allow_download)
     except Exception as exc:
         logger.exception("Failed processing job %s", job_id)
         try:
@@ -334,7 +335,7 @@ def process_once() -> None:
         _PROCESS_FUTURES[future] = (int(job_id), utcnow())
 
 
-def process_job(job_id: int) -> None:
+def process_job(job_id: int, *, allow_download: bool = True) -> None:
     should_download = False
     with SessionLocal() as db:
         if not _acquire_job_lock(db, job_id):
@@ -377,7 +378,7 @@ def process_job(job_id: int) -> None:
         finally:
             _release_job_lock(db, job_id)
 
-    if should_download:
+    if should_download and allow_download:
         try:
             with SessionLocal() as db:
                 job = db.query(Job).filter(Job.id == int(job_id)).first()
@@ -406,7 +407,9 @@ def schedule_job_now(job_id: int) -> bool:
         # In this process, avoid launching duplicate processors for the same job.
         if jid in _processing_job_ids():
             return False
-        future = PROCESS_EXECUTOR.submit(_process_job_background, jid)
+        # Web actions may refresh status immediately, but only the worker owns
+        # downloads; a second web-side pool would exceed the configured limit.
+        future = PROCESS_EXECUTOR.submit(_process_job_background, jid, allow_download=False)
         _PROCESS_FUTURES[future] = (jid, utcnow())
         return True
     except Exception:

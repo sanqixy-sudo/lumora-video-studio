@@ -150,24 +150,57 @@ class DownloadDeadlineTests(unittest.TestCase):
 class WorkerIsolationTests(unittest.TestCase):
     def test_download_saturation_leaves_polling_available_and_queue_bounded(self):
         release = threading.Event()
-        with ThreadPoolExecutor(max_workers=3) as downloads, ThreadPoolExecutor(max_workers=1) as polls:
+        with ThreadPoolExecutor(max_workers=10) as downloads, ThreadPoolExecutor(max_workers=1) as polls:
             try:
-                with patch.object(worker_engine, "DOWNLOAD_EXECUTOR", downloads), patch.object(worker_engine, "_DOWNLOAD_FUTURES", {}), patch.object(worker_engine, "download_remote_job", lambda _: release.wait(5)):
-                    self.assertTrue(worker_engine._schedule_download(1))
+                with patch.object(worker_engine, "DOWNLOAD_EXECUTOR", downloads), patch.object(worker_engine, "_DOWNLOAD_FUTURES", {}), patch.object(worker_engine, "DOWNLOAD_CONCURRENCY", 10), patch.object(worker_engine, "download_remote_job", lambda _: release.wait(10)):
+                    for job_id in range(1, 11):
+                        self.assertTrue(worker_engine._schedule_download(job_id))
                     self.assertFalse(worker_engine._schedule_download(1))
-                    self.assertTrue(worker_engine._schedule_download(2))
-                    self.assertTrue(worker_engine._schedule_download(3))
-                    self.assertFalse(worker_engine._schedule_download(4))
+                    self.assertFalse(worker_engine._schedule_download(11))
+                    self.assertEqual(len(worker_engine._DOWNLOAD_FUTURES), 10)
                     db = MagicMock()
                     db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(
-                        id=4, status="remote_completed", provider_key_id=1)
+                        id=11, status="remote_completed", provider_key_id=1)
                     with patch.object(worker_engine, "SessionLocal") as session, patch.object(worker_engine, "_acquire_job_lock", return_value=True), patch.object(worker_engine, "_latest_event_at", return_value=worker_engine.utcnow()):
                         session.return_value.__enter__.return_value = db
                         # A real completed-job handoff must return even with all
                         # download slots occupied, rather than downloading inline.
-                        self.assertIsNone(polls.submit(worker_engine.process_job, 4).result(timeout=1))
+                        self.assertIsNone(polls.submit(worker_engine.process_job, 11).result(timeout=1))
+                        # Also exercise an actual status-polling path while all
+                        # ten download futures are still blocked.
+                        job = SimpleNamespace(id=12, status="submitted", progress=0,
+                                              provider_key_id=1, key_encrypted="test")
+                        db.query.return_value.filter.return_value.first.return_value = job
+                        with patch.object(worker_engine, "_has_remote_completed_event", return_value=False), patch.object(worker_engine, "_should_poll_remote_now", return_value=True), patch.object(worker_engine, "decrypt_secret", return_value="test"), patch.object(worker_engine, "poll_remote") as poll:
+                            self.assertIsNone(polls.submit(worker_engine.process_job, 12).result(timeout=1))
+                            poll.assert_called_once()
+                    futures = list(worker_engine._DOWNLOAD_FUTURES.values())
+                    release.set()
+                    for future in futures:
+                        future.result(timeout=1)
+                    self.assertTrue(worker_engine._schedule_download(11))
             finally:
                 release.set()
+
+    def test_web_retry_does_not_create_another_download_pool(self):
+        with patch.object(worker_engine, "_cleanup_process_futures"), patch.object(worker_engine, "_PROCESS_FUTURES", {}), patch.object(worker_engine, "PROCESS_EXECUTOR") as executor:
+            self.assertTrue(worker_engine.schedule_job_now(11))
+            executor.submit.assert_called_once_with(worker_engine._process_job_background, 11, allow_download=False)
+        db = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(
+            id=11, status="remote_completed", provider_key_id=1)
+        with patch.object(worker_engine, "SessionLocal") as session, patch.object(worker_engine, "_acquire_job_lock", return_value=True), patch.object(worker_engine, "_schedule_download") as schedule:
+            session.return_value.__enter__.return_value = db
+            worker_engine._process_job_background(11, allow_download=False)
+            schedule.assert_not_called()
+
+    def test_concurrency_configuration_rejects_unbounded_values(self):
+        from app.core.config import Settings
+        from pydantic import ValidationError
+        self.assertEqual(Settings(_env_file=None, video_download_concurrency=10).video_download_concurrency, 10)
+        for value in (0, -1, 33):
+            with self.subTest(value=value), self.assertRaises(ValidationError):
+                Settings(_env_file=None, video_download_concurrency=value)
 
     def test_running_future_is_never_forgotten_or_duplicated(self):
         running, queued = Future(), Future()

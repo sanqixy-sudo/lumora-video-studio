@@ -1,8 +1,8 @@
 # NAS video download recovery and proxy
 
-Video downloads use a separate pool (three transfers per application process), so slow file transfers cannot exhaust status-polling threads. Each transfer attempt has a 120-second deadline. Partial responses are retained for HTTP Range retries; an OS file lock prevents two processes writing the same partial file. Only a complete transfer is renamed to the published video path.
+Video downloads use a separate worker-owned pool (`VIDEO_DOWNLOAD_CONCURRENCY`, default 10, allowed range 1–32), so slow file transfers cannot exhaust status-polling threads. Each transfer attempt has a 120-second deadline. Partial responses are retained for HTTP Range retries; an OS file lock prevents two processes writing the same partial file. Only a complete transfer is renamed to the published video path.
 
-Set `VIDEO_DOWNLOAD_PROXY` in the deployment `.env` to use an HTTP or SOCKS proxy for video files only. API submission and polling keep their existing network configuration. Leave it empty for the existing default network behavior. The runtime requires curl, which is installed by the Dockerfile.
+Set `VIDEO_DOWNLOAD_PROXY` in the deployment `.env` to use an HTTP or SOCKS proxy for video files only. API submission and polling keep their existing network configuration. Web retry actions hand downloads back to the worker instead of creating an additional web-side download pool. Restart the service after changing concurrency. Leave it empty for the existing default network behavior. The runtime requires curl, which is installed by the Dockerfile.
 
 ## NAS deployment on 2026-09-21
 
@@ -10,6 +10,7 @@ The NAS v2 HTTP proxy listens on `127.0.0.1:20171`. The Docker bridge is `172.18
 
 ```dotenv
 VIDEO_DOWNLOAD_PROXY=http://172.18.0.1:20172
+VIDEO_DOWNLOAD_CONCURRENCY=10
 ```
 
 The units are `/etc/systemd/system/lumora-video-proxy.socket` and `.service`. The socket is enabled for startup and ordered after Docker. Check them with:

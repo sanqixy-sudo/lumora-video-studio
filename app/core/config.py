@@ -1,4 +1,5 @@
 from pathlib import Path
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     sora_api_status_http_timeout: int = 30
     # Optional proxy for video file transfers only; API requests stay unchanged.
     video_download_proxy: str = ""
+    video_download_concurrency: int = Field(default=10, ge=1, le=32)
     worker_poll_interval: int = 2
     max_running_jobs: int = 3
     submit_max_attempts: int = 3

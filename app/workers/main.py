@@ -12,6 +12,7 @@ def main() -> None:
     ensure_dirs()
     loop_interval = min(max(int(settings.worker_poll_interval or 2), 1), 5)
     logger.info('Worker started. Configured poll interval=%ss; loop interval=%ss', settings.worker_poll_interval, loop_interval)
+    logger.info("Video download concurrency=%s; status polling uses a separate pool", settings.video_download_concurrency)
     mark_inflight_jobs_interrupted()
     while True:
         process_once()
