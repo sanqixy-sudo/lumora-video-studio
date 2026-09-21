@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import hashlib
+import os
+import subprocess
 import time
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
 import httpx
-import requests
 from PIL import Image
 
 from app.core.config import settings
@@ -598,38 +600,92 @@ def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | No
     return _normalize_task_response(data), response.status_code, latency_ms
 
 
+DOWNLOAD_TOTAL_TIMEOUT_SECONDS = 120
+
+
 def _download_url(video_url: str, dest_path: Path, started: float) -> tuple[dict, int, int]:
-    temp_path = dest_path.with_suffix(dest_path.suffix + ".part")
     dest_path.parent.mkdir(parents=True, exist_ok=True)
+    # OS locks are released on process exit, including container restarts. The
+    # separate lock file remains in place so concurrent callers share one inode.
+    with dest_path.with_suffix(dest_path.suffix + ".download.lock").open("a+b") as lock:
+        try:
+            if os.name == "nt":
+                import msvcrt
+                if lock.tell() == 0:
+                    lock.write(b"0")
+                    lock.flush()
+                lock.seek(0)
+                msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            raise UpstreamError("Video download already in progress") from exc
+        return _download_url_locked(video_url, dest_path, started)
+
+
+def _download_url_locked(video_url: str, dest_path: Path, started: float) -> tuple[dict, int, int]:
+    # Bound each attempt without discarding bytes on a slow connection.
+    temp_path = dest_path.with_suffix(dest_path.suffix + ".download.part")
+    source_path = dest_path.with_suffix(dest_path.suffix + ".download.source")
+    fingerprint = hashlib.sha256(video_url.encode("utf-8")).hexdigest()
+    if not source_path.exists() or source_path.read_text() != fingerprint:
+        temp_path.unlink(missing_ok=True)
+        source_path.write_text(fingerprint)
+    initial_size = temp_path.stat().st_size if temp_path.exists() else 0
+    keep_partial = False
     try:
-        if temp_path.exists():
-            temp_path.unlink()
-    except Exception:
-        pass
-    try:
-        with requests.get(video_url, headers={"User-Agent": "Mozilla/5.0", "Accept": "*/*"}, stream=True, timeout=(20, 90), allow_redirects=True) as response:
-            latency_ms = int((time.perf_counter() - started) * 1000)
-            if response.status_code >= 400:
-                raise UpstreamError("Download video failed", status_code=response.status_code, payload=response.text[:2000], latency_ms=latency_ms)
-            bytes_written = 0
-            with temp_path.open("wb") as fh:
-                for chunk in response.iter_content(chunk_size=1024 * 1024):
-                    if chunk:
-                        fh.write(chunk)
-                        bytes_written += len(chunk)
-            if bytes_written <= 0:
-                raise UpstreamError("Download video failed: empty file", status_code=502, payload=f"source_url={video_url}", latency_ms=latency_ms)
-            temp_path.replace(dest_path)
-            return {
-                "content_type": response.headers.get("content-type") or "video/mp4",
-                "content_length": response.headers.get("content-length"),
-                "bytes_written": bytes_written,
-                "source_url": video_url,
-                "resolver": "status_video_url",
-            }, response.status_code, latency_ms
-    except requests.RequestException as exc:
+        if any(char in video_url for char in ("\r", "\n", "\x00")):
+            raise UpstreamError("Invalid video download URL")
+        config_url = video_url.replace("\\", "\\\\").replace('"', '\\"')
+        result = subprocess.run(
+            ["curl", "--disable", "--silent", "--show-error", "--location",
+             "--fail", "--proto", "=http,https", "--proto-redir", "=http,https",
+             "--connect-timeout", "15", "--max-time", str(DOWNLOAD_TOTAL_TIMEOUT_SECONDS),
+             "--speed-limit", "1024", "--speed-time", "20",
+             "--user-agent", "Mozilla/5.0", "--continue-at", "-", "--output", str(temp_path),
+             "--write-out", "%{http_code}\n%{content_type}", "--config", "-"],
+            input='url = "' + config_url + '"\n', capture_output=True, text=True,
+            timeout=DOWNLOAD_TOTAL_TIMEOUT_SECONDS + 5,
+        )
         latency_ms = int((time.perf_counter() - started) * 1000)
-        raise UpstreamError(f"Download video request error after {latency_ms}ms", payload=str(exc), latency_ms=latency_ms) from exc
+        fields = result.stdout.splitlines()
+        status_code = int(fields[0]) if fields and fields[0].isdigit() else None
+        bytes_written = temp_path.stat().st_size if temp_path.exists() else 0
+        if result.returncode or not status_code or not 200 <= status_code < 300:
+            # curl validates Content-Range when resuming; unsupported ranges are
+            # discarded so the next attempt starts cleanly. Never log stderr URLs.
+            keep_partial = (
+                result.returncode in {5, 6, 7, 18, 28, 35, 52, 56}
+                and bytes_written > 0
+                and (status_code in {200, 206} or (not status_code and initial_size > 0))
+            )
+            made_progress = keep_partial and bytes_written > initial_size
+            raise UpstreamError("Download incomplete; saved bytes for resume" if made_progress else "Download video transfer failed",
+                                status_code=status_code or None,
+                                payload=f"curl exit code {result.returncode}; saved bytes {bytes_written if keep_partial else 0}",
+                                latency_ms=latency_ms,
+                                error_code="download_partial_progress" if made_progress else None)
+
+        if bytes_written <= 0:
+            raise UpstreamError("Download video failed: empty file", status_code=502, latency_ms=latency_ms)
+        temp_path.replace(dest_path)
+        return {"content_type": fields[1] if len(fields) > 1 else "video/mp4",
+                "content_length": str(bytes_written), "bytes_written": bytes_written,
+                "source_url": video_url, "resolver": "status_video_url"}, status_code, latency_ms
+    except subprocess.TimeoutExpired as exc:
+        bytes_written = temp_path.stat().st_size if temp_path.exists() else 0
+        keep_partial = bytes_written > 0
+        raise UpstreamError("Download video timed out; partial data retained",
+                            latency_ms=int((time.perf_counter() - started) * 1000),
+                            error_code="download_partial_progress" if bytes_written > initial_size else None) from exc
+    except OSError as exc:
+        raise UpstreamError("Download video could not start or save file",
+                            latency_ms=int((time.perf_counter() - started) * 1000)) from exc
+    finally:
+        if not keep_partial:
+            temp_path.unlink(missing_ok=True)
+            source_path.unlink(missing_ok=True)
 
 
 def download_video(

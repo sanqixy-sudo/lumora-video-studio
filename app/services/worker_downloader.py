@@ -101,7 +101,7 @@ def download_remote_job(job_id: int) -> None:
                 db.commit()
                 return
 
-            delay = 0 if (known_video_url or _has_remote_completed_event(db, int(job.id))) else delays[attempt_index]
+            delay = delays[attempt_index]
             now = utcnow()
             if delay and job.updated_at is not None:
                 next_retry_at = (_as_aware_utc(job.updated_at) or now) + timedelta(seconds=delay)
@@ -179,6 +179,17 @@ def download_remote_job(job_id: int) -> None:
                         response_summary=(exc.payload or "")[:2000],
                     )
                 )
+
+                if exc.error_code == "download_partial_progress":
+                    job.download_attempts = max(int(job.download_attempts or 1) - 1, 0)
+                    job.status = "download_waiting"
+                    job.error_text = None
+                    db.add(job)
+                    add_event(db, job.id, "info", "download_partial_progress",
+                              "Slow transfer saved partial video; continuing without regenerating.",
+                              {"transfer": exc.payload})
+                    db.commit()
+                    return
 
                 upstream_response = exc.upstream_response if isinstance(exc.upstream_response, dict) else None
                 if upstream_response and is_upstream_failure(upstream_response):

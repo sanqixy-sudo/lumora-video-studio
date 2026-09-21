@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from threading import Lock
 
 from sqlalchemy import func
 from app.core.config import settings
@@ -46,7 +47,26 @@ SUBMIT_EXECUTOR = ThreadPoolExecutor(max_workers=max(16, int(settings.max_runnin
 _SUBMIT_FUTURES: dict[object, int] = {}
 PROCESS_EXECUTOR = ThreadPoolExecutor(max_workers=max(16, int(settings.max_running_jobs) * 4))
 _PROCESS_FUTURES: dict[object, tuple[int, datetime]] = {}
+# Downloads must never occupy status-polling threads. Bound pending work too.
+DOWNLOAD_EXECUTOR = ThreadPoolExecutor(max_workers=3, thread_name_prefix="video-download")
+_DOWNLOAD_FUTURES: dict[int, object] = {}
+_DOWNLOAD_LOCK = Lock()
 _LAST_TEMP_CLEANUP_AT: datetime | None = None
+
+
+def _schedule_download(job_id: int) -> bool:
+    with _DOWNLOAD_LOCK:
+        for jid, future in list(_DOWNLOAD_FUTURES.items()):
+            if future.done():
+                del _DOWNLOAD_FUTURES[jid]
+                try:
+                    future.result()
+                except Exception:
+                    logger.exception("Background download crashed for job %s", jid)
+        if job_id in _DOWNLOAD_FUTURES or len(_DOWNLOAD_FUTURES) >= 3:
+            return False
+        _DOWNLOAD_FUTURES[job_id] = DOWNLOAD_EXECUTOR.submit(download_remote_job, job_id)
+        return True
 
 
 def _cleanup_temp_files_periodically() -> None:
@@ -93,7 +113,7 @@ def _cleanup_process_futures() -> None:
         except Exception:
             watchdog_seconds = max(DOWNLOAD_STALE_SECONDS + 60, PROCESS_WATCHDOG_SECONDS)
 
-        if elapsed > watchdog_seconds:
+        if elapsed > watchdog_seconds and future.cancel():
             _PROCESS_FUTURES.pop(future, None)
             logger.warning("Job %s processor exceeded watchdog %ss; allowing a new attempt", job_id, watchdog_seconds)
             try:
@@ -117,7 +137,7 @@ def _drop_process_futures_for_job(job_id: int) -> int:
     dropped = 0
     for future, info in list(_PROCESS_FUTURES.items()):
         active_job_id, _started_at = info
-        if int(active_job_id) == int(job_id):
+        if int(active_job_id) == int(job_id) and (future.done() or future.cancel()):
             _PROCESS_FUTURES.pop(future, None)
             dropped += 1
     return dropped
@@ -184,8 +204,7 @@ def _kick_remote_completed_downloads() -> None:
     for job_id in job_ids:
         if job_id in _processing_job_ids():
             continue
-        future = PROCESS_EXECUTOR.submit(download_remote_job, int(job_id))
-        _PROCESS_FUTURES[future] = (int(job_id), utcnow())
+        _schedule_download(int(job_id))
 
 
 def _start_queued_jobs() -> None:
@@ -371,7 +390,7 @@ def process_job(job_id: int) -> None:
                         db.commit()
         except Exception:
             logger.exception("Failed writing download handoff event for job %s", job_id)
-        download_remote_job(job_id)
+        _schedule_download(job_id)
 
 
 def schedule_job_now(job_id: int) -> bool:
@@ -397,5 +416,5 @@ def schedule_job_now(job_id: int) -> bool:
 
 def _download_remote(db, job: Job, provider_key=None, api_key: str | None = None) -> None:
     db.commit()
-    download_remote_job(int(job.id))
+    _schedule_download(int(job.id))
 
