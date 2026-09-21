@@ -1,12 +1,12 @@
 """Self-service account settings for ordinary users."""
 
-from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.request_security import require_same_origin
 from app.core.security import hash_password, verify_password
 from app.deps import get_current_user, get_db
 from app.models.tables import User
@@ -20,26 +20,6 @@ def require_account_user(user: User = Depends(get_current_user)) -> User:
     if user.role != "user":
         raise HTTPException(status_code=403, detail="仅普通用户可使用个人设置")
     return user
-
-
-def _origin(value: str) -> tuple[str, str, int] | None:
-    try:
-        parsed = urlsplit(value)
-        if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password:
-            return None
-        return parsed.scheme, parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80)
-    except ValueError:
-        return None
-
-
-def require_same_origin(request: Request) -> None:
-    source = request.headers.get("origin")
-    if source is None:
-        source = request.headers.get("referer", "")
-    if (request.headers.get("sec-fetch-site") == "cross-site"
-            or _origin(source) is None
-            or _origin(source) != _origin(str(request.base_url))):
-        raise HTTPException(status_code=403, detail="请求来源无效，请刷新页面后重试")
 
 
 def _locked_user(db: Session, current_user: User) -> User:

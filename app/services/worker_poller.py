@@ -5,6 +5,7 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from app.models.tables import APICallLog, Job, ProviderKey
+from app.services.network_settings import get_proxy_url
 from app.services.jobs import add_event, refund_failed_job_quota, is_retryable_failure, stringify_failure_reason
 from app.services.provider_keys import record_provider_key_failure, record_provider_key_success
 from app.services.sora_api import UpstreamError, compact_json, extract_upstream_error, fetch_video_status, is_upstream_failure, raw_task_response, remote_content_url
@@ -63,7 +64,7 @@ def poll_remote(db: Session, job: Job, provider_key: ProviderKey, api_key: str) 
     endpoint = remote_content_url(job.remote_task_id, provider_key.api_base_url, provider_key.provider_name)
     _maybe_add_poll_request_event(db, job)
     try:
-        data, status_code, latency_ms = fetch_video_status(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name)
+        data, status_code, latency_ms = fetch_video_status(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name, request_proxy=get_proxy_url(db, "request"))
     except UpstreamError as exc:
         provider_key = db.query(ProviderKey).filter(ProviderKey.id == provider_key_id).with_for_update().first()
         if provider_key:

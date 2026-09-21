@@ -49,10 +49,20 @@ PROCESS_EXECUTOR = ThreadPoolExecutor(max_workers=max(16, int(settings.max_runni
 _PROCESS_FUTURES: dict[object, tuple[int, datetime]] = {}
 # Downloads must never occupy status-polling threads. Bound pending work too.
 DOWNLOAD_CONCURRENCY = settings.video_download_concurrency
-DOWNLOAD_EXECUTOR = ThreadPoolExecutor(max_workers=DOWNLOAD_CONCURRENCY, thread_name_prefix="video-download")
+DOWNLOAD_EXECUTOR = ThreadPoolExecutor(max_workers=32, thread_name_prefix="video-download")
 _DOWNLOAD_FUTURES: dict[int, object] = {}
 _DOWNLOAD_LOCK = Lock()
 _LAST_TEMP_CLEANUP_AT: datetime | None = None
+
+
+def _refresh_download_concurrency(db) -> None:
+    global DOWNLOAD_CONCURRENCY
+    limit = get_system_setting_int(db, "video_download_concurrency", settings.video_download_concurrency)
+    limit = min(32, max(1, int(limit or settings.video_download_concurrency)))
+    with _DOWNLOAD_LOCK:
+        if DOWNLOAD_CONCURRENCY != limit:
+            logger.info("Video download concurrency changed: %s -> %s", DOWNLOAD_CONCURRENCY, limit)
+            DOWNLOAD_CONCURRENCY = limit
 
 
 def _schedule_download(job_id: int) -> bool:
@@ -190,6 +200,7 @@ def _kick_remote_completed_downloads() -> None:
     _cleanup_process_futures()
     in_flight = _processing_job_ids()
     with SessionLocal() as db:
+        _refresh_download_concurrency(db)
         job_ids = [
             int(job_id)
             for (job_id,) in (

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     sora_api_http_timeout: int = 120
     sora_api_status_http_timeout: int = 30
     # Optional proxy for video file transfers only; API requests stay unchanged.
+    upstream_request_proxy: str = ""
     video_download_proxy: str = ""
     video_download_concurrency: int = Field(default=10, ge=1, le=32)
     worker_poll_interval: int = 2

@@ -6,6 +6,7 @@ from datetime import timedelta
 from app.db import SessionLocal
 from app.models.tables import APICallLog, Job, ProviderKey
 from app.services.crypto import decrypt_secret
+from app.services.network_settings import proxy_options
 from app.services.jobs import add_event, create_output_file_record, output_path_for, refund_failed_job_quota
 from app.services.provider_keys import record_provider_key_failure, record_provider_key_success
 from app.services.sora_api import (
@@ -137,6 +138,7 @@ def download_remote_job(job_id: int) -> None:
                 "api_key": api_key,
                 "dest": output_path_for(job),
                 "known_video_url": known_video_url,
+                **proxy_options(db),
             }
         finally:
             _release_job_lock(db, job_id)
@@ -152,6 +154,8 @@ def download_remote_job(job_id: int) -> None:
             claim["api_base_url"],
             claim["provider_name"],
             known_video_url=claim.get("known_video_url"),
+            request_proxy=claim["request_proxy"],
+            download_proxy=claim["download_proxy"],
         )
     except UpstreamError as exc:
         with SessionLocal() as db:

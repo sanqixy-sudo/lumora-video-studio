@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.db import SessionLocal
 from app.models.tables import APICallLog, Job, ProviderKey
 from app.services.crypto import decrypt_secret
+from app.services.network_settings import get_proxy_url
 from app.services.jobs import add_event, get_reference_path, get_reference_url, get_reference_urls, get_reference_video_url, release_reserved_quota_for_job
 from app.services.provider_keys import record_provider_key_failure, record_provider_key_success
 from app.services.quota_plans import charge_reserved_quota
@@ -120,6 +121,7 @@ def submit_queued_job(job_id: int) -> None:
                     api_base_url,
                     model_id,
                     provider_name,
+                    request_proxy=get_proxy_url(db, "request"),
                     idempotency_key=str(job.request_id),
                     reference_video_url=reference_video_url,
                     reference_image_urls=reference_image_urls,

@@ -14,6 +14,8 @@ from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.request_security import require_same_origin
+from app.services.network_settings import proxy_options
 from app.core.timezone import date_bounds_utc, format_shanghai_datetime, month_bounds_utc, shanghai_now
 from app.deps import get_db, require_admin_or_subadmin, require_super_admin
 from app.models.tables import (
@@ -60,7 +62,7 @@ from app.services.reference_images import aspect_ratio_for_dimensions, fetch_ima
 from app.services.risk_control import parse_keywords
 from app.services.quota_plans import PLAN_PERIOD_TYPES, bind_plan_to_user, deactivate_plan_assignments, plan_quota_amount, quota_totals_for_user, quota_totals_for_users, refresh_due_packages, refresh_user_packages, update_assignment_custom_quota
 from app.services.user_admin import attach_display_names, create_user_with_wallet, deduct_quota, grant_quota, reset_user_password, set_user_display_name, set_user_role, set_user_showcase, set_user_status, user_display_name
-from app.services.system_settings import get_system_setting_int, get_system_settings_view, upsert_system_setting
+from app.services.system_settings import get_system_setting_int, get_system_settings_view, upsert_system_setting, validate_proxy_choices, settings_audit_values
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -2038,7 +2040,7 @@ def public_remote_download_job(job_id: int, token: str = Query(...), db: Session
         raise HTTPException(status_code=400, detail="Provider key not found for this job")
     api_key = decrypt_secret(provider_key.key_encrypted)
     try:
-        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name)
+        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name, **proxy_options(db))
     except UpstreamError as exc:
         detail = f"Remote download failed: {exc}"
         if exc.status_code:
@@ -2064,7 +2066,7 @@ def remote_download_job(job_id: int, current_user: User = Depends(require_super_
         raise HTTPException(status_code=400, detail="Provider key not found for this job")
     api_key = decrypt_secret(provider_key.key_encrypted)
     try:
-        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name)
+        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name, **proxy_options(db))
     except UpstreamError as exc:
         detail = f"Remote download failed: {exc}"
         if exc.status_code:
@@ -2255,9 +2257,23 @@ def rankings_page(request: Request, period: str = Query("month"), start_date: st
     return render(request, "admin/rankings.html", current_user=admin, rankings=rankings, period=period, period_label=period_label, start_date=parsed_start, end_date=parsed_end)
 
 
+def _settings_channels(db: Session):
+    return [row for row in db.query(ProviderKey).filter(ProviderKey.status != "deleted").order_by(ProviderKey.id.asc()).all()
+            if not provider_is_retired(row.provider_name)]
+
+
+def _render_system_settings(request, admin, db):
+    return request.app.state.templates.TemplateResponse(
+        request, "admin/settings.html",
+        {"request": request, "current_user": admin, "settings_rows": get_system_settings_view(db),
+         "channel_rows": _settings_channels(db),
+         "settings_saved": request.query_params.get("notice") in {"settings_saved", "channels_saved"}},
+        headers={"Cache-Control": "no-store"})
+
+
 @router.get("/settings/page", response_class=HTMLResponse)
 def settings_page(request: Request, admin: User = Depends(require_super_admin), db: Session = Depends(get_db)):
-    return render(request, "admin/settings.html", current_user=admin, settings_rows=get_system_settings_view(db))
+    return _render_system_settings(request, admin, db)
 
 
 @router.get("/quota-plans/page", response_class=HTMLResponse)
@@ -2405,8 +2421,9 @@ def delete_risk_rule_form(rule_id: int, admin: User = Depends(require_super_admi
     return RedirectResponse("/admin/risk-control/page", status_code=303)
 
 
-@router.post("/settings/update/form")
+@router.post("/settings/update/form", dependencies=[Depends(require_same_origin)])
 def settings_update_form(
+    request: Request,
     max_running_jobs: str = Form(""),
     submit_max_attempts: str = Form(""),
     download_retry_delays_seconds: str = Form(""),
@@ -2416,6 +2433,11 @@ def settings_update_form(
     default_concurrent_job_limit: str = Form(""),
     default_min_submit_interval_seconds: str = Form(""),
     registration_enabled: str = Form("0"),
+    request_proxy_enabled: str | None = Form(None),
+    request_proxy_url: str | None = Form(None),
+    download_proxy_enabled: str | None = Form(None),
+    download_proxy_url: str | None = Form(None),
+    video_download_concurrency: str | None = Form(None),
     admin: User = Depends(require_super_admin),
     db: Session = Depends(get_db),
 ):
@@ -2430,14 +2452,55 @@ def settings_update_form(
         "default_min_submit_interval_seconds": default_min_submit_interval_seconds,
         "registration_enabled": registration_enabled,
     }
+    network_values = {"request_proxy_enabled": request_proxy_enabled, "request_proxy_url": request_proxy_url,
+                      "download_proxy_enabled": download_proxy_enabled, "download_proxy_url": download_proxy_url,
+                      "video_download_concurrency": video_download_concurrency}
+    values.update({key: value for key, value in network_values.items() if value is not None})
     try:
         for key, value in values.items():
             upsert_system_setting(db, key, value, admin.id)
+        validate_proxy_choices(db)
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    write_audit(db, admin.id, "update_system_settings", "app_setting", None, values)
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    write_audit(db, admin.id, "update_system_settings", "app_setting", None, settings_audit_values(db, values))
     db.commit()
-    return RedirectResponse("/admin/settings/page", status_code=303)
+    return RedirectResponse("/admin/settings/page?notice=settings_saved", status_code=303)
+
+
+@router.post("/settings/channels/form", dependencies=[Depends(require_same_origin)])
+async def settings_channel_limits_form(request: Request, admin: User = Depends(require_super_admin), db: Session = Depends(get_db)):
+    form = await request.form()
+    channels = {str(row.id): row for row in _settings_channels(db)}
+    changes = []
+    try:
+        for key in form.keys():
+            if not key.startswith("channel_limit_"):
+                continue
+            channel_id = key.removeprefix("channel_limit_")
+            if channel_id not in channels or len(form.getlist(key)) != 1:
+                raise ValueError("通道配置已变化，请刷新页面后重试。")
+            row = channels[channel_id]
+            value = str(form[key]).strip()
+            try:
+                limit = int(value) if value else None
+            except ValueError:
+                raise ValueError(f"{row.name}：通道生成并发须填写正整数，留空表示不单独限制。") from None
+            if limit is not None and not 1 <= limit <= 256:
+                raise ValueError(f"{row.name}：通道生成并发须为 1–256，留空表示不单独限制。")
+            changes.append((row, limit))
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    for row, limit in changes:
+        if row.concurrent_limit != limit:
+            previous = row.concurrent_limit
+            row.concurrent_limit = limit
+            db.add(row)
+            write_audit(db, admin.id, "update_provider_key", "provider_key", row.id,
+                        {"concurrent_limit": limit, "previous_concurrent_limit": previous})
+    db.commit()
+    return RedirectResponse("/admin/settings/page?notice=channels_saved#channel-concurrency", status_code=303)
 
 
 @router.get("/api-call-logs/page", response_class=HTMLResponse)

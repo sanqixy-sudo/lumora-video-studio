@@ -412,7 +412,14 @@ def _reference_image_urls(
     return cleaned
 
 
-def _reference_image_file(reference_image_url: str | None, input_reference_path: Path | None = None) -> tuple[str, bytes, str] | None:
+def _proxy_client_options(proxy: str | None, *, download: bool = False) -> dict:
+    if proxy is None:
+        proxy = settings.video_download_proxy if download else settings.upstream_request_proxy
+    # An explicit direct choice must also override ambient HTTP(S)_PROXY.
+    return {"proxy": proxy or None, "trust_env": False}
+
+
+def _reference_image_file(reference_image_url: str | None, input_reference_path: Path | None = None, request_proxy: str | None = None) -> tuple[str, bytes, str] | None:
     if input_reference_path:
         content_type = mimetypes.guess_type(str(input_reference_path))[0] or "application/octet-stream"
         return input_reference_path.name, input_reference_path.read_bytes(), content_type
@@ -420,7 +427,7 @@ def _reference_image_file(reference_image_url: str | None, input_reference_path:
         return None
     started = time.perf_counter()
     try:
-        with httpx.Client(timeout=httpx.Timeout(connect=10, read=30, write=10, pool=10), follow_redirects=True) as client:
+        with httpx.Client(timeout=httpx.Timeout(connect=10, read=30, write=10, pool=10), follow_redirects=True, **_proxy_client_options(request_proxy)) as client:
             response = client.get(reference_image_url, headers={"User-Agent": "Mozilla/5.0", "Accept": "image/*,*/*;q=0.8"})
     except httpx.HTTPError as exc:
         latency_ms = int((time.perf_counter() - started) * 1000)
@@ -464,6 +471,7 @@ def create_video(
     idempotency_key: str | None = None,
     reference_video_url: str | None = None,
     reference_image_urls: list[str] | tuple[str, ...] | None = None,
+    request_proxy: str | None = None,
 ) -> tuple[dict, int, int]:
     url = create_video_endpoint(api_base_url, provider_name)
     provider = _provider_name(provider_name)
@@ -527,7 +535,7 @@ def create_video(
         headers["X-Request-ID"] = str(idempotency_key)
     started = time.perf_counter()
     try:
-        with httpx.Client(timeout=_timeout()) as client:
+        with httpx.Client(timeout=_timeout(), **_proxy_client_options(request_proxy)) as client:
             if provider == "wuyin_omni":
                 response = client.post(
                     url,
@@ -542,7 +550,7 @@ def create_video(
                     ("size", (None, size)),
                     ("seconds", (None, str(int(seconds)))),
                 ]
-                image_file = _reference_image_file(image_urls[0] if image_urls else None, input_reference_path)
+                image_file = _reference_image_file(image_urls[0] if image_urls else None, input_reference_path, request_proxy)
                 if image_file:
                     files.append(("image", image_file))
                 response = client.post(url, headers=headers, files=files)
@@ -572,7 +580,7 @@ def create_video(
     return normalized, response.status_code, latency_ms
 
 
-def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | None = None, provider_name: str | None = None) -> tuple[dict, int, int]:
+def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | None = None, provider_name: str | None = None, *, request_proxy: str | None = None) -> tuple[dict, int, int]:
     provider = _provider_name(provider_name)
     if provider == "wuyin_omni":
         url = _wuyin_omni_status_url(api_base_url)
@@ -582,7 +590,7 @@ def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | No
         url = _api_url(api_base_url, f"/videos/{remote_task_id}")
     started = time.perf_counter()
     try:
-        with httpx.Client(timeout=_status_timeout()) as client:
+        with httpx.Client(timeout=_status_timeout(), **_proxy_client_options(request_proxy)) as client:
             if provider == "wuyin_omni":
                 response = client.get(url, headers=_headers(api_key, provider), params={"key": api_key, "id": remote_task_id})
             else:
@@ -603,7 +611,7 @@ def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | No
 DOWNLOAD_TOTAL_TIMEOUT_SECONDS = 120
 
 
-def _download_url(video_url: str, dest_path: Path, started: float) -> tuple[dict, int, int]:
+def _download_url(video_url: str, dest_path: Path, started: float, download_proxy: str | None = None) -> tuple[dict, int, int]:
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     # OS locks are released on process exit, including container restarts. The
     # separate lock file remains in place so concurrent callers share one inode.
@@ -621,10 +629,10 @@ def _download_url(video_url: str, dest_path: Path, started: float) -> tuple[dict
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError as exc:
             raise UpstreamError("Video download already in progress") from exc
-        return _download_url_locked(video_url, dest_path, started)
+        return _download_url_locked(video_url, dest_path, started, download_proxy)
 
 
-def _download_url_locked(video_url: str, dest_path: Path, started: float) -> tuple[dict, int, int]:
+def _download_url_locked(video_url: str, dest_path: Path, started: float, download_proxy: str | None = None) -> tuple[dict, int, int]:
     # Bound each attempt without discarding bytes on a slow connection.
     temp_path = dest_path.with_suffix(dest_path.suffix + ".download.part")
     source_path = dest_path.with_suffix(dest_path.suffix + ".download.source")
@@ -639,12 +647,14 @@ def _download_url_locked(video_url: str, dest_path: Path, started: float) -> tup
             raise UpstreamError("Invalid video download URL")
         config_url = video_url.replace("\\", "\\\\").replace('"', '\\"')
         transfer_config = 'url = "' + config_url + '"\n'
-        proxy = settings.video_download_proxy.strip()
+        proxy = (settings.video_download_proxy if download_proxy is None else download_proxy).strip()
         if proxy:
             if any(char in proxy for char in ("\r", "\n", "\x00")):
                 raise UpstreamError("Invalid video download proxy")
             config_proxy = proxy.replace("\\", "\\\\").replace('"', '\\"')
             transfer_config += 'proxy = "' + config_proxy + '"\nnoproxy = ""\n'
+        else:
+            transfer_config += 'proxy = ""\nnoproxy = "*"\n'
         result = subprocess.run(
             ["curl", "--disable", "--silent", "--show-error", "--location",
              "--fail", "--proto", "=http,https", "--proto-redir", "=http,https",
@@ -702,12 +712,14 @@ def download_video(
     api_base_url: str | None = None,
     provider_name: str | None = None,
     known_video_url: str | None = None,
+    request_proxy: str | None = None,
+    download_proxy: str | None = None,
 ) -> tuple[dict, int, int]:
     started = time.perf_counter()
     video_url = known_video_url
     status_data: dict | None = None
     if not video_url:
-        status_data, _status_code, _latency_ms = fetch_video_status(api_key, remote_task_id, api_base_url, provider_name)
+        status_data, _status_code, _latency_ms = fetch_video_status(api_key, remote_task_id, api_base_url, provider_name, request_proxy=request_proxy)
         video_url = status_data.get("video_url") or status_data.get("url")
     if not video_url:
         if status_data and is_upstream_failure(status_data):
@@ -722,7 +734,7 @@ def download_video(
             )
         payload = compact_json(status_data or {"task_id": remote_task_id, "status": "processing"})
         raise UpstreamError("Remote result url not ready", status_code=425, payload=payload, upstream_response=status_data)
-    return _download_url(video_url, dest_path, started)
+    return _download_url(video_url, dest_path, started, download_proxy)
 
 
 def compact_json(data: dict) -> str:
@@ -740,12 +752,12 @@ def remote_content_url(remote_task_id: str, api_base_url: str | None = None, pro
     return _api_url(api_base_url, f"/videos/{remote_task_id}")
 
 
-def open_video_stream(api_key: str, remote_task_id: str, api_base_url: str | None = None, provider_name: str | None = None):
-    status_data, _status_code, _latency_ms = fetch_video_status(api_key, remote_task_id, api_base_url, provider_name)
+def open_video_stream(api_key: str, remote_task_id: str, api_base_url: str | None = None, provider_name: str | None = None, *, request_proxy: str | None = None, download_proxy: str | None = None):
+    status_data, _status_code, _latency_ms = fetch_video_status(api_key, remote_task_id, api_base_url, provider_name, request_proxy=request_proxy)
     video_url = status_data.get("video_url") or status_data.get("url")
     if not video_url:
         raise UpstreamError("Remote download failed: result url not ready", status_code=404, payload=compact_json(status_data))
-    client = httpx.Client(timeout=_timeout(), follow_redirects=True)
+    client = httpx.Client(timeout=_timeout(), follow_redirects=True, **_proxy_client_options(download_proxy, download=True))
     try:
         request = client.build_request("GET", video_url, headers={"User-Agent": "Mozilla/5.0", "Accept": "*/*"})
         response = client.send(request, stream=True)

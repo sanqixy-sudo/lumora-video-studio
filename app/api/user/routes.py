@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from starlette.background import BackgroundTask
 
 from app.core.config import settings
+from app.services.network_settings import proxy_options
 from app.core.timezone import date_bounds_utc, format_shanghai_datetime, shanghai_now
 from app.services.crypto import decrypt_secret
 from app.deps import get_current_user, get_db
@@ -1660,7 +1661,7 @@ def public_remote_download_job(job_id: int, token: str = Query(...), db: Session
         raise HTTPException(status_code=400, detail="Provider key not found for this job")
     api_key = decrypt_secret(provider_key.key_encrypted)
     try:
-        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name)
+        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name, **proxy_options(db))
     except UpstreamError as exc:
         detail = f"Remote download failed: {exc}"
         if exc.status_code:
@@ -1686,7 +1687,7 @@ def remote_download_job(job_id: int, current_user: User = Depends(get_current_us
         raise HTTPException(status_code=400, detail="Provider key not found for this job")
     api_key = decrypt_secret(provider_key.key_encrypted)
     try:
-        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name)
+        response, client = open_video_stream(api_key, job.remote_task_id, provider_key.api_base_url, provider_key.provider_name, **proxy_options(db))
     except UpstreamError as exc:
         detail = f"Remote download failed: {exc}"
         if exc.status_code:
