@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}批量记录{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="/static/workbench/batch-recovery.css?v=20260922-2">
 <link rel="stylesheet" href="/static/workbench/batch-download.css?v=20260922-2">
 <section class="wb-page-heading">
   <div>
@@ -24,6 +25,7 @@
   <p class="muted tiny">一次最多 20 个批次，依次下载各批次的 ZIP，仅包含已完成且可下载的视频。浏览器提示时，请允许下载多个文件。</p>
   <div id="batch-download-status" class="tiny" role="status" aria-live="polite"></div>
   <div id="batch-download-error" class="form-error hidden" role="alert"></div>
+  <div id="batch-recovery-error" class="form-error hidden" role="alert"></div>
   <div class="table-wrap surface-table clean-table-wrap">
     <table class="table clean-table">
       <thead>
@@ -42,6 +44,7 @@
           <td class="batch-summary-text">{{ summary.get('text', '-') }}</td>
           <td>
             <div class="inline-actions compact-actions">
+              {% if retry_counts.get(batch.id, 0) %}<button type="button" class="secondary-btn small-btn" data-batch-regenerate="{{ batch.id }}" data-batch-name="{{ batch.batch_name or batch.batch_code }}">重试失败 {{ retry_counts[batch.id] }} 项</button>{% endif %}
               <a class="ghost-btn small-btn" href="/app/job-batches/{{ batch.id }}/result">查看</a>
               {% if summary.get("downloadable_count", 0) %}<a class="primary-btn small-btn" href="/app/job-batches/{{ batch.id }}/download-zip">下载已完成 {{ summary.downloadable_count }} 个</a>{% else %}<button type="button" class="ghost-btn small-btn" disabled>暂无可下载作品</button>{% endif %}
             </div>
@@ -57,4 +60,4 @@
 </section>
 {% endblock %}
 
-{% block scripts %}<script src="/static/workbench/batch-download.js?v=20260922-2"></script>{% endblock %}
+{% block scripts %}<script src="/static/workbench/batch-recovery.js?v=20260922-2"></script><script src="/static/workbench/batch-download.js?v=20260922-2"></script>{% endblock %}

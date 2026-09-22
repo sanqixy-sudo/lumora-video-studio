@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}批次详情{% endblock %}
 {% block content %}
-<link rel="stylesheet" href="/static/workbench/batch-recovery.css?v=20260922-1">
+<link rel="stylesheet" href="/static/workbench/batch-recovery.css?v=20260922-2">
 <section class="wb-page-heading"><div></div><div class="inline-actions"><a class="ghost-btn small-btn" href="/app/job-batches/page">返回批次记录</a><a class="primary-btn small-btn" href="/app">继续创作</a></div></section>
 <section class="batch-overview">
   <div class="batch-overview-main"><h2>{{ batch.batch_name or batch.batch_code }}</h2><span class="muted">{{ batch.product_name or '-' }} / {{ batch.region_name or '-' }} · <time data-ui-time>{{ batch.created_at|dt }}</time></span><div class="tiny muted">{{ batch.batch_code }} · {{ batch.total_count }} 个任务</div></div>
@@ -18,4 +18,4 @@
 <div class="inline-actions batch-result-actions"><a id="batch-download" class="primary-btn {{ '' if summary.get('downloadable_count',0) else 'hidden' }}" href="/app/job-batches/{{ batch.id }}/download-zip">下载已完成 {{ summary.get('downloadable_count',0) }} 个</a><span id="batch-download-empty" class="muted {{ 'hidden' if summary.get('downloadable_count',0) else '' }}">暂无可下载作品，生成后会自动更新。</span></div>
 </section>
 {% endblock %}
-{% block scripts %}<script>window.BATCH_DATA_ENDPOINT = "/app/job-batches/{{ batch.id }}";</script><script src="/static/workbench/batch-recovery.js?v=20260922-1"></script>{% endblock %}
+{% block scripts %}<script>window.BATCH_DATA_ENDPOINT = "/app/job-batches/{{ batch.id }}";</script><script src="/static/workbench/batch-recovery.js?v=20260922-2"></script>{% endblock %}

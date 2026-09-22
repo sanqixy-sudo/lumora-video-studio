@@ -1,4 +1,4 @@
-#batch-regenerate,[data-regenerate],[data-retry-download]{min-height:44px;white-space:nowrap}
+#batch-regenerate,[data-regenerate],[data-retry-download],[data-batch-regenerate]{min-height:44px;white-space:nowrap}
 .batch-result-table [data-job-failure],.batch-result-table [data-job-recovery-reason]{max-width:260px;white-space:normal;overflow-wrap:anywhere;line-height:1.6;margin:6px 0 0}
 .batch-result-table [data-job-failure]:empty,.batch-result-table [data-job-recovery-reason]:empty{display:none}
 #batch-recovery-error{margin-bottom:16px;overflow-wrap:anywhere}

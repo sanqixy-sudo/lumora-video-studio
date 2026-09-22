@@ -1,11 +1,13 @@
 (() => {
   const base = window.BATCH_DATA_ENDPOINT;
-  if (!base) return;
+  const listButtons = [...document.querySelectorAll("[data-batch-regenerate]")];
+  if (!base && !listButtons.length) return;
   const bulk = document.getElementById('batch-regenerate');
   const error = document.getElementById('batch-recovery-error');
   let busy = false;
-  const buttons = () => [...document.querySelectorAll('#batch-regenerate,[data-regenerate],[data-retry-download]')];
+  const buttons = () => [...document.querySelectorAll('#batch-regenerate,[data-regenerate],[data-retry-download],[data-batch-regenerate]')];
   function sync(payload) {
+    if (!bulk) return;
     const count = payload.jobs.filter(job => job.can_regenerate).length;
     bulk.classList.toggle('hidden', !count);
     if (!busy) bulk.textContent = `重新生成失败项 · ${count}`;
@@ -27,7 +29,7 @@
     if (!response.ok || !body) throw new Error(typeof body?.detail === 'string' ? body.detail : `操作未完成（HTTP ${response.status}），请刷新后重试。`);
     return body;
   }
-  async function run(button, mode, id) {
+  async function run(button, mode, id, endpoint = base) {
     if (busy) return;
     busy = true;
     error.classList.add('hidden');
@@ -38,15 +40,16 @@
     let submitted = false;
     try {
       if (mode === 'download') {
-        await request(`${base}/jobs/${id}/retry-download`, {});
+        await request(`${endpoint}/jobs/${id}/retry-download`, {});
       } else {
-        const quote = await request(`${base}/regeneration-preview${id ? '?job_id='+id : ''}`);
+        const quote = await request(`${endpoint}/regeneration-preview${id ? '?job_id='+id : ''}`);
         button.textContent = label;
         const skipped = quote.skipped.length ? ` 另有 ${quote.skipped.length} 条暂不能重做。` : '';
-        const confirmed = await SoraUI.confirm(`将在原批次重做 ${quote.count} 条失败项，预占 ${quote.quota} 次额度，上游接受后按现有规则扣除。成功作品和正在处理的任务不受影响。${skipped}`, {title:'重新生成失败项',label:'确认重新生成'});
+        const batchLabel = button.dataset.batchName ? `“${button.dataset.batchName}”（#${button.dataset.batchRegenerate}）：` : "";
+        const confirmed = await SoraUI.confirm(`${batchLabel}将在原批次重做 ${quote.count} 条失败项，预占 ${quote.quota} 次额度，上游接受后按现有规则扣除。成功作品和正在处理的任务不受影响。${skipped}`, {title:'重新生成失败项',label:'确认重新生成'});
         if (!confirmed) return;
         button.textContent = '正在加入生成队列…';
-        await request(`${base}/regenerate`, {job_ids:quote.job_ids});
+        await request(`${endpoint}/regenerate`, {job_ids:quote.job_ids});
       }
       submitted = true;
       button.textContent = '已加入队列';
@@ -58,7 +61,8 @@
       if (!submitted) { busy = false; buttons().forEach(item => item.disabled = false); button.textContent = label; button.removeAttribute('aria-busy'); button.focus({preventScroll:true}); }
     }
   }
-  bulk.addEventListener('click', () => run(bulk, 'generate'));
+  bulk?.addEventListener('click', () => run(bulk, 'generate'));
+  listButtons.forEach(button => button.addEventListener('click', () => run(button, 'generate', null, `/app/job-batches/${Number(button.dataset.batchRegenerate)}`)));
   document.querySelectorAll('[data-regenerate]').forEach(button => button.addEventListener('click', () => run(button,'generate',Number(button.dataset.regenerate))));
   document.querySelectorAll('[data-retry-download]').forEach(button => button.addEventListener('click', () => run(button,'download',Number(button.dataset.retryDownload))));
 })();

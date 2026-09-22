@@ -14,6 +14,19 @@ class BatchRegenerationTests(unittest.TestCase):
         self.assertEqual(self.client.post('/auth/login-browser',json={'username':name,'password':' old-password '}).status_code,200)
     def retry(self,ids,**kw):
         return self.client.post('/app/job-batches/10/regenerate',json={'job_ids':ids},headers=kw.get('headers',{'Origin':'http://testserver'}))
+    def test_batch_list_exposes_eligible_retry_and_hides_after_requeue(self):
+        response=self.client.get('/app/job-batches/page')
+        self.assertEqual(response.status_code,200)
+        self.assertIn('data-batch-regenerate="10"',response.text)
+        self.assertIn('重试失败 2 项',response.text)
+        self.assertEqual(self.retry([1,2]).status_code,200)
+        self.assertNotIn('data-batch-regenerate="10"',self.client.get('/app/job-batches/page').text)
+        self.login('other')
+        self.assertNotIn('data-batch-regenerate="10"',self.client.get('/app/job-batches/page').text)
+    def test_batch_list_hides_retry_for_disabled_channel(self):
+        with self.env.Session() as db:
+            db.get(ProviderKey,1).status='disabled';db.commit()
+        self.assertNotIn('data-batch-regenerate="10"',self.client.get('/app/job-batches/page').text)
     def test_same_batch_same_positions_preserve_old_attempts_and_copy_materials(self):
         quote=self.client.get('/app/job-batches/10/regeneration-preview').json()
         self.assertEqual(quote['job_ids'],[1,2]);self.assertEqual(quote['quota'],2)

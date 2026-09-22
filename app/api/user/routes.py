@@ -1167,12 +1167,22 @@ def job_batches_page(
     query = db.query(JobBatch).filter(JobBatch.user_id == current_user.id).order_by(JobBatch.id.desc())
     paged = _pagination(query, page, per_page)
     summary_map = _batch_summary_map(db, {batch.id for batch in paged["items"]})
+    failed_jobs = db.query(Job).filter(
+        Job.batch_id.in_([batch.id for batch in paged["items"]]),
+        Job.user_id == current_user.id, Job.status == 'failed', latest_attempt_filter(),
+    ).all()
+    recovery = regeneration_info(db, failed_jobs)
+    retry_counts = {}
+    for job in failed_jobs:
+        if recovery[job.id]['can_regenerate']:
+            retry_counts[job.batch_id] = retry_counts.get(job.batch_id, 0) + 1
     return render(
         request,
         "app/job_batches.html",
         current_user=current_user,
         batches=paged["items"],
         summary_map=summary_map,
+        retry_counts=retry_counts,
         pagination=paged,
     )
 
