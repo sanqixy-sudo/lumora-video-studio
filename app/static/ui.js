@@ -123,7 +123,7 @@ const SoraUI = (() => {
       // Use standard URL encoding unless the form actually contains a file control.
       const hasFile = [...data.values()].some(value => value instanceof File);
       const body = hasFile ? data : new URLSearchParams([...data.entries()]);
-      const response = await fetch(form.action, {method:'POST',body,credentials:'same-origin'});
+      const response = await fetch(form.action, {method:'POST',body,credentials:'same-origin',headers:{'Accept':'application/json'}});
       const contentType = response.headers.get('content-type') || '';
       if (response.status === 401) { window.location.assign(`/login?next=${encodeURIComponent(location.pathname + location.search)}&expired=1`); return; }
       if (!response.ok) {

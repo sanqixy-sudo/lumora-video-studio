@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 1440
     session_cookie_name: str = 'sora_session'
     session_cookie_secure: bool = False
+    # Explicit external origin for TLS-terminating reverse proxies that preserve Host.
+    public_origin: str = ''
     database_url: str = 'postgresql+psycopg://sora:sora_password@127.0.0.1:5432/sora'
     files_upload_dir: Path = Path('/data/uploads')
     files_output_dir: Path = Path('/data/outputs')
