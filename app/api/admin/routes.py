@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.request_security import require_same_origin
+from app.services.job_regeneration import latest_attempt_filter
 from app.services.network_settings import proxy_options
 from app.core.timezone import date_bounds_utc, format_shanghai_datetime, month_bounds_utc, shanghai_now
 from app.deps import get_db, require_admin_or_subadmin, require_super_admin
@@ -1752,7 +1753,7 @@ def _batch_summary_map(db: Session, batch_ids: list[int] | set[int]) -> dict[int
         return {}
     rows = (
         db.query(Job.batch_id, Job.status, func.count(Job.id).label("count"))
-        .filter(Job.batch_id.in_(ids))
+        .filter(Job.batch_id.in_(ids), latest_attempt_filter())
         .group_by(Job.batch_id, Job.status)
         .all()
     )

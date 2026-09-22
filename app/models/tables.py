@@ -106,6 +106,8 @@ class Job(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), index=True)
     batch_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('job_batches.id', ondelete='SET NULL'), index=True)
     batch_index: Mapped[int | None] = mapped_column(Integer)
+    retry_of_job_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('jobs.id', ondelete='SET NULL'), unique=True)
+
     provider_key_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('provider_keys.id'))
     request_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, unique=True)
     remote_task_id: Mapped[str | None] = mapped_column(String(128), index=True)

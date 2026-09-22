@@ -1566,6 +1566,9 @@ function initBatchResultPage() {
       setText("batch-state",batch.state_label); setText("batch-summary",batch.summary);
       setText("batch-completed",batch.completed_count); setText("batch-active",batch.active_count); setText("batch-failed",batch.failed_count);
       const ids = new Set(jobs.map(job => String(job.id)));
+      // Another tab may have restarted a row. Render its new attempt in place.
+      if (jobs.some(job => !document.querySelector(`[data-batch-job="${Number(job.id)}"]`))) { window.location.reload(); return; }
+      document.dispatchEvent(new CustomEvent('lumora:batch-updated', {detail:payload}));
       document.querySelectorAll("[data-batch-job]").forEach(row => { if (!ids.has(row.dataset.batchJob)) row.remove(); });
       jobs.forEach(job => {
         const row = document.querySelector(`[data-batch-job="${Number(job.id)}"]`);

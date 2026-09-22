@@ -256,7 +256,7 @@ class SessionVersionMigrationTests(unittest.TestCase):
         from alembic.script import ScriptDirectory
 
         config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
-        self.assertEqual(ScriptDirectory.from_config(config).get_heads(), ["0024_merge_account_legacy_quota"])
+        self.assertEqual(ScriptDirectory.from_config(config).get_heads(), ["0025_job_regeneration"])
         for revision in ["0022_upstream_errors", "0023_model_quota_costs", "0023_user_session_version"]:
             with self.subTest(revision=revision), TemporaryDirectory() as directory:
                 url = "sqlite:///" + str(Path(directory) / "migration.sqlite")
@@ -277,8 +277,9 @@ class SessionVersionMigrationTests(unittest.TestCase):
                     command.upgrade(config, "head")
                 with engine.connect() as connection:
                     self.assertEqual(connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar(),
-                                     "0024_merge_account_legacy_quota")
+                                     "0025_job_regeneration")
                     self.assertEqual(connection.exec_driver_sql("SELECT session_version FROM users WHERE id=1").scalar(), 0)
+                    self.assertIn("retry_of_job_id", [column["name"] for column in inspect(connection).get_columns("jobs")])
                     self.assertIn("quota_cost", [column["name"] for column in inspect(connection).get_columns("jobs")])
                 engine.dispose()
 

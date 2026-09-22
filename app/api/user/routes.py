@@ -11,6 +11,10 @@ import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 from PIL import Image, UnidentifiedImageError
+from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
+from app.core.request_security import require_same_origin
+from app.services.job_regeneration import latest_attempt_filter, regeneration_info, regenerate_failed_jobs
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTask
@@ -115,7 +119,7 @@ def _batch_summary_map(db: Session, batch_ids: list[int] | set[int]) -> dict[int
         return {}
     rows = (
         db.query(Job.batch_id, Job.status, func.count(Job.id).label("count"))
-        .filter(Job.batch_id.in_(ids))
+        .filter(Job.batch_id.in_(ids), latest_attempt_filter())
         .group_by(Job.batch_id, Job.status)
         .all()
     )
@@ -554,7 +558,7 @@ def app_dashboard_page(
         db.commit()
     wallet = db.query(QuotaWallet).filter(QuotaWallet.user_id == current_user.id).first()
     quota_stats = quota_totals_for_user(db, int(current_user.id), wallet)
-    recent_jobs = db.query(Job).filter(Job.user_id == current_user.id).order_by(Job.id.desc()).limit(4).all()
+    recent_jobs = db.query(Job).filter(Job.user_id == current_user.id, latest_attempt_filter()).order_by(Job.id.desc()).limit(4).all()
     reference_presets = _reference_preset_query_for_user(db, current_user.id).filter(ReferenceImagePreset.status == "active").all()
     choices = _model_options(db)
     preferred = get_system_setting_text(db, "default_model_choice", "")
@@ -643,7 +647,7 @@ def dashboard(current_user: User = Depends(get_current_user), db: Session = Depe
         db.commit()
     wallet = db.query(QuotaWallet).filter(QuotaWallet.user_id == current_user.id).first()
     quota_stats = quota_totals_for_user(db, int(current_user.id), wallet)
-    recent_jobs = db.query(Job).filter(Job.user_id == current_user.id).order_by(Job.id.desc()).limit(4).all()
+    recent_jobs = db.query(Job).filter(Job.user_id == current_user.id, latest_attempt_filter()).order_by(Job.id.desc()).limit(4).all()
     return {
         "user": current_user.username,
         "remaining_quota": wallet.remaining_quota if wallet else 0,
@@ -1108,7 +1112,7 @@ def jobs_page(
     db: Session = Depends(get_db),
 ):
     per_page = min(max(per_page, 1), 100)
-    query = db.query(Job).filter(Job.user_id == current_user.id).order_by(Job.id.desc())
+    query = db.query(Job).filter(Job.user_id == current_user.id, latest_attempt_filter()).order_by(Job.id.desc())
     total_items = query.order_by(None).count() or 0
     total_pages = max(1, ceil(total_items / per_page)) if total_items else 1
     page = min(page, total_pages)
@@ -1134,7 +1138,7 @@ def list_jobs(
     db: Session = Depends(get_db),
 ) -> dict:
     per_page = min(max(per_page, 1), 100)
-    query = db.query(Job).filter(Job.user_id == current_user.id).order_by(Job.id.desc())
+    query = db.query(Job).filter(Job.user_id == current_user.id, latest_attempt_filter()).order_by(Job.id.desc())
     total_items = query.order_by(None).count() or 0
     total_pages = max(1, ceil(total_items / per_page)) if total_items else 1
     page = min(page, total_pages)
@@ -1184,7 +1188,7 @@ def job_batch_result_page(
         raise HTTPException(status_code=404, detail="Job not found")
     jobs = (
         db.query(Job)
-        .filter(Job.batch_id == batch.id, Job.user_id == current_user.id)
+        .filter(Job.batch_id == batch.id, Job.user_id == current_user.id, latest_attempt_filter())
         .order_by(Job.batch_index.asc().nullslast(), Job.id.asc())
         .all()
     )
@@ -1198,6 +1202,7 @@ def job_batch_result_page(
         jobs=jobs,
         queue_map=queue_map,
         summary=summary_map.get(batch.id, {}),
+        recovery_map=regeneration_info(db, jobs),
     )
 
 
@@ -1212,15 +1217,70 @@ def job_batch_detail(
         raise HTTPException(status_code=404, detail="Job not found")
     jobs = (
         db.query(Job)
-        .filter(Job.batch_id == batch.id, Job.user_id == current_user.id)
+        .filter(Job.batch_id == batch.id, Job.user_id == current_user.id, latest_attempt_filter())
         .order_by(Job.batch_index.asc().nullslast(), Job.id.asc())
         .all()
     )
     summary = _batch_summary_map(db, {batch.id}).get(batch.id, {})
+    recovery = regeneration_info(db, jobs)
     return {
         "batch": _serialize_batch(batch, summary),
-        "jobs": [{**serialize_job(job, get_output_file(db, job.id)), "queue_text": queue_text(db, job)} for job in jobs],
+        "jobs": [{**serialize_job(job, get_output_file(db, job.id)), **recovery[job.id], "queue_text": queue_text(db, job)} for job in jobs],
     }
+
+
+class BatchRegenerationRequest(BaseModel):
+    job_ids: list[int] = Field(min_length=1, max_length=100)
+
+
+@router.get("/job-batches/{batch_id}/regeneration-preview")
+def batch_regeneration_preview(batch_id: int, job_id: int | None = Query(None),
+        current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    batch = db.query(JobBatch).filter(JobBatch.id == batch_id, JobBatch.user_id == current_user.id).first()
+    if not batch:
+        raise HTTPException(404, "批次不存在")
+    query = db.query(Job).filter(Job.batch_id == batch_id, Job.user_id == current_user.id, latest_attempt_filter())
+    if job_id is not None:
+        query = query.filter(Job.id == job_id)
+    else:
+        query = query.filter(Job.status == "failed")
+    jobs = query.order_by(Job.id).all()
+    info = regeneration_info(db, jobs)
+    ids = [job.id for job in jobs if info[job.id]['can_regenerate']]
+    skipped = [{'job_id':job.id,'reason':info[job.id]['regeneration_reason'] or '当前状态无需重新生成'} for job in jobs if job.id not in ids]
+    if not ids:
+        raise HTTPException(400, skipped[0]['reason'] if skipped else '当前没有可以重新生成的失败任务，请刷新页面。')
+    return {'job_ids':ids,'count':len(ids),'quota':len(ids),'skipped':skipped}
+
+
+@router.post("/job-batches/{batch_id}/regenerate", dependencies=[Depends(require_same_origin)])
+def batch_regenerate(batch_id: int, payload: BatchRegenerationRequest,
+        current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        jobs = regenerate_failed_jobs(db, current_user, batch_id, payload.job_ids)
+    except LookupError as exc:
+        db.rollback(); raise HTTPException(404, str(exc)) from None
+    except ValueError as exc:
+        db.rollback(); raise HTTPException(400, str(exc)) from None
+    except IntegrityError:
+        db.rollback(); raise HTTPException(409, '任务状态已变化，请刷新后查看，避免重复提交。') from None
+    return {'ok':True,'job_ids':[job.id for job in jobs], 'count':len(jobs)}
+
+
+@router.post("/job-batches/{batch_id}/jobs/{job_id}/retry-download", dependencies=[Depends(require_same_origin)])
+def batch_retry_download(batch_id: int, job_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    job = db.query(Job).filter(Job.id == job_id, Job.batch_id == batch_id, Job.user_id == current_user.id).with_for_update().first()
+    if not job:
+        raise HTTPException(404, '任务不存在')
+    if job.remote_task_id and job.status in {'remote_completed','download_waiting','downloading','completed'}:
+        return {'ok':True}
+    if job.status != 'download_failed' or not job.remote_task_id:
+        raise HTTPException(400, '当前状态不能重新下载，请刷新页面。')
+    job.status='remote_completed'; job.download_attempts=0
+    job.error_text=None; job.error_message=None; job.error_code=None
+    db.add(JobEvent(job_id=job.id,level='info',event_type='redownload_requested',message='用户在批次页重新下载，不重新生成或扣费。'))
+    db.commit()
+    return {'ok':True}
 
 
 @router.get("/job-batches/{batch_id}/download-zip")
