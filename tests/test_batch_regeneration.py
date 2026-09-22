@@ -19,6 +19,7 @@ class BatchRegenerationTests(unittest.TestCase):
         self.assertEqual(quote['job_ids'],[1,2]);self.assertEqual(quote['quota'],2)
         response=self.retry(quote['job_ids']);self.assertEqual(response.status_code,200,response.text)
         ids=response.json()['job_ids']
+        self.assertEqual(self.client.post('/app/jobs/2/resume').status_code,400)
         with self.env.Session() as db:
             self.assertEqual(db.query(JobBatch).count(),1)
             for original_id,new_id in zip([1,2],ids):

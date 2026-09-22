@@ -124,7 +124,7 @@ def _batch_summary_map(db: Session, batch_ids: list[int] | set[int]) -> dict[int
         .all()
     )
     downloadable = {batch_id: set() for batch_id in ids}
-    output_rows = db.query(Job.batch_id, Job.id, JobFile.file_path).join(JobFile, JobFile.job_id == Job.id).filter(Job.batch_id.in_(ids), Job.status == "completed", JobFile.file_type == "output_video").all()
+    output_rows = db.query(Job.batch_id, Job.id, JobFile.file_path).join(JobFile, JobFile.job_id == Job.id).filter(Job.batch_id.in_(ids), latest_attempt_filter(), Job.status == "completed", JobFile.file_type == "output_video").all()
     for batch_id, job_id, file_path in output_rows:
         if Path(file_path).is_file():
             downloadable[int(batch_id)].add(int(job_id))
@@ -1295,7 +1295,7 @@ def job_batch_download_zip(
     rows = (
         db.query(Job, JobFile)
         .join(JobFile, and_(JobFile.job_id == Job.id, JobFile.file_type == "output_video"))
-        .filter(Job.batch_id == batch.id, Job.user_id == current_user.id, Job.status == "completed")
+        .filter(Job.batch_id == batch.id, Job.user_id == current_user.id, latest_attempt_filter(), Job.status == "completed")
         .order_by(Job.batch_index.asc().nullslast(), Job.id.asc())
         .all()
     )
@@ -1652,7 +1652,7 @@ def job_detail_page(
         files=files,
         api_calls=[_serialize_api_call(call) for call in api_calls],
         can_redownload=can_redownload(job, output_file),
-        can_resume=can_resume(job),
+        can_resume=can_resume(job) and not db.query(Job.id).filter(Job.retry_of_job_id == job.id).first(),
         can_pause=can_pause(job),
         data_endpoint=f"/app/jobs/{job.id}",
         remote_download_url=job_data.get("remote_download_url"),
@@ -1678,7 +1678,7 @@ def job_detail(job_id: int, current_user: User = Depends(get_current_user), db: 
         "events": [serialize_event(event) for event in events],
         "api_calls": [_serialize_api_call(call) for call in api_calls],
         "can_redownload": can_redownload(job, output_file),
-        "can_resume": can_resume(job),
+        "can_resume": can_resume(job) and not db.query(Job.id).filter(Job.retry_of_job_id == job.id).first(),
         "can_pause": can_pause(job),
     }
 
@@ -1778,9 +1778,11 @@ def redownload_job(job_id: int, current_user: User = Depends(get_current_user), 
 
 @router.post("/jobs/{job_id}/resume")
 def resume_job(job_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    job = db.query(Job).filter(Job.id == job_id, Job.user_id == current_user.id).first()
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == current_user.id).with_for_update().first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+    if db.query(Job.id).filter(Job.retry_of_job_id == job.id).first():
+        raise HTTPException(400, '此任务已有重做记录，请返回原批次查看最新进度。')
     output_file = get_output_file(db, job.id)
     force_download_statuses = {"remote_completed", "download_failed", "download_waiting", "downloading"}
     if can_redownload(job, output_file):
