@@ -57,6 +57,24 @@ class SystemNetworkSettingsTests(unittest.TestCase):
         with self.env.Session() as db:
             self.assertEqual(get_proxy_url(db,"download"),secret)
 
+    def test_unchanged_proxy_address_is_not_resubmitted_with_other_settings(self):
+        from app.services.system_settings import get_system_settings_view
+        self.assertEqual(self.save(download_proxy_enabled="1",download_proxy_url="http://172.18.0.1:20172").status_code,303)
+        with self.env.Session() as db:
+            view={item['key']:item for item in get_system_settings_view(db)}
+            self.assertEqual(view['download_proxy_url']['value'],'')
+            self.assertEqual(view['download_proxy_url']['current_proxy'],'http://172.18.0.1:20172')
+            payload={key:item['value'] or '' for key,item in view.items()}
+        payload['max_running_jobs']='12'
+        response=self.client.post('/admin/settings/update/form',data=payload,headers={'Origin':'http://testserver'},follow_redirects=False)
+        self.assertEqual(response.status_code,303)
+        with self.env.Session() as db:
+            self.assertEqual(get_proxy_url(db,'download'),'http://172.18.0.1:20172')
+            self.assertEqual(db.get(AppSetting,'max_running_jobs').value,'12')
+        html=self.client.get('/admin/settings/page').text
+        self.assertIn('name="download_proxy_url" value=""',html)
+        self.assertIn('http://172.18.0.1:20172',html)
+
     def test_invalid_settings_roll_back_every_field(self):
         self.assertEqual(self.save(max_running_jobs="8").status_code,303)
         for changes in ({"video_download_concurrency":"0"},{"video_download_concurrency":"33"},

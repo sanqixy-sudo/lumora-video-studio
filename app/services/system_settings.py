@@ -180,7 +180,9 @@ def get_system_settings_view(db: Session) -> list[dict]:
         if definition["type"] == "proxy":
             current = decode_proxy_url(value)
             masked = redact_proxy_url(current)
-            entry.update(value=current if masked == current else "", current_proxy=masked,
+            # A blank field preserves the stored address. Do not resubmit internal
+            # proxy URLs when saving unrelated settings through a public WAF.
+            entry.update(value="", current_proxy=masked,
                          default=redact_proxy_url(definition["default"]))
         data.append(entry)
     return data
