@@ -32,27 +32,31 @@ class BatchArchiveTests(unittest.TestCase):
         self.env=BatchArchiveEnvironment();self.addCleanup(self.env.close)
         self.client=TestClient(self.env.app)
         self.client.post('/auth/login-browser',json={'username':'creator','password':' old-password '})
-    def download(self,ids):
-        return self.client.get('/app/job-batches/bulk-download',params={'batch_ids':ids,'download_token':'a'*32})
-    def test_outer_zip_contains_named_batch_zips_with_latest_videos(self):
-        response=self.download('10,11,10');self.assertEqual(response.status_code,200,response.text[:100] if response.status_code!=200 else '')
-        self.assertEqual(response.cookies['batch_zip_'+'a'*32],'ready')
-        with zipfile.ZipFile(io.BytesIO(response.content)) as outer:
-            self.assertEqual(outer.namelist(),['Drama-Play-巴西-批次-10.zip','Drama-Play-巴西-批次-11.zip'])
-            self.assertIsNone(outer.testzip())
-            expected=[{b'video-1',b'video-5'},{b'video-3'}]
-            for name,contents in zip(outer.namelist(),expected):
-                with zipfile.ZipFile(io.BytesIO(outer.read(name))) as inner:
-                    self.assertEqual({inner.read(n) for n in inner.namelist()},contents)
-                    self.assertTrue(all('/' not in n and '\\' not in n for n in inner.namelist()))
-                    self.assertIsNone(inner.testzip())
-        self.assertEqual(list(settings.files_temp_dir.iterdir()),[])
-    def test_ownership_and_invalid_selection_fail_without_partial_zip(self):
-        for ids in ('10,12','999','13','10,13','', '0','-1','1;2',','.join(str(i) for i in range(1,22)),'999999999999999999999'):
-            with self.subTest(ids=ids):
-                response=self.download(ids);self.assertIn(response.status_code,[400,404])
-                self.assertEqual(response.cookies['batch_zip_'+'a'*32],'error')
+    def download(self,batch_id,token='a'*32):
+        return self.client.get(f'/app/job-batches/{batch_id}/download-zip',params={'download_token':token})
+    def test_separate_zips_contain_latest_videos_and_named_attachments(self):
+        from urllib.parse import unquote
+        for batch_id,contents in [(10,{b'video-1',b'video-5'}),(11,{b'video-3'})]:
+            response=self.download(batch_id)
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(response.cookies['batch_zip_'+'a'*32],'ready')
+            self.assertIn(f'Drama-Play-巴西-批次-{batch_id}.zip',unquote(response.headers['content-disposition']))
+            with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+                self.assertEqual({archive.read(n) for n in archive.namelist()},contents)
+                self.assertTrue(all(n.endswith('.mp4') and '/' not in n for n in archive.namelist()))
+                self.assertIsNone(archive.testzip())
+            self.assertEqual(list(settings.files_temp_dir.iterdir()),[])
+    def test_ownership_and_empty_batch_fail_with_error_cookie(self):
+        for batch_id in (12,999,13,0):
+            response=self.download(batch_id);self.assertIn(response.status_code,[400,404])
+            self.assertEqual(response.cookies['batch_zip_'+'a'*32],'error')
+        self.assertEqual(self.download(10,token='invalid').status_code,422)
         self.assertFalse(settings.files_temp_dir.exists() and list(settings.files_temp_dir.iterdir()))
+    def test_single_download_without_token_remains_compatible(self):
+        self.assertEqual(self.client.get('/app/job-batches/10/download-zip').status_code,200)
+        self.assertEqual(self.client.get('/app/job-batches/12/download-zip').status_code,404)
+        self.client.cookies.clear()
+        self.assertIn(self.download(10).status_code,[401,403])
     def test_missing_file_and_busy_and_space_errors_are_explicit(self):
         (self.env.root/'3.mp4').unlink()
         self.assertEqual(self.download('11').status_code,400)
@@ -69,7 +73,7 @@ class BatchArchiveTests(unittest.TestCase):
     def test_ui_has_selection_and_disables_empty_batches(self):
         page=self.client.get('/app/job-batches/page');self.assertEqual(page.status_code,200)
         self.assertIn('batch-bulk-download',page.text)
-        self.assertIn('总 ZIP 内每个批次一个 ZIP',page.text)
+        self.assertIn('依次下载各批次的 ZIP',page.text)
         self.assertIn('暂无可下载视频',page.text)
         self.assertNotIn('ZIP12',page.text)
 
