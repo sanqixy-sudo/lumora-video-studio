@@ -9,7 +9,8 @@ from uuid import uuid4
 
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
+from app.services.batch_archives import build_nested_batch_zip
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
@@ -1176,6 +1177,52 @@ def job_batches_page(
     )
 
 
+def _batch_zip_filename(batch: JobBatch) -> str:
+    product = _clean_zip_label(batch.product_name, "未命名APP")[:40]
+    region = _clean_zip_label(batch.region_name, "未设置地区")[:24]
+    return f"{product}-{region}-批次-{batch.id}.zip"
+
+
+def _parse_bulk_batch_ids(value: str) -> list[int]:
+    parts = value.split(',')
+    if len(parts) > 20 or not parts or any(not p.strip().isascii() or not p.strip().isdigit() or int(p.strip()) <= 0 or int(p.strip()) > 9223372036854775807 for p in parts):
+        raise HTTPException(400, '请选择 1–20 个有效批次。')
+    return list(dict.fromkeys(int(p.strip()) for p in parts))
+
+
+@router.get("/job-batches/bulk-download")
+def batch_bulk_download(batch_ids: str = Query(..., max_length=450),
+        download_token: str = Query(..., pattern=r'^[a-f0-9]{32}$'),
+        current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        ids = _parse_bulk_batch_ids(batch_ids)
+        batches = {b.id:b for b in db.query(JobBatch).filter(JobBatch.id.in_(ids),JobBatch.user_id == current_user.id).all()}
+        if len(batches) != len(ids):
+            raise HTTPException(404, '部分批次不存在或无权下载，请刷新后重新选择。')
+        rows = db.query(Job,JobFile).join(JobFile,JobFile.job_id == Job.id).filter(
+            Job.batch_id.in_(ids),Job.user_id == current_user.id,Job.status == 'completed',
+            latest_attempt_filter(),JobFile.file_type == 'output_video').order_by(Job.batch_index.asc().nullslast(),Job.id,JobFile.id.desc()).all()
+        grouped = {batch_id:[] for batch_id in ids}
+        seen = set()
+        used_names = {batch_id:set() for batch_id in ids}
+        for job, output in rows:
+            source = Path(output.file_path)
+            if job.id in seen or not source.is_file():
+                continue
+            seen.add(job.id)
+            name = _unique_zip_name(job_video_download_filename(db,job),used_names[job.batch_id])
+            grouped[job.batch_id].append((source,name))
+        entries = [(_batch_zip_filename(batches[batch_id]),grouped[batch_id]) for batch_id in ids]
+        response = build_nested_batch_zip(entries,f"批次合集-{shanghai_now():%Y%m%d-%H%M%S}-{len(ids)}个批次.zip")
+        result = 'ready'
+    except HTTPException as exc:
+        response = JSONResponse({'detail':exc.detail},status_code=exc.status_code,headers={'Cache-Control':'no-store'})
+        result = 'error'
+    # This short-lived nonce cookie reports only archive readiness, never auth.
+    response.set_cookie('batch_zip_'+download_token,result,max_age=300,path='/app/job-batches',samesite='strict')
+    return response
+
+
 @router.get("/job-batches/{batch_id}/result", response_class=HTMLResponse)
 def job_batch_result_page(
     batch_id: int,
@@ -1299,13 +1346,11 @@ def job_batch_download_zip(
         .order_by(Job.batch_index.asc().nullslast(), Job.id.asc())
         .all()
     )
-    product = _clean_zip_label(batch.product_name, "未命名APP")[:40]
-    region = _clean_zip_label(batch.region_name, "未设置地区")[:24]
     return _build_jobs_zip_response(
         db,
         rows,
         f"batch_bulk_{current_user.id}_{batch.id}",
-        f"{product}-{region}-批次-{batch.id}.zip",
+        _batch_zip_filename(batch),
         skip_missing_files=True,
     )
 

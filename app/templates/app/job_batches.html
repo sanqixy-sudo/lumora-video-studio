@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}批量记录{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="/static/workbench/batch-download.css?v=20260922-1">
 <section class="wb-page-heading">
   <div>
     <h2>批量记录</h2>
@@ -14,15 +15,25 @@
       <h2>批次列表</h2>
     </div>
   </div>
+  <div class="batch-bulk-toolbar">
+    <label class="batch-select-all"><input id="batch-select-all" type="checkbox"><span>全选当前页</span></label>
+    <button id="batch-clear-selection" type="button" class="ghost-btn small-btn" disabled>取消选择</button>
+    <button id="batch-bulk-download" type="button" class="primary-btn small-btn" disabled>下载选中批次 ZIP</button>
+    <span id="batch-selection-count" class="muted tiny" role="status">已选 0 个批次</span>
+  </div>
+  <p class="muted tiny">一次最多 20 个批次。总 ZIP 内每个批次一个 ZIP，仅包含已完成且可下载的视频。</p>
+  <div id="batch-download-status" class="tiny" role="status" aria-live="polite"></div>
+  <div id="batch-download-error" class="form-error hidden" role="alert"></div>
   <div class="table-wrap surface-table clean-table-wrap">
     <table class="table clean-table">
       <thead>
-        <tr><th>批次</th><th>APP / 地区</th><th>创建时间</th><th>任务数</th><th>状态</th><th>概览</th><th>操作</th></tr>
+        <tr><th class="batch-check-column"><span class="sr-only">选择批次</span></th><th>批次</th><th>APP / 地区</th><th>创建时间</th><th>任务数</th><th>状态</th><th>概览</th><th>操作</th></tr>
       </thead>
       <tbody>
         {% for batch in batches %}
         {% set summary = summary_map.get(batch.id, {}) %}
-        <tr>
+        <tr data-selectable-batch>
+          <td class="batch-check-column"><label class="batch-row-select"><input type="checkbox" class="batch-select-checkbox" value="{{ batch.id }}" aria-label="选择批次 {{ batch.batch_name or batch.batch_code }}" data-videos="{{ summary.get('downloadable_count',0) }}" {% if not summary.get('downloadable_count',0) %}disabled title="暂无可下载视频"{% endif %}></label></td>
           <td><div class="user-cell"><strong>{{ batch.batch_name or batch.batch_code }}</strong><span>{{ batch.batch_code }} / ID: {{ batch.id }}</span></div></td>
           <td><div class="meta-stack"><strong>{{ batch.product_name or '-' }}</strong><span>{{ batch.region_name or '-' }}</span></div></td>
           <td><time data-ui-time>{{ batch.created_at|dt }}</time></td>
@@ -37,7 +48,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7"><div class="empty-state compact-empty">暂无批量记录</div></td></tr>
+        <tr><td colspan="8"><div class="empty-state compact-empty">暂无批量记录</div></td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -45,3 +56,5 @@
   {% include "partials/pagination.html" %}
 </section>
 {% endblock %}
+
+{% block scripts %}<script src="/static/workbench/batch-download.js?v=20260922-1"></script>{% endblock %}
