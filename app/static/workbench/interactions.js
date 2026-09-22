@@ -99,6 +99,23 @@
       const presetCards=[...presetGrid.querySelectorAll('.wb-preset-choice')];
       presetCards.sort((a,b)=>nameOrder.compare(a.querySelector('strong').textContent.trim(),b.querySelector('strong').textContent.trim()));
       presetGrid.append(...presetCards);
+      const search=document.getElementById('wb-material-search-input');
+      const clearSearch=document.getElementById('wb-material-search-clear');
+      const normalizeName=value=>value.normalize('NFKC').toLocaleLowerCase().trim();
+      const searchable=presetCards.map(card=>({card,name:normalizeName(card.querySelector('strong').textContent)}));
+      function filterMaterials(){
+        const terms=normalizeName(search.value).split(/\s+/).filter(Boolean);
+        let count=0;
+        searchable.forEach(({card,name})=>{card.hidden=!terms.every(term=>name.includes(term));if(!card.hidden)count++;});
+        clearSearch.hidden=!search.value;
+        document.getElementById('wb-material-search-count').textContent=`显示 ${count} / ${presetCards.length} 张`;
+        document.getElementById('wb-material-search-empty').hidden=!presetCards.length||count>0;
+      }
+      search.addEventListener('input',filterMaterials);
+      search.addEventListener('search',filterMaterials);
+      search.addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault();});
+      clearSearch.addEventListener('click',()=>{search.value='';filterMaterials();search.focus();});
+      filterMaterials();
       const choices=[...drawer.querySelectorAll('[data-preset-choice]')];
       const selected=document.getElementById('wb-selected-materials');
       let draft=new Set();
@@ -124,6 +141,7 @@
         });
       }
       document.querySelector('[data-open-materials]').addEventListener('click',e=>{
+        search.value='';filterMaterials();
         draft=new Set(isOmni()?originals.filter(el=>el.checked).map(el=>el.value):standard.value?[standard.value]:[]);renderDraft();openDialog(drawer,e.currentTarget);
       });
       choices.forEach(choice=>choice.addEventListener('change',()=>{if(choice.checked){if(maximum()===1)draft.clear();draft.add(choice.value);}else draft.delete(choice.value);renderDraft();}));

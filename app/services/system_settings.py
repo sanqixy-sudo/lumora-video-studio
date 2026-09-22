@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.services.model_choices import model_options
 from app.core.config import settings
 from app.models.tables import AppSetting
 from app.services.network_settings import (PROXY_KEYS, decode_proxy_url, encode_proxy_url, proxy_default, redact_proxy_url, stored_proxy_url, validate_proxy_url)
 
 SYSTEM_SETTING_DEFS = [
+    {"key": "default_model_choice", "label": "默认生成模型", "default": "", "type": "model", "restart": False},
     {"key": "request_proxy_enabled", "label": "上游请求连接方式", "default": "1" if settings.upstream_request_proxy else "0", "type": "bool", "restart": False},
     {"key": "request_proxy_url", "label": "请求代理地址", "default": settings.upstream_request_proxy, "type": "proxy", "restart": False},
     {"key": "download_proxy_enabled", "label": "视频下载连接方式", "default": "1" if settings.video_download_proxy else "0", "type": "bool", "restart": False},
@@ -81,6 +83,7 @@ SYSTEM_SETTING_DEFS = [
 
 
 SETTING_PRESENTATION = {
+    "default_model_choice": ("创作默认", "", "新打开创建页时自动选中，用户仍可自行切换。停用或删除通道后自动回到手动选择。"),
     "request_proxy_enabled": ("代理设置", "", "用于向上游提交生成任务和查询任务状态；保存后用于下一次请求。"),
     "request_proxy_url": ("代理设置", "", "支持 HTTP、HTTPS、SOCKS5。留空保留当前地址；选择直连可关闭代理。"),
     "download_proxy_enabled": ("代理设置", "", "仅用于获取视频文件，与上游请求代理独立。正在进行的下载沿用开始时的配置。"),
@@ -143,6 +146,8 @@ def upsert_system_setting(db: Session, key: str, value: str | None, operator_use
         if parsed < minimum or (maximum is not None and parsed > maximum):
             raise ValueError(f"{definition['label']}须为 {minimum}–{maximum}。" if maximum is not None else f"{definition['label']}不能小于 {minimum}。")
         value = str(parsed)
+    if definition["type"] == "model" and value and value not in {row["value"] for row in model_options(db)}:
+        raise ValueError("默认模型已不可用，请选择启用通道中的模型与时长。")
     if definition["type"] == "bool":
         value = "1" if str(value).strip().lower() in {"1", "true", "yes", "on", "enabled"} else "0"
     if definition["type"] == "int" and not value:
@@ -167,6 +172,11 @@ def get_system_settings_view(db: Session) -> list[dict]:
         row = rows.get(definition["key"])
         value = row.value if row and row.value is not None else definition["default"]
         entry = {**definition, "value": value, "updated_at": row.updated_at if row else None}
+        if definition["type"] == "model":
+            entry["options"] = model_options(db)
+            entry["unavailable"] = bool(value and value not in {option["value"] for option in entry["options"]})
+            if entry["unavailable"]:
+                entry["value"] = ""
         if definition["type"] == "proxy":
             current = decode_proxy_url(value)
             masked = redact_proxy_url(current)

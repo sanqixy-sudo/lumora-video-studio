@@ -6,7 +6,7 @@
 <section class="wb-panel task-tabs-card">
 <div class="section-head"><h2>运行配置</h2><span class="muted tiny">保存后自动生效，无需重启服务</span></div>
 <form action="/admin/settings/update/form" method="post" class="settings-form" novalidate>
-{% set groups = ['并发控制','代理设置','下载与重试','用户与额度'] %}
+{% set groups = ['并发控制','代理设置','下载与重试','用户与额度','创作默认'] %}
 <div class="settings-layout">
 <nav class="tab-nav" aria-label="设置分组">{% for name in groups %}<button class="tab-button {{ 'active' if loop.first else '' }}" data-tab-target="settings-{{ loop.index }}" type="button">{{ name }}</button>{% endfor %}</nav>
 <div class="settings-panels">
@@ -17,12 +17,15 @@
 <div class="settings-grid">
 {% for item in settings_rows if item.group == group %}
 <label class="setting-item" for="setting-{{ item.key }}"><span>{{ item.label }}{% if item.unit %} <small class="muted">{{ item.unit }}</small>{% endif %}</span>
-{% if item.type == 'bool' %}
+{% if item.type == 'model' %}
+<select id="setting-{{ item.key }}" name="{{ item.key }}" aria-describedby="help-{{ item.key }}"><option value="">不设置（用户手动选择）</option>{% for option in item.options %}<option value="{{ option.value }}" {{ 'selected' if option.value == item.value else '' }}>{{ option.label }}</option>{% endfor %}</select>
+{% if item.unavailable %}<small class="setting-help">原默认模型已不可用，请重新选择。</small>{% endif %}
+{% elif item.type == 'bool' %}
 <select id="setting-{{ item.key }}" name="{{ item.key }}" aria-describedby="help-{{ item.key }}"><option value="0" {{ 'selected' if not item.value or item.value == '0' else '' }}>{{ '直连' if 'proxy' in item.key else '关闭' }}</option><option value="1" {{ 'selected' if item.value == '1' else '' }}>{{ '使用代理' if 'proxy' in item.key else '开启' }}</option></select>
 {% else %}
 <input id="setting-{{ item.key }}" inputmode="{{ 'numeric' if item.type in ['int','int_optional'] else 'url' if item.type == 'proxy' else 'text' }}" autocomplete="off" name="{{ item.key }}" value="{{ item.value or '' }}" aria-describedby="help-{{ item.key }}" {% if item.type in ['int','int_optional'] %}type="number" min="{{ item.min|default(0) }}" {% if item.max is defined %}max="{{ item.max }}"{% endif %} step="1"{% else %}type="text"{% endif %} {% if item.type == 'proxy' %}placeholder="{{ '留空保留已保存的代理' if item.current_proxy else 'http://主机:端口 或 socks5://主机:端口' }}" spellcheck="false" maxlength="2048"{% endif %} />
 {% endif %}
-<small class="setting-help" id="help-{{ item.key }}">{{ item.description }}{% if item.type == 'proxy' and item.current_proxy %}<br>当前地址：<span class="setting-proxy-address">{{ item.current_proxy }}</span>{% elif item.type != 'proxy' %}<br>默认：{{ ('使用代理' if item.default == '1' else '直连') if 'proxy' in item.key else ('开启' if item.default == '1' else '关闭') if item.type == 'bool' else (item.default or '不限') }}{% endif %}</small>
+<small class="setting-help" id="help-{{ item.key }}">{{ item.description }}{% if item.type == 'proxy' and item.current_proxy %}<br>当前地址：<span class="setting-proxy-address">{{ item.current_proxy }}</span>{% elif item.type not in ['proxy','model'] %}<br>默认：{{ ('使用代理' if item.default == '1' else '直连') if 'proxy' in item.key else ('开启' if item.default == '1' else '关闭') if item.type == 'bool' else (item.default or '不限') }}{% endif %}</small>
 </label>
 {% endfor %}
 </div></section>{% endfor %}

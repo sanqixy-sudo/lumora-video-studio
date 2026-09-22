@@ -15,6 +15,8 @@ from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTask
 
+from app.services.model_choices import model_options as _model_options
+from app.services.system_settings import get_system_setting_text
 from app.core.config import settings
 from app.services.network_settings import proxy_options
 from app.core.timezone import date_bounds_utc, format_shanghai_datetime, shanghai_now
@@ -285,36 +287,6 @@ def _risk_failure_map(db: Session, prompts: list[str] | tuple[str, ...]) -> dict
     return failures
 
 
-def _model_options(db: Session) -> list[dict]:
-    options: list[dict] = []
-    provider_keys = (
-        db.query(ProviderKey)
-        .filter(ProviderKey.status == "active")
-        .order_by(ProviderKey.id.asc())
-        .all()
-    )
-    for provider_key in provider_keys:
-        provider_name = normalize_provider_name(provider_key.provider_name)
-        if provider_is_retired(provider_name):
-            continue
-        seconds_values = PROVIDER_SECONDS.get(provider_name, ())
-        for seconds in seconds_values:
-            model_id = model_id_for_seconds(provider_key, seconds)
-            if not model_id:
-                continue
-            options.append(
-                {
-                    "value": f"key:{provider_key.id}:{seconds}",
-                    "provider_key_id": provider_key.id,
-                    "provider_name": provider_name,
-                    "provider_label": provider_key.name,
-                    "seconds": seconds,
-                    "model_id": model_id,
-                    "label": f"{provider_key.name.strip()} · {model_id} · {seconds} 秒",
-                }
-            )
-    return options
-
 
 def _parse_model_choice(model_choice: str | None, seconds: int | str | None) -> tuple[str, int, int | None]:
     text = str(model_choice or "").strip()
@@ -584,6 +556,9 @@ def app_dashboard_page(
     quota_stats = quota_totals_for_user(db, int(current_user.id), wallet)
     recent_jobs = db.query(Job).filter(Job.user_id == current_user.id).order_by(Job.id.desc()).limit(4).all()
     reference_presets = _reference_preset_query_for_user(db, current_user.id).filter(ReferenceImagePreset.status == "active").all()
+    choices = _model_options(db)
+    preferred = get_system_setting_text(db, "default_model_choice", "")
+    default_model_choice = preferred if any(row["value"] == preferred for row in choices) else ""
     return render(
         request,
         "app/dashboard.html",
@@ -594,7 +569,8 @@ def app_dashboard_page(
         default_seconds=settings.default_video_seconds,
         default_size=settings.default_video_size,
         supported_seconds=sorted({seconds for values in PROVIDER_SECONDS.values() for seconds in values}),
-        model_options=_model_options(db),
+        model_options=choices,
+        default_model_choice=default_model_choice,
         reference_presets=reference_presets,
         new_request_id=str(uuid4()),
     )
@@ -1263,13 +1239,13 @@ def job_batch_download_zip(
         .order_by(Job.batch_index.asc().nullslast(), Job.id.asc())
         .all()
     )
-    date_text = shanghai_now().strftime("%Y%m%d_%H%M%S")
-    batch_label = _clean_zip_label(batch.batch_name or batch.batch_code, f"批次{batch.id}")
+    product = _clean_zip_label(batch.product_name, "未命名APP")[:40]
+    region = _clean_zip_label(batch.region_name, "未设置地区")[:24]
     return _build_jobs_zip_response(
         db,
         rows,
         f"batch_bulk_{current_user.id}_{batch.id}",
-        f"{batch_label}_{date_text}.zip",
+        f"{product}-{region}-批次-{batch.id}.zip",
         skip_missing_files=True,
     )
 

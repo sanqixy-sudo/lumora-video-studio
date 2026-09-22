@@ -2433,6 +2433,7 @@ def settings_update_form(
     default_concurrent_job_limit: str = Form(""),
     default_min_submit_interval_seconds: str = Form(""),
     registration_enabled: str = Form("0"),
+    default_model_choice: str | None = Form(None),
     request_proxy_enabled: str | None = Form(None),
     request_proxy_url: str | None = Form(None),
     download_proxy_enabled: str | None = Form(None),
@@ -2455,6 +2456,8 @@ def settings_update_form(
     network_values = {"request_proxy_enabled": request_proxy_enabled, "request_proxy_url": request_proxy_url,
                       "download_proxy_enabled": download_proxy_enabled, "download_proxy_url": download_proxy_url,
                       "video_download_concurrency": video_download_concurrency}
+    if default_model_choice is not None:
+        values["default_model_choice"] = default_model_choice
     values.update({key: value for key, value in network_values.items() if value is not None})
     try:
         for key, value in values.items():
