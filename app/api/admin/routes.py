@@ -1393,6 +1393,8 @@ def _provider_base_url(provider_name: str | None, api_base_url: str | None) -> s
     if provider_is_retired(provider):
         raise HTTPException(status_code=400, detail="该渠道已下线，不能新增或修改配置")
     value = str(api_base_url or "").strip()
+    if provider in {"flow_omni", "oaire_omni"} and value.rstrip("/") in {"", "https://niubi.zeabur.app"}:
+        value = "https://api.oairegbox.cc"
     if provider == "wuyin_omni" and value.rstrip("/") in {"", "https://niubi.zeabur.app"}:
         value = "https://api.wuyinkeji.com"
     return normalize_api_base_url(value)

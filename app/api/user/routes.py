@@ -381,6 +381,7 @@ def _resolve_reference_image_url(
     confirmed_image_urls: set[str] | None = None,
     *,
     require_matching_size: bool = True,
+    require_accessible: bool = False,
 ) -> tuple[str | None, str | None, int | None, int | None]:
     preset_id = _parse_reference_preset_id(reference_preset_id)
     name: str | None = None
@@ -415,10 +416,10 @@ def _resolve_reference_image_url(
         return None, None, None, None
 
     # Confirmation applies only to this direct URL, never to a preset or its permissions.
-    if not preset_id and url in (confirmed_image_urls or set()):
+    if not require_accessible and not preset_id and url in (confirmed_image_urls or set()):
         return url, name, None, None
 
-    if not width or not height:
+    if require_accessible or not width or not height:
         try:
             width, height, _, _ = fetch_image_dimensions(url)
         except ValueError as exc:
@@ -466,10 +467,13 @@ def _resolve_job_reference_materials(
         confirmed = {url for value in (confirmed_reference_image_urls or []) if (url := normalize_public_image_url(value))}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if provider not in {"veo_omni", "wuyin_omni"}:
+    if provider not in {"veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"}:
         image = _resolve_reference_image_url(db, current_user, reference_preset_id, reference_image_url, size, confirmed)
         video = _resolve_reference_video_url(reference_video_url, provider) if reference_video_url else None
         return ([image] if image[0] else []), video
+
+    if provider in {"flow_omni", "oaire_omni"} and (reference_video_url or omni_reference_video_url or (omni_mode and omni_mode != "multi_image")):
+        raise HTTPException(status_code=400, detail="oaire Omni 渠道仅支持文生视频和图生视频，不支持视频编辑")
 
     if provider == "veo_omni" and (reference_video_url or omni_reference_video_url or (omni_mode and omni_mode != "multi_image")):
         raise HTTPException(status_code=400, detail="VEO Omni 视频编辑已下线，请使用多图生视频")
@@ -481,24 +485,31 @@ def _resolve_job_reference_materials(
     if reference_image_url and str(reference_image_url).strip():
         image_urls.append(str(reference_image_url).strip())
 
-    maximum = 6 if provider == "veo_omni" else 1
-    if len(preset_ids) + len(image_urls) > maximum:
-        label = "VEO Omni" if provider == "veo_omni" else "Wuyin Omni"
+    maximum = None if provider == "flow_omni" else (6 if provider == "veo_omni" else (5 if provider == "oaire_omni" else 1))
+    if maximum is not None and len(preset_ids) + len(image_urls) > maximum:
+        label = PROVIDER_LABELS[provider]
         raise HTTPException(status_code=400, detail=f"{label} 最多支持 {maximum} 张参考图")
 
+    accessibility_options = {"require_accessible": True} if provider in {"flow_omni", "oaire_omni"} else {}
     resolved: list[tuple[str, str | None, int | None, int | None]] = []
     seen: set[str] = set()
     for preset_id in preset_ids:
-        item = _resolve_reference_image_url(db, current_user, preset_id, None, size, require_matching_size=False)
+        item = _resolve_reference_image_url(
+            db, current_user, preset_id, None, size,
+            require_matching_size=False, **accessibility_options,
+        )
         if item[0] and item[0] not in seen:
             resolved.append(item)
             seen.add(item[0])
     for image_url in image_urls:
-        item = _resolve_reference_image_url(db, current_user, None, image_url, size, confirmed, require_matching_size=False)
+        item = _resolve_reference_image_url(
+            db, current_user, None, image_url, size, confirmed,
+            require_matching_size=False, **accessibility_options,
+        )
         if item[0] and item[0] not in seen:
             resolved.append(item)
             seen.add(item[0])
-    if len(resolved) > maximum:
+    if maximum is not None and len(resolved) > maximum:
         raise HTTPException(status_code=400, detail=f"当前渠道最多支持 {maximum} 张参考图")
 
     video_value = omni_reference_video_url or reference_video_url

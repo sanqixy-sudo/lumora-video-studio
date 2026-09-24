@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.config import settings
+from app.services import flow_omni, oaire_omni
 from app.core.timezone import date_bounds_utc, shanghai_now
 from app.models.tables import APICallLog, ProviderKey
 
@@ -15,6 +16,8 @@ PROVIDER_LABELS = {
     "podgrok": "PodGrok",
     "veo_omni": "Veo Omni",
     "wuyin_omni": "Wuyin Omni",
+    "flow_omni": "oaire-flow omni",
+    "oaire_omni": "oaire omni",
 }
 
 PROVIDER_SECONDS = {
@@ -24,6 +27,8 @@ PROVIDER_SECONDS = {
     "podgrok": (12, 15),
     "veo_omni": (10,),
     "wuyin_omni": (10,),
+    "flow_omni": (flow_omni.SECONDS,),
+    "oaire_omni": (oaire_omni.SECONDS,),
 }
 
 def normalize_provider_name(value: str | None) -> str:
@@ -36,6 +41,10 @@ def normalize_provider_name(value: str | None) -> str:
         return "podsora"
     if text in {"podgrok", "pod_grok", "apipod_grok", "grok", "grok_imagine"}:
         return "podgrok"
+    if text in {"flow_omni", "flow-omni", "oairegbox_omni"}:
+        return "flow_omni"
+    if text in {"oaire_omni", "oaire-omni"}:
+        return "oaire_omni"
     if text in {"veo_omni", "veo-omni", "veoomni"}:
         return "veo_omni"
     if text in {"wuyin_omni", "wuyin-omni", "google_omni", "google-omni", "video_google_omni", "wuyin_google_omni"}:
@@ -48,6 +57,12 @@ def provider_is_retired(value: str | None) -> bool:
 
 
 def model_id_for_seconds(provider_key: ProviderKey, seconds: int) -> str:
+    provider = normalize_provider_name(provider_key.provider_name)
+    if provider == "flow_omni":
+        return flow_omni.MODEL if int(seconds) == flow_omni.SECONDS else ""
+    if provider == "oaire_omni":
+        model = str(provider_key.model_id_10s or oaire_omni.DEFAULT_MODEL).strip()
+        return model if int(seconds) == oaire_omni.SECONDS and model in oaire_omni.MODELS else ""
     if normalize_provider_name(provider_key.provider_name) == "wuyin_omni":
         return "wuyin-omni" if int(seconds) == 10 else ""
     field_value = getattr(provider_key, f"model_id_{int(seconds)}s", None)

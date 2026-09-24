@@ -29,7 +29,7 @@ def model_options(db: Session) -> list[dict]:
                     "provider_label": provider_key.name,
                     "seconds": seconds,
                     "model_id": model_id,
-                    "label": f"{provider_key.name.strip()} · {model_id} · {seconds} 秒",
+                    "label": f"{provider_key.name.strip()} · {model_id} · {'约 ' if provider_name in {'flow_omni', 'oaire_omni'} else ''}{seconds} 秒",
                 }
             )
     return options

@@ -366,6 +366,8 @@ def create_jobs_batch_and_reserve(
     """
     if provider_key and provider_is_retired(provider_key.provider_name):
         raise ValueError("该渠道已下线，请选择其他模型")
+    if provider_key and normalize_provider_name(provider_key.provider_name) in {"flow_omni", "oaire_omni"} and reference_video_url:
+        raise ValueError("oaire Omni 渠道不支持视频编辑")
     if provider_key and normalize_provider_name(provider_key.provider_name) == "veo_omni" and reference_video_url:
         raise ValueError("VEO Omni 视频编辑已下线")
     cleaned_prompts = normalize_prompt_list(list(prompts))
@@ -524,6 +526,8 @@ def create_job_and_charge(
 
     if provider_is_retired(provider_key.provider_name):
         raise ValueError("该渠道已下线，请选择其他模型")
+    if normalize_provider_name(provider_key.provider_name) in {"flow_omni", "oaire_omni"} and reference_video_url:
+        raise ValueError("oaire Omni 渠道不支持视频编辑")
     if normalize_provider_name(provider_key.provider_name) == "veo_omni" and reference_video_url:
         raise ValueError("VEO Omni 视频编辑已下线")
     enforce_user_rate_limits(db, user)

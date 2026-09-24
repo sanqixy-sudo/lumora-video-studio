@@ -14,6 +14,7 @@ import httpx
 from PIL import Image
 
 from app.core.config import settings
+from app.services import flow_omni, oaire_omni
 from app.services.reference_images import aspect_ratio_for_size
 
 DEFAULT_BASE_URL = "https://niubi.zeabur.app"
@@ -92,6 +93,7 @@ def extract_upstream_error(data: dict) -> tuple[str | None, str | None]:
         _nested_value(data, "reason"),
         _nested_value(data, "message"),
         _nested_value(data, "detail"),
+        _nested_value(data, "error"),
     )
     message = next((_message_text(value) for value in message_candidates if _nonempty_value(value) is not None), None)
     code_candidates = (
@@ -194,6 +196,10 @@ def _provider_name(value: str | None) -> str:
         return "podsora"
     if text in {"podgrok", "pod_grok", "apipod_grok", "grok", "grok_imagine"}:
         return "podgrok"
+    if text in {"flow_omni", "flow-omni", "oairegbox_omni"}:
+        return "flow_omni"
+    if text in {"oaire_omni", "oaire-omni"}:
+        return "oaire_omni"
     if text in {"veo_omni", "veo-omni", "veoomni"}:
         return "veo_omni"
     if text in {"wuyin_omni", "wuyin-omni", "google_omni", "google-omni", "video_google_omni", "wuyin_google_omni"}:
@@ -203,6 +209,10 @@ def _provider_name(value: str | None) -> str:
 
 def _model_for(seconds: int, model_id: str | None = None, provider_name: str | None = None) -> str:
     provider = _provider_name(provider_name)
+    if provider == "flow_omni":
+        return flow_omni.MODEL
+    if provider == "oaire_omni":
+        return str(model_id or oaire_omni.DEFAULT_MODEL).strip()
     requested = str(model_id or "").strip()
     if requested:
         return requested
@@ -361,7 +371,7 @@ def create_video_endpoint(api_base_url: str | None = None, provider_name: str | 
         return _wuyin_omni_create_url(api_base_url)
     if provider in {"podsora", "podgrok"}:
         return _podsora_create_url(api_base_url)
-    return _api_url(api_base_url, "/videos")
+    return _api_url(api_base_url or (flow_omni.DEFAULT_BASE_URL if provider in {"flow_omni", "oaire_omni"} else None), "/videos")
 
 
 def create_video_request_summary(
@@ -479,7 +489,17 @@ def create_video(
     if provider not in {"seedance"} and input_reference_path and not image_urls:
         raise UpstreamError("Reference images must be public URLs and sent as image_url")
     model = _model_for(int(seconds), model_id, provider)
-    if provider == "wuyin_omni":
+    if provider == "flow_omni":
+        try:
+            payload = flow_omni.build_payload(prompt, seconds, size, image_urls, reference_video_url)
+        except ValueError as exc:
+            raise UpstreamError(str(exc)) from exc
+    elif provider == "oaire_omni":
+        try:
+            payload = oaire_omni.build_payload(prompt, seconds, size, image_urls, model, reference_video_url)
+        except ValueError as exc:
+            raise UpstreamError(str(exc)) from exc
+    elif provider == "wuyin_omni":
         if int(seconds) != 10:
             raise UpstreamError("Wuyin Omni only supports 10-second videos")
         if len(image_urls) > 1:
@@ -515,7 +535,7 @@ def create_video(
                 payload["video_url"] = reference_video_url
     if provider == "podgrok":
         payload["resolution"] = "720p"
-    if image_urls and provider not in {"wuyin_omni", "veo_omni"}:
+    if image_urls and provider not in {"wuyin_omni", "veo_omni", "flow_omni", "oaire_omni"}:
         payload["image_url"] = image_urls[0]
 
     request_summary = create_video_request_summary(
@@ -575,7 +595,7 @@ def create_video(
         exc.endpoint = url
         exc.request_summary = request_summary
         raise
-    normalized = _normalize_task_response(data)
+    normalized = flow_omni.normalize_response(data) if provider in {"flow_omni", "oaire_omni"} else _normalize_task_response(data)
     normalized["model"] = str(normalized.get("model") or model)
     return normalized, response.status_code, latency_ms
 
@@ -587,7 +607,7 @@ def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | No
     elif provider in {"podsora", "podgrok"}:
         url = _podsora_status_url(api_base_url, remote_task_id)
     else:
-        url = _api_url(api_base_url, f"/videos/{remote_task_id}")
+        url = _api_url(api_base_url or (flow_omni.DEFAULT_BASE_URL if provider in {"flow_omni", "oaire_omni"} else None), f"/videos/{remote_task_id}")
     started = time.perf_counter()
     try:
         with httpx.Client(timeout=_status_timeout(), **_proxy_client_options(request_proxy)) as client:
@@ -605,7 +625,8 @@ def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | No
         exc.latency_ms = latency_ms
         exc.endpoint = url
         raise
-    return _normalize_task_response(data), response.status_code, latency_ms
+    normalized = flow_omni.normalize_response(data) if provider in {"flow_omni", "oaire_omni"} else _normalize_task_response(data)
+    return normalized, response.status_code, latency_ms
 
 
 DOWNLOAD_TOTAL_TIMEOUT_SECONDS = 120
@@ -749,7 +770,7 @@ def remote_content_url(remote_task_id: str, api_base_url: str | None = None, pro
         return _wuyin_omni_status_url(api_base_url)
     if provider in {"podsora", "podgrok"}:
         return _podsora_status_url(api_base_url, remote_task_id)
-    return _api_url(api_base_url, f"/videos/{remote_task_id}")
+    return _api_url(api_base_url or (flow_omni.DEFAULT_BASE_URL if provider in {"flow_omni", "oaire_omni"} else None), f"/videos/{remote_task_id}")
 
 
 def open_video_stream(api_key: str, remote_task_id: str, api_base_url: str | None = None, provider_name: str | None = None, *, request_proxy: str | None = None, download_proxy: str | None = None):

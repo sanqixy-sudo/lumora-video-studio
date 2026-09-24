@@ -18,11 +18,15 @@
         <option value="seedance">Seedance</option>
         <option value="veo_omni">Veo Omni</option>
         <option value="wuyin_omni">Wuyin Omni</option>
+        <option value="flow_omni">oaire-flow omni</option>
+        <option value="oaire_omni">oaire omni</option>
       </select>
     </label>
+    <p class="field-hint" data-provider-model-field="flow_omni">固定模型 flow-omni-1.1-flash · 约 8 秒 · 720p · 文生 / 多图参考（建议不超过 6 张）</p>
+    <p class="field-hint" data-provider-model-field="oaire_omni">令牌需开通 gemini-fast；默认 omni-fast · 约 10 秒 · 文生 / 最多 5 张参考图；10 秒模型 ID 可填 omni-fast-no-water。</p>
     <label data-provider-model-field="seedance">5 秒模型 ID<input autocomplete="off" name="model_id_5s" placeholder="seedance-1.5-pro…" /></label>
     <label data-provider-model-field="sora_api">8 秒模型 ID<input autocomplete="off" name="model_id_8s" placeholder="sora-2-8s…" /></label>
-    <label data-provider-model-field="seedance veo_omni">10 秒模型 ID<input autocomplete="off" name="model_id_10s" placeholder="seedance-1.5-pro-10s / veo-omni-flash-1080p…" /></label>
+    <label data-provider-model-field="seedance veo_omni oaire_omni">10 秒模型 ID<input autocomplete="off" name="model_id_10s" placeholder="seedance-1.5-pro-10s / veo-omni-flash-1080p…" /></label>
     <label data-provider-model-field="sora_api seedance">12 秒模型 ID<input autocomplete="off" name="model_id_12s" placeholder="sora-2-12s / seedance-1.5-pro-12s…" /></label>
     <label>权重<input inputmode="numeric" autocomplete="off" name="weight" type="number" value="100" min="1" /></label>
     <label>日调用上限<input inputmode="numeric" autocomplete="off" name="daily_limit" type="number" min="1" placeholder="不限…" /></label>
@@ -39,7 +43,7 @@
         {% for row in rows %}
         <tr>
           <td>#{{ row.id }}</td>
-          <td><strong>{{ row.name }}</strong><br><span class="muted tiny">{{ row.provider_name }}</span></td>
+          <td><strong>{{ row.name }}</strong><br><span class="muted tiny">{{ {'flow_omni':'oaire-flow omni','oaire_omni':'oaire omni'}.get(row.provider_name, row.provider_name) }}</span></td>
           <td>
             <span class="mono-line">{{ row.api_base_url or '-' }}</span><br>
             <span class="muted tiny">
@@ -73,11 +77,15 @@
                   <option value="seedance" {{ 'selected' if row.provider_name == 'seedance' else '' }}>Seedance</option>
                   <option value="veo_omni" {{ 'selected' if row.provider_name == 'veo_omni' else '' }}>Veo Omni</option>
                   <option value="wuyin_omni" {{ 'selected' if row.provider_name in ['wuyin_omni', 'google_omni'] else '' }}>Wuyin Omni</option>
+                  <option value="flow_omni" {{ 'selected' if row.provider_name == 'flow_omni' else '' }}>oaire-flow omni</option>
+                  <option value="oaire_omni" {{ 'selected' if row.provider_name == 'oaire_omni' else '' }}>oaire omni</option>
                 </select>
               </label>
+              <p class="field-hint" data-provider-model-field="flow_omni">固定模型 flow-omni-1.1-flash · 约 8 秒 · 720p · 文生 / 多图参考（建议不超过 6 张）</p>
+    <p class="field-hint" data-provider-model-field="oaire_omni">令牌需开通 gemini-fast；默认 omni-fast · 约 10 秒 · 文生 / 最多 5 张参考图；10 秒模型 ID 可填 omni-fast-no-water。</p>
               <label data-provider-model-field="seedance">5 秒模型 ID<input autocomplete="off" name="model_id_5s" value="{{ row.model_id_5s or '' }}" placeholder="seedance-1.5-pro…" /></label>
               <label data-provider-model-field="sora_api">8 秒模型 ID<input autocomplete="off" name="model_id_8s" value="{{ row.model_id_8s or '' }}" placeholder="sora-2-8s…" /></label>
-              <label data-provider-model-field="seedance veo_omni">10 秒模型 ID<input autocomplete="off" name="model_id_10s" value="{{ row.model_id_10s or '' }}" placeholder="seedance-1.5-pro-10s / veo-omni-flash-1080p…" /></label>
+              <label data-provider-model-field="seedance veo_omni oaire_omni">10 秒模型 ID<input autocomplete="off" name="model_id_10s" value="{{ row.model_id_10s or '' }}" placeholder="seedance-1.5-pro-10s / veo-omni-flash-1080p…" /></label>
               <label data-provider-model-field="sora_api seedance">12 秒模型 ID<input autocomplete="off" name="model_id_12s" value="{{ row.model_id_12s or '' }}" placeholder="sora-2-12s / seedance-1.5-pro-12s…" /></label>
               <label>权重<input inputmode="numeric" autocomplete="off" name="weight" type="number" value="{{ row.weight or 100 }}" min="1" /></label>
               <label>日调用上限<input inputmode="numeric" autocomplete="off" name="daily_limit" type="number" min="1" value="{{ row.daily_limit or '' }}" /></label>

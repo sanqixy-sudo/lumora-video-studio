@@ -59,6 +59,22 @@ docker compose up -d --build
 
 所有运行配置通过环境变量注入，示例见 [`.env.example`](.env.example)。不要把真实密钥、Cookie、数据库文件或生产媒体文件提交到仓库。
 
+## oaire-flow omni 渠道
+
+在管理后台“上游密钥”新增渠道，选择 **oaire-flow omni**，填写名称和 API Key；默认调用地址为 `https://api.oairegbox.cc`（可修改）。令牌需开通 `Gemini flow` 分组，模型固定为 `flow-omni-1.1-flash`，不必填写其他渠道的模型字段。
+
+创建页面选择该渠道后，不选参考图就是文生视频；可用参考图预设或公网图片链接添加多张图（建议不超过 6 张，超过时上游可能只取前几张）。参考图提交时检查链接及图片内容是否可读取，不校验素材比例。输出约 8 秒、720p，支持横屏和竖屏；不提供视频编辑。应用仍按每条任务预留额度，上游价格和授权以供应商为准。
+
+适配使用 JSON `POST /v1/videos`，图片通过 `images` 数组传递，不发送 `seconds`、`duration` 或视频编辑字段。Worker 使用原任务 ID 查询 `GET /v1/videos/{task_id}`；完成后优先读取 `video_url`，兼容 `data[0].url` 和 `metadata.url`，再进入现有下载队列。旧 Omni 渠道独立保留，无需数据库迁移。
+
+协议来源：[Flow Omni 接口文档](https://docs.oairegbox.cc/#flow-omni)。本地回归：`python -m unittest discover -s tests -p "test_flow_omni_integration.py" -v`，使用隔离数据库及模拟上游，不消耗真实生成额度。
+
+## oaire omni 渠道
+
+在管理后台新增 **oaire omni** 渠道并填写 API Key，默认地址 `https://api.oairegbox.cc`，令牌需开通 `gemini-fast` 分组。默认模型 `omni-fast`；若使用无水印版，可在 10 秒模型 ID 填 `omni-fast-no-water`。创建页面支持纯提示词文生视频，或最多 5 张公网参考图的图生视频，不提供 V2V 和续写。图片只检查能否读取，不校验素材比例。输出约 10 秒，横竖屏由 `aspect_ratio` 指定。
+
+使用 JSON `POST /v1/videos`（参考图为 `images` 数组），保留任务 ID 轮询 `GET /v1/videos/{task_id}`；完成后优先使用 `video_url`，兼容 `data[0].url`，沿用现有下载队列。接口依据：[OAIREGBOX Omni 文档](https://docs.oairegbox.cc/#omni)。
+
 ## 更新与数据
 
 更新源码后执行 `docker compose up -d --build`。数据库保存在命名卷 `postgres-data`，视频、上传文件、日志及加密密钥位于 `data/`。保留这些数据；不要使用 `docker compose down -v` 删除数据库卷。

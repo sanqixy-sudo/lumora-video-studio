@@ -682,7 +682,9 @@ function initCreateJobForm() {
       const value = normalizeUrl(input.value);
       if (reset || checkbox.value !== value) checkbox.checked = false;
       checkbox.value = value;
-      checkbox.disabled = input.disabled || !value;
+      const skipAllowed = !["flow_omni", "oaire_omni"].includes(selectedProvider());
+      checkbox.closest("label").hidden = !skipAllowed;
+      checkbox.disabled = !skipAllowed || input.disabled || !value;
       if (checkbox.disabled) checkbox.checked = false;
       checkbox.closest('label').querySelector('small').hidden = !checkbox.checked;
     }
@@ -708,6 +710,7 @@ function initCreateJobForm() {
   }
 
   function omniMaxImages() {
+    if (selectedProvider() === "flow_omni") return Number.POSITIVE_INFINITY;
     return Number.parseInt(omniMaterialCard?.dataset.maxImages || "0", 10) || 0;
   }
 
@@ -724,7 +727,8 @@ function initCreateJobForm() {
   function refreshOmniCount() {
     const count = omniImageCount();
     const maximum = omniMaxImages();
-    if (omniMaterialCount) omniMaterialCount.textContent = `${count} / ${maximum} 张`;
+    if (omniMaterialCount) omniMaterialCount.textContent = selectedProvider() === "flow_omni"
+      ? `${count} 张 · 建议不超过 6 张` : `${count} / ${maximum} 张`;
     omniMaterialCard?.classList.toggle("is-limit", count >= maximum && maximum > 0);
     omniPresetChecks().forEach((input) => {
       input.disabled = omniMaterialCard?.classList.contains("hidden") || (!input.checked && count >= maximum);
@@ -753,7 +757,7 @@ function initCreateJobForm() {
     secondsSelect.value = option?.dataset.seconds || "";
     syncImageConfirmations(true);
     const provider = selectedProvider();
-    const isOmni = ["veo_omni", "wuyin_omni"].includes(provider);
+    const isOmni = ["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"].includes(provider);
     if (isOmni && lastOmniProvider && lastOmniProvider !== provider) resetOmniMaterials();
     if (isOmni) lastOmniProvider = provider;
     standardReferenceField?.classList.toggle("hidden", isOmni);
@@ -762,13 +766,19 @@ function initCreateJobForm() {
     omniMaterialCard?.querySelectorAll("input,button").forEach((control) => { control.disabled = !isOmni; });
     if (isOmni) {
       const isVeo = provider === "veo_omni";
-      const maximum = isVeo ? 6 : 1;
+      const isFlow = provider === "flow_omni";
+      const isOaire = provider === "oaire_omni";
+      const maximum = isVeo || isFlow ? 6 : isOaire ? 5 : 1;
       omniMaterialCard.dataset.maxImages = String(maximum);
-      if (omniMaterialTitle) omniMaterialTitle.textContent = isVeo ? "VEO Omni 输入素材" : "Wuyin Omni 输入素材";
+      if (omniMaterialTitle) omniMaterialTitle.textContent = isVeo ? "VEO Omni 输入素材" : isFlow ? "oaire-flow omni 输入素材" : isOaire ? "oaire omni 输入素材" : "Wuyin Omni 输入素材";
       if (omniMaterialDescription) omniMaterialDescription.textContent = isVeo
         ? "选择 1–6 张参考图，生成一个视频。"
+        : isFlow ? "不选参考图即文生视频；可选多张图（建议不超过 6 张），只检查图片可读取，不限制素材比例；约 8 秒、720p。"
+        : isOaire ? "不选参考图即文生视频；最多 5 张参考图。只检查图片可读取，不限制素材比例；约 10 秒。"
         : "可使用 1 张参考图和 1 个参考视频，均填写公网 URL。";
-      if (omniMaterialHint) omniMaterialHint.textContent = `预设按列表顺序、图片链接按填写顺序提交，合计最多 ${maximum} 张。`;
+      if (omniMaterialHint) omniMaterialHint.textContent = isFlow
+        ? "预设按列表顺序、图片链接按填写顺序提交；超过 6 张时，上游可能只取前几张。"
+        : `预设按列表顺序、图片链接按填写顺序提交，合计最多 ${maximum} 张。`;
     }
     syncOmniMode();
     refreshOmniCount();
@@ -798,7 +808,7 @@ function initCreateJobForm() {
 
   function validateOmniMaterials() {
     const provider = selectedProvider();
-    if (!["veo_omni", "wuyin_omni"].includes(provider)) return true;
+    if (!["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"].includes(provider)) return true;
     const count = omniImageCount();
     const maximum = omniMaxImages();
     if (count > maximum) {
@@ -882,7 +892,7 @@ function initCreateJobForm() {
     if (requiresImage && !omniImageCount()) missing.push('添加至少 1 张参考图');
     if (!count) missing.push('填写提示词');
     if (count > Number(form.dataset.availableQuota || 0)) missing.push('减少视频数量或申请额度');
-    if (['veo_omni','wuyin_omni'].includes(selectedProvider()) && omniImageCount() > omniMaxImages()) missing.push('减少参考图数量');
+    if (['veo_omni','wuyin_omni','flow_omni','oaire_omni'].includes(selectedProvider()) && omniImageCount() > omniMaxImages()) missing.push('减少参考图数量');
     const text = missing.length ? '还需：' + missing.join('、') + '。' : '已准备好，提交后将确认视频数量与预计额度。';
     if (status.textContent !== text) status.textContent = text;
     status.dataset.ready = String(!missing.length);
@@ -998,7 +1008,7 @@ function initCreateJobForm() {
   }
 
   async function validateReferenceUrl() {
-    if (["veo_omni", "wuyin_omni"].includes(selectedProvider())) { latestImageCheckToken++; return Boolean(secondsSelect.value && sizeSelect.value); }
+    if (["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"].includes(selectedProvider())) { latestImageCheckToken++; return Boolean(secondsSelect.value && sizeSelect.value); }
     syncImageConfirmations();
     updateRatioFrame();
     const selectedOption = presetSelect?.selectedOptions?.[0];
@@ -1654,6 +1664,8 @@ function initProviderKeyForms() {
     const defaultBaseUrls = {
       sora_api: "https://niubi.zeabur.app",
       wuyin_omni: "https://api.wuyinkeji.com",
+      flow_omni: "https://api.oairegbox.cc",
+      oaire_omni: "https://api.oairegbox.cc",
     };
     const syncFields = (updateBaseUrl = false) => {
       const provider = providerSelect.value || "sora_api";
