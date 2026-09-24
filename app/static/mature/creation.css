@@ -43,3 +43,4 @@
 
 .mature .wb-parameters .section-head h2{font-size:16px}
 html{scroll-padding-top:80px;scroll-padding-bottom:110px}input,select,textarea,button,a[href],summary,[tabindex]{scroll-margin-block:80px 110px}.wb-dialog-body{overscroll-behavior:contain}.wb-drawer .form-error{scroll-margin-top:16px}.wb-user-directory .form-error{margin:12px 0}.wb-create-page:has(#wb-selected-materials:not(:empty)) #standard-reference-field .reference-ratio-card{display:none}
+.wb-prefix-dialog{width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}.wb-prefix-dialog label{display:block;margin-bottom:8px;font-size:13px;font-weight:600}.wb-prefix-dialog textarea{display:block;width:100%;min-height:160px;max-height:50dvh;resize:vertical;font-size:15px;line-height:1.6}.wb-prefix-dialog .inline-actions{gap:8px;margin-top:24px}.wb-prefix-dialog .wb-prefix-error{margin:8px 0 0;color:var(--wb-error);font-size:13px}

@@ -641,6 +641,12 @@ function initCreateJobForm() {
   const submitButton = form?.querySelector('button[type="submit"]');
   const promptList = document.getElementById("prompt-list");
   const addPromptBtn = document.getElementById("add-prompt-btn");
+  const prefixToggle = document.getElementById("batch-prefix-toggle");
+  const prefixDialog = document.getElementById("batch-prefix-dialog");
+  const prefixTextarea = document.getElementById("batch-prefix-textarea");
+  const prefixError = document.getElementById("batch-prefix-error");
+  const prefixApply = document.getElementById("batch-prefix-apply");
+  const prefixCancel = document.getElementById("batch-prefix-cancel");
   const promptCountText = document.getElementById("prompt-count-text");
   const quotaCostText = document.getElementById("quota-cost-text");
   const importToggle = document.getElementById("batch-import-toggle");
@@ -1151,6 +1157,37 @@ function initCreateJobForm() {
   addPromptBtn?.addEventListener("click", (event) => {
     event.preventDefault();
     addPrompt("", true);
+  });
+  prefixToggle?.addEventListener("click", () => {
+    prefixDialog?.showModal();
+    prefixTextarea?.focus();
+  });
+  prefixDialog?.addEventListener("close", () => {
+    prefixTextarea.value = "";
+    prefixError.hidden = true;
+  });
+  prefixTextarea?.addEventListener("input", () => { prefixError.hidden = true; });
+  prefixCancel?.addEventListener("click", () => prefixDialog?.close());
+  prefixApply?.addEventListener("click", () => {
+    const prefix = prefixTextarea?.value.trim();
+    if (!prefix) {
+      prefixError.textContent = "请先输入前置内容。";
+      prefixError.hidden = false;
+      prefixTextarea?.focus();
+      return;
+    }
+    const scripts = promptTextareas().filter((textarea) => textarea.value.trim());
+    if (!scripts.length) {
+      prefixError.textContent = "请先填写至少一条提示词。";
+      prefixError.hidden = false;
+      return;
+    }
+    scripts.forEach((textarea) => {
+      textarea.value = `${prefix}\n\n${textarea.value.trimStart()}`;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    prefixDialog.close();
+    showToast(`已为 ${scripts.length} 条提示词添加前置内容。`, "info");
   });
   promptList.addEventListener("input", (event) => {
     if (event.target.matches('textarea[name="prompts"]')) refreshPromptNumbers();
