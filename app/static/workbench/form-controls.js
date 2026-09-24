@@ -92,6 +92,9 @@
     function open() {
       sync(); if (select.matches(':disabled') || opened) return;
       active?.close(); build(); opened = true; active = api;
+      // Forms can move into a modal drawer after this select was enhanced.
+      const host = select.closest('dialog') || document.body;
+      if (panel.parentElement !== host) host.append(panel);
       panel.setAttribute('aria-hidden', 'false'); panel.inert = false;
       panel.classList.add('is-open');
       if (panel.showPopover) panel.showPopover();
@@ -117,7 +120,7 @@
         select.dispatchEvent(new Event('change', {bubbles:true}));
       }
     }
-    const api = {close, trigger, panel}; instances.set(select, api);
+    const api = {close, position, trigger, panel}; instances.set(select, api);
     trigger.addEventListener('click', event => { event.preventDefault(); opened ? close() : open(); });
     panel.addEventListener('pointerdown', event => event.preventDefault());
     panel.addEventListener('click', event => {
@@ -179,7 +182,12 @@
     });
     addEventListener('resize', () => active?.close());
     window.visualViewport?.addEventListener('resize', () => active?.close());
-    document.addEventListener('scroll', event => { if (active && !active.panel.contains(event.target)) active.close(); }, true);
+    document.addEventListener('scroll', event => {
+      if (!active || active.panel.contains(event.target)) return;
+      // Focusing a select can scroll its drawer after the menu opens. Keep it aligned.
+      if (active.trigger.closest('dialog')?.contains(event.target)) active.position();
+      else active.close();
+    }, true);
     document.addEventListener('toggle', event => { if (event.target.tagName === 'DIALOG' && !event.target.open) active?.close(); }, true);
   }
   if (document.body) initFormControls();
