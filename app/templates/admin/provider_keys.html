@@ -22,7 +22,7 @@
         <option value="oaire_omni">oaire omni</option>
       </select>
     </label>
-    <p class="field-hint" data-provider-model-field="flow_omni">固定模型 flow-omni-1.1-flash · 约 8 秒 · 720p · 文生 / 多图参考（建议不超过 6 张）</p>
+    <p class="field-hint" data-provider-model-field="flow_omni">固定模型 flow-omni-1.1-flash · 约 8 秒 · 720p · 文生 / 可选 1–6 张参考图</p>
     <p class="field-hint" data-provider-model-field="oaire_omni">令牌需开通 gemini-fast；默认 omni-fast · 约 10 秒 · 文生 / 最多 5 张参考图；10 秒模型 ID 可填 omni-fast-no-water。</p>
     <label data-provider-model-field="seedance">5 秒模型 ID<input autocomplete="off" name="model_id_5s" placeholder="seedance-1.5-pro…" /></label>
     <label data-provider-model-field="sora_api">8 秒模型 ID<input autocomplete="off" name="model_id_8s" placeholder="sora-2-8s…" /></label>
@@ -81,7 +81,7 @@
                   <option value="oaire_omni" {{ 'selected' if row.provider_name == 'oaire_omni' else '' }}>oaire omni</option>
                 </select>
               </label>
-              <p class="field-hint" data-provider-model-field="flow_omni">固定模型 flow-omni-1.1-flash · 约 8 秒 · 720p · 文生 / 多图参考（建议不超过 6 张）</p>
+              <p class="field-hint" data-provider-model-field="flow_omni">固定模型 flow-omni-1.1-flash · 约 8 秒 · 720p · 文生 / 可选 1–6 张参考图</p>
     <p class="field-hint" data-provider-model-field="oaire_omni">令牌需开通 gemini-fast；默认 omni-fast · 约 10 秒 · 文生 / 最多 5 张参考图；10 秒模型 ID 可填 omni-fast-no-water。</p>
               <label data-provider-model-field="seedance">5 秒模型 ID<input autocomplete="off" name="model_id_5s" value="{{ row.model_id_5s or '' }}" placeholder="seedance-1.5-pro…" /></label>
               <label data-provider-model-field="sora_api">8 秒模型 ID<input autocomplete="off" name="model_id_8s" value="{{ row.model_id_8s or '' }}" placeholder="sora-2-8s…" /></label>

@@ -390,6 +390,7 @@ html[data-theme=dark] .wb-glass {
   scroll-padding-block:12px;
 }
 .wb-glass.wb-create-page .prompt-list {max-height:none; overflow:visible; align-content:start}
+.wb-glass.wb-create-page .prompt-card.is-expanded textarea {max-height:1200px; overscroll-behavior:contain}
 .wb-glass.wb-create-page .wb-material-note {flex:none}
 .wb-glass.wb-create-page .wb-submit {
   flex:none; position:relative; inset:auto; margin-top:12px; min-height:76px;

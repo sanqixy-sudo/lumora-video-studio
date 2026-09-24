@@ -13,8 +13,17 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     });}
     decorate();new MutationObserver(decorate).observe(list,{childList:true});
-    list.addEventListener('focusin',event=>{if(event.target.matches('textarea'))event.target.closest('[data-prompt-card]').classList.add('is-expanded');});
-    list.addEventListener('click',event=>{const button=event.target.closest('[data-collapse-prompt]');if(!button)return;const card=button.closest('[data-prompt-card]');card.classList.remove('is-expanded');card.querySelector('textarea').style.height='';card.querySelector('[data-copy-prompt]').focus({preventScroll:true});});
+    function fitPrompt(textarea){
+      if(!textarea.closest('.prompt-card.is-expanded'))return;
+      textarea.style.height='auto';
+      const height=Math.max(168,Math.min(textarea.scrollHeight,1200));
+      textarea.style.height=`${height}px`;
+      textarea.style.overflowY=textarea.scrollHeight>height+1?'auto':'hidden';
+    }
+    list.addEventListener('focusin',event=>{if(event.target.matches('textarea')){event.target.closest('[data-prompt-card]').classList.add('is-expanded');fitPrompt(event.target);}});
+    list.addEventListener('input',event=>{if(event.target.matches('textarea'))fitPrompt(event.target);});
+    addEventListener('resize',()=>list.querySelectorAll('.prompt-card.is-expanded textarea').forEach(fitPrompt));
+    list.addEventListener('click',event=>{const button=event.target.closest('[data-collapse-prompt]');if(!button)return;const card=button.closest('[data-prompt-card]');card.classList.remove('is-expanded');const textarea=card.querySelector('textarea');textarea.style.height='';textarea.style.overflowY='';card.querySelector('[data-copy-prompt]').focus({preventScroll:true});});
   }
   // The artwork is static after one per-tab introduction, separate from login form availability.
   const art=document.querySelector('.mature-storyboards');

@@ -172,6 +172,21 @@ class GoogleOmniAdapterTests(unittest.TestCase):
             "https://api.wuyinkeji.com/api/async/video_google_omni",
         )
 
+    def test_veo_text_generation_omits_reference_images(self):
+        client = self._client()
+        client.post.return_value = httpx.Response(
+            200,
+            json={"id": "veo_text_1", "status": "queued"},
+            request=httpx.Request("POST", "https://nb.373766.xyz/v1/videos"),
+        )
+        with patch("app.services.sora_api.httpx.Client", return_value=client):
+            create_video("old-secret", "prompt", 10, "1280x720",
+                         api_base_url="https://nb.373766.xyz", provider_name="veo_omni")
+        self.assertEqual(client.post.call_args.kwargs["json"], {
+            "model": "veo-omni-flash", "prompt": "prompt", "duration": 10,
+            "aspect_ratio": "16:9",
+        })
+
     def test_veo_multi_image_uses_documented_array_field_and_model(self):
         client = self._client()
         client.post.return_value = httpx.Response(
@@ -284,6 +299,12 @@ class GoogleOmniReferenceVideoTests(unittest.TestCase):
                 get_reference_urls(db, 321),
                 ["https://cdn.example/first.jpg", "https://cdn.example/second.jpg"],
             )
+
+    def test_veo_text_generation_needs_no_materials(self):
+        images, video = _resolve_job_reference_materials(
+            MagicMock(), MagicMock(id=10), "veo_omni", "1280x720")
+        self.assertEqual(images, [])
+        self.assertIsNone(video)
 
     def test_material_resolver_enforces_mode_and_channel_limits(self):
         fake_user = MagicMock(id=10)

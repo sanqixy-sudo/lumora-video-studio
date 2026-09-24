@@ -519,8 +519,6 @@ def create_video(
                 raise UpstreamError("VEO Omni only supports 10-second videos")
             if len(image_urls) > 6:
                 raise UpstreamError("VEO Omni supports at most six reference images")
-            if not reference_video_url and not image_urls:
-                raise UpstreamError("VEO Omni multi-image mode requires at least one reference image")
             model = "veo-omni-flash-video-edit" if reference_video_url else "veo-omni-flash"
         payload = {
             "model": model,

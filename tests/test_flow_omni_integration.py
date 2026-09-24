@@ -58,7 +58,7 @@ class FlowContractTests(unittest.TestCase):
 
     def test_text_and_images_exact_wire_fields_and_orientation(self):
         for size, ratio in [("720x1280", "9:16"), ("1280x720", "16:9")]:
-            for images in [[], IMAGES[:1], IMAGES, IMAGES + ["https://cdn.example/seven.png"]]:
+            for images in [[], IMAGES[:1], IMAGES]:
                 with self.subTest(size=size, count=len(images)):
                     client = self.client([])
                     with patch.object(sora_api.httpx, "Client", return_value=client):
@@ -89,7 +89,8 @@ class FlowContractTests(unittest.TestCase):
         self.assertEqual(_provider_base_url("flow_omni", "https://custom.example/v1"), "https://custom.example")
 
     def test_reject_edit_invalid_duration_and_size_before_http(self):
-        cases = [{"reference_video_url": VIDEO}, {"seconds": 10}, {"size": "1080x1920"}]
+        cases = [{"reference_video_url": VIDEO}, {"seconds": 10}, {"size": "1080x1920"},
+                 {"reference_image_urls": IMAGES + ["https://cdn.example/seven.png"]}]
         with patch.object(sora_api.httpx, "Client") as http:
             for changes in cases:
                 args = dict(api_key="test-key", prompt="scene", seconds=8, size="720x1280", provider_name="flow_omni")
@@ -199,13 +200,15 @@ class FlowCreationTests(unittest.TestCase):
             self.assertEqual(db.query(Job).count(), 0)
             self.assertEqual(db.query(QuotaWallet).filter_by(user_id=1).one().reserved_quota, 0)
 
-    def test_seven_images_are_allowed_as_advisory_limit(self):
+    def test_seven_images_are_rejected_before_reserving_quota(self):
         images = IMAGES + ["https://cdn.example/seven.png"]
-        with patch("app.api.user.routes.fetch_image_dimensions", return_value=(512, 512, "image/png", 100)):
-            response = self.client.post("/app/jobs", data=self.payload(omni_reference_image_urls=images))
-        self.assertEqual(response.status_code, 200, response.text)
+        for endpoint in ["/app/jobs", "/app/jobs/batch", "/app/jobs/form", "/app/jobs/batch/form"]:
+            with self.subTest(endpoint=endpoint):
+                response = self.client.post(endpoint, data=self.payload(omni_reference_image_urls=images), follow_redirects=False)
+                self.assertEqual(response.status_code, 400, response.text)
         with self.env.Session() as db:
-            self.assertEqual(db.query(JobFile).filter_by(job_id=response.json()["job_id"], file_type="reference_image_url").count(), 7)
+            self.assertEqual(db.query(Job).count(), 0)
+            self.assertEqual(db.query(QuotaWallet).filter_by(user_id=1).one().reserved_quota, 0)
 
     def test_direct_image_must_be_readable_even_if_confirmed(self):
         for endpoint in ["/app/jobs", "/app/jobs/batch", "/app/jobs/form", "/app/jobs/batch/form"]:

@@ -121,13 +121,13 @@
       let draft=new Set();
       const provider=()=>model.selectedOptions[0]?.dataset.provider||'';
       const isOmni=()=>['veo_omni','wuyin_omni','flow_omni','oaire_omni'].includes(provider());
-      const maximum=()=>provider()==='flow_omni'?Number.POSITIVE_INFINITY:provider()==='veo_omni'?6:provider()==='oaire_omni'?5:1;
+      const maximum=()=>['flow_omni','veo_omni'].includes(provider())?6:provider()==='oaire_omni'?5:1;
       const urlCount=()=>isOmni()?[...document.querySelectorAll('[name=omni_reference_image_urls]')].filter(el=>el.value.trim()).length:0;
       function renderDraft(){
         const available=Math.max(0,maximum()-urlCount());
         choices.forEach(choice=>{choice.checked=draft.has(choice.value);choice.disabled=!choice.checked&&draft.size>=available&&maximum()>1 || available===0;});
         document.getElementById('wb-material-draft-count').textContent=`已选择 ${draft.size} 张`;
-        document.getElementById('wb-material-limit').textContent=`${isOmni()?provider()==='veo_omni'?'VEO Omni':provider()==='flow_omni'?'oaire-flow omni':provider()==='oaire_omni'?'oaire omni':'Wuyin Omni':'当前模型'} · ${provider()==='flow_omni'?'建议不超过 6 张':`最多 ${maximum()} 张`}${urlCount()?`，已有 ${urlCount()} 个图片链接`:''}`;
+        document.getElementById('wb-material-limit').textContent=`${isOmni()?provider()==='veo_omni'?'VEO Omni':provider()==='flow_omni'?'oaire-flow omni':provider()==='oaire_omni'?'oaire omni':'Wuyin Omni':'当前模型'} · 最多 ${maximum()} 张${urlCount()?`，已有 ${urlCount()} 个图片链接`:''}`;
       }
       function renderSelected(){
         selected.replaceChildren();

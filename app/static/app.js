@@ -710,7 +710,6 @@ function initCreateJobForm() {
   }
 
   function omniMaxImages() {
-    if (selectedProvider() === "flow_omni") return Number.POSITIVE_INFINITY;
     return Number.parseInt(omniMaterialCard?.dataset.maxImages || "0", 10) || 0;
   }
 
@@ -727,8 +726,7 @@ function initCreateJobForm() {
   function refreshOmniCount() {
     const count = omniImageCount();
     const maximum = omniMaxImages();
-    if (omniMaterialCount) omniMaterialCount.textContent = selectedProvider() === "flow_omni"
-      ? `${count} 张 · 建议不超过 6 张` : `${count} / ${maximum} 张`;
+    if (omniMaterialCount) omniMaterialCount.textContent = `${count} / ${maximum} 张`;
     omniMaterialCard?.classList.toggle("is-limit", count >= maximum && maximum > 0);
     omniPresetChecks().forEach((input) => {
       input.disabled = omniMaterialCard?.classList.contains("hidden") || (!input.checked && count >= maximum);
@@ -772,13 +770,11 @@ function initCreateJobForm() {
       omniMaterialCard.dataset.maxImages = String(maximum);
       if (omniMaterialTitle) omniMaterialTitle.textContent = isVeo ? "VEO Omni 输入素材" : isFlow ? "oaire-flow omni 输入素材" : isOaire ? "oaire omni 输入素材" : "Wuyin Omni 输入素材";
       if (omniMaterialDescription) omniMaterialDescription.textContent = isVeo
-        ? "选择 1–6 张参考图，生成一个视频。"
-        : isFlow ? "不选参考图即文生视频；可选多张图（建议不超过 6 张），只检查图片可读取，不限制素材比例；约 8 秒、720p。"
+        ? "不选参考图即文生视频；可选 1–6 张参考图生成视频。"
+        : isFlow ? "不选参考图即文生视频；可选 1–6 张参考图，只检查图片可读取，不限制素材比例；约 8 秒、720p。"
         : isOaire ? "不选参考图即文生视频；最多 5 张参考图。只检查图片可读取，不限制素材比例；约 10 秒。"
         : "可使用 1 张参考图和 1 个参考视频，均填写公网 URL。";
-      if (omniMaterialHint) omniMaterialHint.textContent = isFlow
-        ? "预设按列表顺序、图片链接按填写顺序提交；超过 6 张时，上游可能只取前几张。"
-        : `预设按列表顺序、图片链接按填写顺序提交，合计最多 ${maximum} 张。`;
+      if (omniMaterialHint) omniMaterialHint.textContent = `预设按列表顺序、图片链接按填写顺序提交，合计最多 ${maximum} 张。`;
     }
     syncOmniMode();
     refreshOmniCount();
@@ -813,11 +809,6 @@ function initCreateJobForm() {
     const maximum = omniMaxImages();
     if (count > maximum) {
       SoraUI.formError(form, `当前渠道最多支持 ${maximum} 张参考图。`);
-      return false;
-    }
-    if (provider === "veo_omni" && count < 1) {
-      SoraUI.formError(form, "VEO Omni 至少需要 1 张参考图，请在参考素材中添加。");
-      omniMaterialCard?.scrollIntoView({block:"center",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
       return false;
     }
     return true;
@@ -888,8 +879,6 @@ function initCreateJobForm() {
     for (const [name, label] of [['product_name','APP 名称'],['region_name','投放地区']]) {
       if (!form.elements.namedItem(name)?.value.trim()) missing.push('填写' + label);
     }
-    const requiresImage = selectedProvider() === 'veo_omni';
-    if (requiresImage && !omniImageCount()) missing.push('添加至少 1 张参考图');
     if (!count) missing.push('填写提示词');
     if (count > Number(form.dataset.availableQuota || 0)) missing.push('减少视频数量或申请额度');
     if (['veo_omni','wuyin_omni','flow_omni','oaire_omni'].includes(selectedProvider()) && omniImageCount() > omniMaxImages()) missing.push('减少参考图数量');
@@ -897,7 +886,7 @@ function initCreateJobForm() {
     if (status.textContent !== text) status.textContent = text;
     status.dataset.ready = String(!missing.length);
     const materialHint = document.getElementById('material-step-hint');
-    if (materialHint) materialHint.textContent = requiresImage ? '必需 · 1–6 张参考图' : modelSelect?.value ? '选填 · 可直接写提示词' : '按模型要求添加';
+    if (materialHint) materialHint.textContent = modelSelect?.value ? '选填 · 可直接写提示词' : '按模型要求添加';
   }
   form.addEventListener('input', refreshReadiness);
   form.addEventListener('change', refreshReadiness);

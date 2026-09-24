@@ -5,7 +5,7 @@ Contract: https://docs.oairegbox.cc/#flow-omni
 DEFAULT_BASE_URL = "https://api.oairegbox.cc"
 MODEL = "flow-omni-1.1-flash"
 SECONDS = 8  # Approximate output length; the upstream request has no duration field.
-RECOMMENDED_IMAGES = 6
+MAX_IMAGES = 6
 
 
 def build_payload(prompt, seconds, size, image_urls, reference_video_url=None):
@@ -15,6 +15,8 @@ def build_payload(prompt, seconds, size, image_urls, reference_video_url=None):
         raise ValueError("Flow Omni 仅支持约 8 秒视频")
     if size not in {"720x1280", "1280x720"}:
         raise ValueError("Flow Omni 仅支持 720p 横屏或竖屏")
+    if len(image_urls) > MAX_IMAGES:
+        raise ValueError("Flow Omni 最多支持 6 张参考图")
     payload = {"model": MODEL, "prompt": prompt, "resolution": "720p",
                "aspect_ratio": "9:16" if size == "720x1280" else "16:9"}
     if image_urls:

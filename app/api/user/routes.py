@@ -485,7 +485,7 @@ def _resolve_job_reference_materials(
     if reference_image_url and str(reference_image_url).strip():
         image_urls.append(str(reference_image_url).strip())
 
-    maximum = None if provider == "flow_omni" else (6 if provider == "veo_omni" else (5 if provider == "oaire_omni" else 1))
+    maximum = 6 if provider in {"veo_omni", "flow_omni"} else (5 if provider == "oaire_omni" else 1)
     if maximum is not None and len(preset_ids) + len(image_urls) > maximum:
         label = PROVIDER_LABELS[provider]
         raise HTTPException(status_code=400, detail=f"{label} 最多支持 {maximum} 张参考图")
@@ -514,8 +514,6 @@ def _resolve_job_reference_materials(
 
     video_value = omni_reference_video_url or reference_video_url
     video = _resolve_reference_video_url(video_value, provider) if video_value else None
-    if provider == "veo_omni" and not resolved:
-        raise HTTPException(status_code=400, detail="VEO Omni 多图生视频至少需要 1 张参考图")
     return resolved, video
 
 
