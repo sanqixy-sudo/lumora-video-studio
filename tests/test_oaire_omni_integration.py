@@ -39,7 +39,9 @@ class OaireOmniContractTests(unittest.TestCase):
                                 "test-key", "scene", 10, size, provider_name="oaire_omni",
                                 reference_image_urls=images, model_id=model)
                         expected = {"model": model, "prompt": "scene", "aspect_ratio": ratio}
-                        if images:
+                        if len(images) == 1:
+                            expected["image_url"] = images[0]
+                        elif images:
                             expected["images"] = images
                         args, kwargs = client.post.call_args
                         self.assertEqual(args[0], BASE + "/v1/videos")

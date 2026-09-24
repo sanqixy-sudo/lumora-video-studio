@@ -24,6 +24,8 @@ def build_payload(prompt, seconds, size, image_urls, model=DEFAULT_MODEL, refere
         raise ValueError("oaire omni 最多支持 5 张参考图")
     payload = {"model": model, "prompt": prompt,
                "aspect_ratio": "9:16" if size == "720x1280" else "16:9"}
-    if image_urls:
+    if len(image_urls) == 1:
+        payload["image_url"] = image_urls[0]
+    elif image_urls:
         payload["images"] = list(image_urls)
     return payload
