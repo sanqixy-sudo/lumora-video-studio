@@ -760,22 +760,27 @@ function initCreateJobForm() {
   function currentCapabilities() {
     try { return JSON.parse(modelSelect?.selectedOptions?.[0]?.dataset.capabilities || "null"); } catch (_) { return null; }
   }
-  function replaceChoices(select, values, fallback, label) {
-    const previous = select.value;
+  function replaceChoices(select, values, fallback, label, preferred) {
+    const previous = preferred ?? select.value;
     select.replaceChildren(...values.map(value => new Option(label(String(value)), String(value))));
     select.value = values.map(String).includes(previous) ? previous : String(fallback);
     select.dispatchEvent(new Event('lumora:select-sync'));
     return previous && previous !== select.value;
   }
+  let initialDefaults = {};
+  try { initialDefaults = JSON.parse(form.dataset.generationDefaults || '{}'); } catch (_) { /* Use model defaults. */ }
+  let applyInitialDefaults = initialDefaults.default_model_choice === modelSelect?.value;
   let previousModelChoice = "";
   function syncGenerationSpecs() {
     const spec = currentCapabilities();
     if (!resolutionSelect || !aspectSelect) return;
     if (!spec) { secondsSelect.replaceChildren(new Option('请选择模型', '')); return; }
+    const preferred = applyInitialDefaults ? initialDefaults : {};
+    applyInitialDefaults = false;
     const changed = [];
-    if (replaceChoices(resolutionSelect, spec.resolutions, spec.default_resolution, v => v)) changed.push('清晰度');
-    if (replaceChoices(aspectSelect, spec.ratios, '9:16', v => ({'9:16':'竖屏 9:16','16:9':'横屏 16:9','1:1':'方形 1:1'}[v] || v))) changed.push('比例');
-    if (replaceChoices(secondsSelect, spec.seconds, spec.default_seconds, v => `${v} 秒`)) changed.push('时长');
+    if (replaceChoices(resolutionSelect, spec.resolutions, spec.default_resolution, v => v, preferred.default_resolution)) changed.push('清晰度');
+    if (replaceChoices(aspectSelect, spec.ratios, '9:16', v => ({'9:16':'竖屏 9:16','16:9':'横屏 16:9','1:1':'方形 1:1'}[v] || v), preferred.default_aspect_ratio)) changed.push('比例');
+    if (replaceChoices(secondsSelect, spec.seconds, spec.default_seconds, v => `${v} 秒`, preferred.default_seconds)) changed.push('时长');
     const note = document.getElementById('generation-spec-notice');
     if (note && previousModelChoice !== modelSelect.value) note.textContent = previousModelChoice && changed.length ? `${changed.join('、')}已调整为当前模型支持的值` : '';
     previousModelChoice = modelSelect.value;
@@ -1776,6 +1781,35 @@ function initUsageMonthlyPage() {
   });
 }
 
+function initCreationDefaultsSettings() {
+  const model = document.getElementById('setting-default_model_choice');
+  if (!model) return;
+  const fields = [
+    ['default_resolution', 'resolutions', spec => spec.default_resolution, value => value],
+    ['default_aspect_ratio', 'ratios', () => '9:16', value => ({'9:16':'竖屏 9:16','16:9':'横屏 16:9','1:1':'方形 1:1'}[value] || value)],
+    ['default_seconds', 'seconds', spec => spec.default_seconds, value => `${value} 秒`],
+  ];
+  function sync() {
+    let spec = null;
+    try { spec = JSON.parse(model.selectedOptions[0]?.dataset.capabilities || 'null'); } catch (_) { /* No model selected. */ }
+    fields.forEach(([key, capability, fallback, label]) => {
+      const select = document.getElementById(`setting-${key}`);
+      if (!select) return;
+      const previous = select.value;
+      select.disabled = !spec;
+      if (!spec) {
+        select.replaceChildren(new Option('请先选择默认模型', ''));
+        return;
+      }
+      const values = spec[capability].map(String);
+      select.replaceChildren(...values.map(value => new Option(label(value), value)));
+      select.value = values.includes(previous) ? previous : String(fallback(spec));
+    });
+  }
+  model.addEventListener('change', sync);
+  sync();
+}
+
 function initProviderKeyForms() {
   document.querySelectorAll(".provider-key-config-form").forEach((form) => {
     const providerSelect = form.querySelector('select[name="provider_name"]');
@@ -1852,6 +1886,7 @@ document.addEventListener("DOMContentLoaded", () => {
   safeInit("plaza", initPlazaPage);
   safeInit("usageMonthly", initUsageMonthlyPage);
   safeInit("providerKeyForms", initProviderKeyForms);
+  safeInit("creationDefaultsSettings", initCreationDefaultsSettings);
   safeInit("actionPost", initActionPostButtons);
   safeInit("libraryStar", initLibraryStarToggles);
   safeInit("libraryProtection", initLibraryProtectionToggles);

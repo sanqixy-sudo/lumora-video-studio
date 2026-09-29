@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from starlette.background import BackgroundTask
 
 from app.services.model_choices import model_options as _model_options
-from app.services.system_settings import get_system_setting_text
+from app.services.system_settings import get_system_setting_text, get_creation_defaults
 from app.core.config import settings
 from app.services.network_settings import proxy_options
 from app.core.timezone import date_bounds_utc, format_shanghai_datetime, shanghai_now
@@ -596,8 +596,8 @@ def app_dashboard_page(
     recent_jobs = db.query(Job).filter(Job.user_id == current_user.id, latest_attempt_filter()).order_by(Job.id.desc()).limit(4).all()
     reference_presets = _reference_preset_query_for_user(db, current_user.id).filter(ReferenceImagePreset.status == "active").all()
     choices = _model_options(db)
-    preferred = get_system_setting_text(db, "default_model_choice", "")
-    default_model_choice = preferred if any(row["value"] == preferred for row in choices) else ""
+    creation_defaults = get_creation_defaults(db, choices)
+    default_model_choice = creation_defaults["default_model_choice"]
     return render(
         request,
         "app/dashboard.html",
@@ -610,6 +610,7 @@ def app_dashboard_page(
         supported_seconds=sorted({seconds for values in PROVIDER_SECONDS.values() for seconds in values}),
         model_options=choices,
         default_model_choice=default_model_choice,
+        creation_defaults=creation_defaults,
         reference_presets=reference_presets,
         new_request_id=str(uuid4()),
     )

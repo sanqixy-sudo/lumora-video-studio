@@ -9,6 +9,9 @@ from app.services.network_settings import (PROXY_KEYS, decode_proxy_url, encode_
 
 SYSTEM_SETTING_DEFS = [
     {"key": "default_model_choice", "label": "默认生成模型", "default": "", "type": "model", "restart": False},
+    {"key": "default_resolution", "label": "默认清晰度", "default": "", "type": "generation", "restart": False},
+    {"key": "default_aspect_ratio", "label": "默认画幅比例", "default": "", "type": "generation", "restart": False},
+    {"key": "default_seconds", "label": "默认时长", "default": "", "type": "generation", "restart": False},
     {"key": "request_proxy_enabled", "label": "上游请求连接方式", "default": "1" if settings.upstream_request_proxy else "0", "type": "bool", "restart": False},
     {"key": "request_proxy_url", "label": "请求代理地址", "default": settings.upstream_request_proxy, "type": "proxy", "restart": False},
     {"key": "download_proxy_enabled", "label": "视频下载连接方式", "default": "1" if settings.video_download_proxy else "0", "type": "bool", "restart": False},
@@ -84,6 +87,9 @@ SYSTEM_SETTING_DEFS = [
 
 SETTING_PRESENTATION = {
     "default_model_choice": ("创作默认", "", "新打开创建页时自动选中，用户仍可自行切换。停用或删除通道后自动回到手动选择。"),
+    "default_resolution": ("创作默认", "", "新打开生成页时使用的清晰度，选项随默认模型变化。"),
+    "default_aspect_ratio": ("创作默认", "", "新打开生成页时使用的画幅比例，用户仍可自行调整。"),
+    "default_seconds": ("创作默认", "", "新打开生成页时使用的时长；固定时长模型仅提供一个选项。"),
     "request_proxy_enabled": ("代理设置", "", "用于向上游提交生成任务和查询任务状态；保存后用于下一次请求。"),
     "request_proxy_url": ("代理设置", "", "支持 HTTP、HTTPS、SOCKS5。留空保留当前地址；选择直连可关闭代理。"),
     "download_proxy_enabled": ("代理设置", "", "仅用于获取视频文件，与上游请求代理独立。正在进行的下载沿用开始时的配置。"),
@@ -147,7 +153,7 @@ def upsert_system_setting(db: Session, key: str, value: str | None, operator_use
             raise ValueError(f"{definition['label']}须为 {minimum}–{maximum}。" if maximum is not None else f"{definition['label']}不能小于 {minimum}。")
         value = str(parsed)
     if definition["type"] == "model" and value and value not in {row["value"] for row in model_options(db)}:
-        raise ValueError("默认模型已不可用，请选择启用通道中的模型与时长。")
+        raise ValueError("默认模型已不可用，请选择启用通道中的模型。")
     if definition["type"] == "bool":
         value = "1" if str(value).strip().lower() in {"1", "true", "yes", "on", "enabled"} else "0"
     if definition["type"] == "int" and not value:
@@ -165,18 +171,78 @@ def upsert_system_setting(db: Session, key: str, value: str | None, operator_use
     return row
 
 
+GENERATION_DEFAULT_FIELDS = {
+    "default_resolution": "resolutions", "default_aspect_ratio": "ratios", "default_seconds": "seconds",
+}
+
+
+def _spec_default_values(spec: dict) -> dict[str, str]:
+    return {"default_resolution": spec["default_resolution"], "default_aspect_ratio": "9:16",
+            "default_seconds": str(spec["default_seconds"])}
+
+
+def get_creation_defaults(db: Session, choices: list[dict] | None = None) -> dict[str, str]:
+    choices = model_options(db) if choices is None else choices
+    preferred = get_system_setting_text(db, "default_model_choice", "")
+    choice = next((row for row in choices if row["value"] == preferred), None)
+    if not choice:
+        return {"default_model_choice": "", **{key: "" for key in GENERATION_DEFAULT_FIELDS}}
+    spec = choice["capabilities"]
+    defaults = _spec_default_values(spec)
+    for key, capability in GENERATION_DEFAULT_FIELDS.items():
+        stored = get_system_setting_text(db, key, "")
+        if stored in {str(value) for value in spec[capability]}:
+            defaults[key] = stored
+    return {"default_model_choice": preferred, **defaults}
+
+
+def normalize_creation_defaults(db: Session, submitted: dict) -> dict[str, str]:
+    """Validate the complete model/spec selection before any settings are written."""
+    keys = {"default_model_choice", *GENERATION_DEFAULT_FIELDS}
+    if not keys.intersection(submitted):
+        return {}
+    current = get_creation_defaults(db)
+    model = str(submitted.get("default_model_choice", current["default_model_choice"]) or "").strip()
+    if not model:
+        return {key: "" for key in keys}
+    choice = next((row for row in model_options(db) if row["value"] == model), None)
+    if not choice:
+        raise ValueError("默认模型已不可用，请重新选择。")
+    spec = choice["capabilities"]
+    defaults = _spec_default_values(spec)
+    labels = {"default_resolution": "默认清晰度", "default_aspect_ratio": "默认画幅比例", "default_seconds": "默认时长"}
+    for key, capability in GENERATION_DEFAULT_FIELDS.items():
+        previous = current[key] if current["default_model_choice"] == model else defaults[key]
+        value = str(submitted.get(key, previous) or defaults[key]).strip()
+        if value not in {str(item) for item in spec[capability]}:
+            raise ValueError(f"所选模型不支持{labels[key]}，请重新选择。")
+        defaults[key] = value
+    return {"default_model_choice": model, **defaults}
+
+
 def get_system_settings_view(db: Session) -> list[dict]:
     rows = {row.key: row for row in db.query(AppSetting).all()}
     data = []
+    choices = model_options(db)
+    defaults = get_creation_defaults(db, choices)
+    choice = next((row for row in choices if row["value"] == defaults["default_model_choice"]), None)
     for definition in SYSTEM_SETTING_DEFS:
         row = rows.get(definition["key"])
         value = row.value if row and row.value is not None else definition["default"]
         entry = {**definition, "value": value, "updated_at": row.updated_at if row else None}
         if definition["type"] == "model":
-            entry["options"] = model_options(db)
+            entry["options"] = choices
             entry["unavailable"] = bool(value and value not in {option["value"] for option in entry["options"]})
             if entry["unavailable"]:
                 entry["value"] = ""
+        if definition["type"] == "generation":
+            key = definition["key"]
+            entry["value"] = defaults[key]
+            values = choice["capabilities"][GENERATION_DEFAULT_FIELDS[key]] if choice else []
+            entry["options"] = [{"value": str(item), "label":
+                ({"9:16": "竖屏 9:16", "16:9": "横屏 16:9", "1:1": "方形 1:1"}.get(str(item), str(item))
+                 if key == "default_aspect_ratio" else f"{item} 秒" if key == "default_seconds" else str(item))}
+                for item in values]
         if definition["type"] == "proxy":
             current = decode_proxy_url(value)
             masked = redact_proxy_url(current)

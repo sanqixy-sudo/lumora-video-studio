@@ -63,7 +63,7 @@ from app.services.reference_images import aspect_ratio_for_dimensions, fetch_ima
 from app.services.risk_control import parse_keywords
 from app.services.quota_plans import PLAN_PERIOD_TYPES, bind_plan_to_user, deactivate_plan_assignments, plan_quota_amount, quota_totals_for_user, quota_totals_for_users, refresh_due_packages, refresh_user_packages, update_assignment_custom_quota
 from app.services.user_admin import attach_display_names, create_user_with_wallet, deduct_quota, grant_quota, reset_user_password, set_user_display_name, set_user_role, set_user_showcase, set_user_status, user_display_name
-from app.services.system_settings import get_system_setting_int, get_system_settings_view, upsert_system_setting, validate_proxy_choices, settings_audit_values
+from app.services.system_settings import get_system_setting_int, get_system_settings_view, upsert_system_setting, validate_proxy_choices, settings_audit_values, normalize_creation_defaults
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -2440,7 +2440,7 @@ def delete_risk_rule_form(rule_id: int, admin: User = Depends(require_super_admi
 
 
 @router.post("/settings/update/form", dependencies=[Depends(require_same_origin)])
-def settings_update_form(
+async def settings_update_form(
     request: Request,
     max_running_jobs: str = Form(""),
     submit_max_attempts: str = Form(""),
@@ -2452,6 +2452,9 @@ def settings_update_form(
     default_min_submit_interval_seconds: str = Form(""),
     registration_enabled: str = Form("0"),
     default_model_choice: str | None = Form(None),
+    default_resolution: str | None = Form(None),
+    default_aspect_ratio: str | None = Form(None),
+    default_seconds: str | None = Form(None),
     request_proxy_enabled: str | None = Form(None),
     request_proxy_url: str | None = Form(None),
     download_proxy_enabled: str | None = Form(None),
@@ -2474,10 +2477,14 @@ def settings_update_form(
     network_values = {"request_proxy_enabled": request_proxy_enabled, "request_proxy_url": request_proxy_url,
                       "download_proxy_enabled": download_proxy_enabled, "download_proxy_url": download_proxy_url,
                       "video_download_concurrency": video_download_concurrency}
-    if default_model_choice is not None:
-        values["default_model_choice"] = default_model_choice
+    creation_values = {"default_model_choice": default_model_choice, "default_resolution": default_resolution,
+                       "default_aspect_ratio": default_aspect_ratio, "default_seconds": default_seconds}
+    # FastAPI maps empty optional form strings to None; retain explicit clears.
+    form = await request.form()
+    values.update({key: str(form[key]) for key in creation_values if key in form})
     values.update({key: value for key, value in network_values.items() if value is not None})
     try:
+        values.update(normalize_creation_defaults(db, values))
         for key, value in values.items():
             upsert_system_setting(db, key, value, admin.id)
         validate_proxy_choices(db)

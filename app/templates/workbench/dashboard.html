@@ -4,7 +4,7 @@
 {% block top_actions %}{% endblock %}
 {% block content %}
 <div class="wb-creator">
-<form action="/app/jobs/batch/form" method="post" enctype="multipart/form-data" id="create-job-form" data-history-scope="{{ current_user.id }}" data-async-formdata="/app/jobs/batch" data-available-quota="{{ quota_stats.total_available }}" class="wb-creation-form">
+<form action="/app/jobs/batch/form" method="post" enctype="multipart/form-data" id="create-job-form" data-generation-defaults='{{ creation_defaults|default({})|tojson }}' data-history-scope="{{ current_user.id }}" data-async-formdata="/app/jobs/batch" data-available-quota="{{ quota_stats.total_available }}" class="wb-creation-form">
 <input type="hidden" name="batch_request_id" value="{{ new_request_id }}">
 <div class="glass-workbench"><section class="wb-settings" aria-label="共享生成设置">
  <ol class="wb-create-guide" aria-label="创作准备">
