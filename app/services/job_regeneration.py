@@ -27,6 +27,12 @@ def regeneration_block_reason(db: Session, job: Job) -> str | None:
         return '原通道已停用，请在创作页重新选择模型。'
     if model_id_for_seconds(provider, job.seconds) != job.model:
         return '原模型配置已变化，请在创作页重新选择模型。'
+    if provider.provider_name == "oaire_grok":
+        from app.services.model_capabilities import validate_grok
+        try:
+            validate_grok(job.model, job.seconds, job.resolution, job.aspect_ratio)
+        except ValueError as exc:
+            return str(exc)
     risk = match_risk_message(db, [job.prompt])
     if risk:
         return '提示词未通过当前校验，请修改后重新创建。'
@@ -72,6 +78,7 @@ def regenerate_failed_jobs(db: Session, user: User, batch_id: int, job_ids: list
                   retry_of_job_id=source.id, provider_key_id=source.provider_key_id, request_id=uuid4(),
                   product_name=source.product_name, region_name=source.region_name, prompt=source.prompt,
                   seconds=source.seconds, size=source.size, model=source.model,
+                  resolution=source.resolution, aspect_ratio=source.aspect_ratio,
                   status='queued', progress=0, queued_at=utcnow(), submit_attempts=0, download_attempts=0)
         db.add(job); db.flush()
         refs = db.query(JobFile).filter(JobFile.job_id == source.id, JobFile.file_type.in_(REFERENCE_TYPES)).order_by(JobFile.id).all()

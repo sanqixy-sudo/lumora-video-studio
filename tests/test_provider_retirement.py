@@ -11,7 +11,7 @@ from app.services.jobs import create_jobs_batch_and_reserve, create_job_and_char
 
 class ProviderRetirementTests(unittest.TestCase):
     def test_aliases_cannot_create_new_tasks(self):
-        for alias in ['podsora','pod_sora','apipod','apipod_sora','podgrok','pod_grok','grok','grok_imagine']:
+        for alias in ['sora','sora_api','seedance','seedance_api','podsora','pod_sora','apipod','apipod_sora','podgrok','pod_grok','grok','grok_imagine']:
             with self.subTest(alias=alias):
                 self.assertTrue(provider_is_retired(alias))
                 with self.assertRaises(HTTPException): _parse_model_choice(alias+':12',12)
@@ -19,9 +19,9 @@ class ProviderRetirementTests(unittest.TestCase):
 
     def test_old_keys_are_not_selectable(self):
         retired=ProviderKey(id=9,name='old',provider_name='podgrok',status='active',model_id_12s='grok')
-        live=ProviderKey(id=1,name='Sora',provider_name='sora_api',status='active',model_id_12s='sora-2-12s')
+        live=ProviderKey(id=1,name='Omni',provider_name='wuyin_omni',status='active')
         db=MagicMock(); db.query.return_value.filter.return_value.order_by.return_value.all.return_value=[retired,live]
-        self.assertEqual([item['provider_name'] for item in _model_options(db)],['sora_api'])
+        self.assertEqual([item['provider_name'] for item in _model_options(db)],['wuyin_omni'])
         db.query.return_value.filter.return_value.first.return_value=retired
         with self.assertRaises(HTTPException): _select_model_provider_key(db,'',12,9)
         with patch('app.services.provider_keys.list_active_provider_keys',return_value=[retired]):

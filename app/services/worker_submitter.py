@@ -97,6 +97,7 @@ def submit_queued_job(job_id: int) -> None:
                 provider_name,
                 reference_video_url,
                 reference_image_urls=reference_image_urls,
+                **({"resolution": job.resolution, "aspect_ratio": job.aspect_ratio} if provider_name == "oaire_grok" else {}),
             )
             endpoint = create_video_endpoint(api_base_url, provider_name)
             api_call = APICallLog(
@@ -125,6 +126,7 @@ def submit_queued_job(job_id: int) -> None:
                     idempotency_key=str(job.request_id),
                     reference_video_url=reference_video_url,
                     reference_image_urls=reference_image_urls,
+                    **({"resolution": job.resolution, "aspect_ratio": job.aspect_ratio} if provider_name == "oaire_grok" else {}),
                 )
             except UpstreamError as exc:
                 api_call = db.query(APICallLog).filter(APICallLog.id == api_call.id).first()

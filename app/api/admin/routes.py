@@ -1388,6 +1388,12 @@ def _parse_positive_int(value, default: int = 1) -> int:
     return parsed
 
 
+def _validate_grok_model(provider_name, model_id):
+    from app.services.model_capabilities import GROK_MODELS
+    if normalize_provider_name(provider_name) == "oaire_grok" and model_id not in GROK_MODELS:
+        raise HTTPException(status_code=400, detail="请选择支持的 Grok 模型")
+
+
 def _provider_base_url(provider_name: str | None, api_base_url: str | None) -> str:
     provider = normalize_provider_name(provider_name)
     if provider_is_retired(provider):
@@ -1397,11 +1403,14 @@ def _provider_base_url(provider_name: str | None, api_base_url: str | None) -> s
         value = "https://api.oairegbox.cc"
     if provider == "wuyin_omni" and value.rstrip("/") in {"", "https://niubi.zeabur.app"}:
         value = "https://api.wuyinkeji.com"
+    if provider == "oaire_grok" and not value:
+        raise HTTPException(status_code=400, detail="请填写 New API 网关调用地址")
     return normalize_api_base_url(value)
 
 
 @router.post("/provider-keys")
 def create_provider_key(payload: AdminCreateProviderKeyRequest, admin: User = Depends(require_super_admin), db: Session = Depends(get_db)) -> dict:
+    _validate_grok_model(payload.provider_name, payload.model_id)
     row = ProviderKey(name=payload.name, provider_name=normalize_provider_name(payload.provider_name), api_base_url=_provider_base_url(payload.provider_name, payload.api_base_url), model_id=(payload.model_id or "").strip() or None, model_id_4s=(payload.model_id_4s or "").strip() or None, model_id_5s=(payload.model_id_5s or "").strip() or None, model_id_8s=(payload.model_id_8s or "").strip() or None, model_id_10s=(payload.model_id_10s or "").strip() or None, model_id_12s=(payload.model_id_12s or "").strip() or None, model_id_15s=(payload.model_id_15s or "").strip() or None, key_masked=mask_secret(payload.raw_key), key_encrypted=encrypt_secret(payload.raw_key), weight=payload.weight, daily_limit=payload.daily_limit, concurrent_limit=payload.concurrent_limit)
     row.consecutive_failures = 0
     row.last_error_at = None
@@ -1431,6 +1440,7 @@ def create_provider_key_form(
     admin: User = Depends(require_super_admin),
     db: Session = Depends(get_db),
 ):
+    _validate_grok_model(provider_name, model_id)
     row = ProviderKey(
         name=name.strip(),
         provider_name=normalize_provider_name(provider_name),
@@ -1498,6 +1508,7 @@ def update_provider_key_form(
         raise HTTPException(status_code=404, detail="Job not found")
     if provider_is_retired(row.provider_name):
         raise HTTPException(status_code=400, detail="已下线渠道仅保留历史记录")
+    _validate_grok_model(provider_name, model_id)
     row.name = name.strip()
     row.provider_name = normalize_provider_name(provider_name)
     row.api_base_url = _provider_base_url(provider_name, api_base_url)

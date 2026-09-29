@@ -13,19 +13,26 @@
  <li><button type="button" data-create-step="prompts"><span class="wb-step-number">3</span><span>编写提示词<span class="wb-step-detail">每条生成一个视频</span></span></button></li>
  </ol>
  <div class="wb-settings-fields">
-  <label class="wb-model-label">生成模型<select name="model_choice" id="job-model-select" required><option value="">选择模型与时长</option>{% for group in model_options|groupby('provider_name') %}<optgroup label="{{ {'sora_api':'Sora','seedance':'Seedance','veo_omni':'VEO Omni','wuyin_omni':'Wuyin Omni','flow_omni':'oaire-flow omni','oaire_omni':'oaire omni'}.get(group.grouper,group.grouper) }}">{% for option in group.list %}<option value="{{ option.value }}" {{ 'selected' if option.value == default_model_choice else '' }} data-seconds="{{ option.seconds }}" data-provider="{{ option.provider_name }}" data-model-id="{{ option.model_id }}">{{ option.label }}</option>{% endfor %}</optgroup>{% endfor %}</select><input type="hidden" name="seconds" id="job-seconds-select"></label>
+  <label class="wb-model-label">生成模型<select name="model_choice" id="job-model-select" required><option value="">选择生成模型</option>{% for group in model_options|groupby('provider_name') %}<optgroup label="{{ {'sora_api':'Sora','seedance':'Seedance','veo_omni':'VEO Omni','wuyin_omni':'Wuyin Omni','flow_omni':'oaire-flow omni','oaire_omni':'oaire omni','oaire_grok':'oaire Grok'}.get(group.grouper,group.grouper) }}">{% for option in group.list %}<option value="{{ option.value }}" {{ 'selected' if option.value == default_model_choice else '' }} data-seconds="{{ option.seconds }}" data-capabilities='{{ option.capabilities|tojson }}' data-provider="{{ option.provider_name }}" data-model-id="{{ option.model_id }}">{{ option.label }}</option>{% endfor %}</optgroup>{% endfor %}</select></label>
   <label>APP 名称<input autocomplete="off" name="product_name" maxlength="80" placeholder="例如 NiceReels…" required></label>
   <label>投放地区<input autocomplete="off" name="region_name" maxlength="80" placeholder="例如 美国…" required></label>
   <label>批次名称 <span class="wb-optional">选填</span><input autocomplete="off" name="batch_name" maxlength="128" placeholder="为这批视频命名…"></label>
  </div>
- <div class="wb-format-row"><fieldset class="wb-aspect"><legend>画幅</legend><label><input autocomplete="off" type="radio" name="aspect_choice" value="720x1280" checked><span><i class="wb-frame-portrait"></i>竖屏 9:16</span></label><label><input autocomplete="off" type="radio" name="aspect_choice" value="1280x720"><span><i class="wb-frame-landscape"></i>横屏 16:9</span></label></fieldset><select name="size" id="job-size-select" hidden aria-label="分辨率"><option value="720x1280">720 × 1280</option><option value="1280x720">1280 × 720</option></select><span id="studio-spec-summary">选择模型后显示时长</span><span class="wb-shared-label">本批次共用设置与素材</span></div>
+ <div class="wb-format-row wb-generation-specs">
+  <label>清晰度<select name="resolution" id="job-resolution-select" required aria-label="清晰度"><option value="720p">720p</option></select></label>
+  <label>画幅比例<select name="aspect_ratio" id="job-aspect-select" required aria-label="画幅比例"><option value="9:16">竖屏 9:16</option><option value="16:9">横屏 16:9</option></select></label>
+  <label>时长<select name="seconds" id="job-seconds-select" required aria-label="时长"><option value="">请选择模型</option></select></label>
+  <select name="size" id="job-size-select" hidden aria-label="请求尺寸"><option value="720x1280">720 × 1280</option><option value="1280x720">1280 × 720</option></select>
+  <span class="wb-shared-label">本批次共用设置与素材</span>
+  <span id="generation-spec-notice" class="field-hint" role="status"></span>
+ </div>
  {% if not model_options %}<div class="form-error" role="status">暂无可用模型，请联系管理员配置渠道。</div>{% endif %}
 </section>
 <div class="wb-editor">
  <section class="wb-materials" aria-labelledby="materials-title">
   <div class="wb-pane-title"><div>{{ icon('image') }}<h2 id="materials-title">参考素材</h2></div><a class="icon-btn" href="/app/reference-images/page" aria-label="管理素材预设" title="管理素材预设">{{ icon('settings') }}</a></div>
   <div class="wb-materials-content">
-   <div id="wb-selected-materials" class="wb-selected-materials" aria-live="polite"></div><button type="button" class="wb-add-material" data-open-materials>{{ icon('plus') }}<strong>选择预设素材</strong><span>浏览素材库并添加参考图</span></button>
+   <div id="grok-image-checks" class="wb-grok-checks" hidden aria-live="polite"></div><div id="wb-selected-materials" class="wb-selected-materials" aria-live="polite"></div><button type="button" class="wb-add-material" data-open-materials>{{ icon('plus') }}<strong>选择预设素材</strong><span>浏览素材库并添加参考图</span></button>
    
    <div id="standard-reference-field" class="reference-field">
     <select name="reference_preset_id" id="reference-preset-select" hidden aria-label="所选参考图"><option value="">不使用预设</option>{% for preset in reference_presets %}<option value="{{ preset.id }}" data-url="{{ preset.image_url }}" data-width="{{ preset.width or '' }}" data-height="{{ preset.height or '' }}" data-ratio="{{ preset.aspect_ratio or '' }}">{{ preset.name }}</option>{% endfor %}</select>

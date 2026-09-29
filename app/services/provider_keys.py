@@ -7,9 +7,10 @@ from app.services import flow_omni, oaire_omni
 from app.core.timezone import date_bounds_utc, shanghai_now
 from app.models.tables import APICallLog, ProviderKey
 
-RETIRED_PROVIDERS = frozenset({"podsora", "podgrok"})
+RETIRED_PROVIDERS = frozenset({"podsora", "podgrok", "sora_api", "seedance"})
 
 PROVIDER_LABELS = {
+    "oaire_grok": "oaire Grok",
     "sora_api": "Sora",
     "seedance": "Seedance",
     "podsora": "PodSora",
@@ -21,6 +22,7 @@ PROVIDER_LABELS = {
 }
 
 PROVIDER_SECONDS = {
+    "oaire_grok": tuple(range(1, 16)),
     "sora_api": (8, 12),
     "seedance": (5, 10, 12),
     "podsora": (4, 8, 12),
@@ -58,6 +60,9 @@ def provider_is_retired(value: str | None) -> bool:
 
 def model_id_for_seconds(provider_key: ProviderKey, seconds: int) -> str:
     provider = normalize_provider_name(provider_key.provider_name)
+    if provider == "oaire_grok":
+        from app.services.model_capabilities import GROK_MODELS
+        return provider_key.model_id if provider_key.model_id in GROK_MODELS and int(seconds) in range(1, 16) else ""
     if provider == "flow_omni":
         return flow_omni.MODEL if int(seconds) == flow_omni.SECONDS else ""
     if provider == "oaire_omni":

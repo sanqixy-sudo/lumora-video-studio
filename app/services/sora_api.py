@@ -14,7 +14,7 @@ import httpx
 from PIL import Image
 
 from app.core.config import settings
-from app.services import flow_omni, oaire_omni
+from app.services import flow_omni, oaire_omni, oaire_grok
 from app.services.reference_images import aspect_ratio_for_size
 
 DEFAULT_BASE_URL = "https://niubi.zeabur.app"
@@ -204,6 +204,8 @@ def _provider_name(value: str | None) -> str:
         return "veo_omni"
     if text in {"wuyin_omni", "wuyin-omni", "google_omni", "google-omni", "video_google_omni", "wuyin_google_omni"}:
         return "wuyin_omni"
+    if text == "oaire_grok":
+        return text
     return "sora_api"
 
 
@@ -384,13 +386,14 @@ def create_video_request_summary(
     provider_name: str | None = None,
     reference_video_url: str | None = None,
     reference_image_urls: list[str] | tuple[str, ...] | None = None,
+    resolution: str | None = None, aspect_ratio: str | None = None,
 ) -> str:
     provider = _provider_name(provider_name)
     model = _model_for(int(seconds), model_id, provider)
     image_urls = _reference_image_urls(reference_image_url, reference_image_urls)
     if provider == "veo_omni":
         model = "veo-omni-flash-video-edit" if reference_video_url else "veo-omni-flash"
-    aspect_ratio = aspect_ratio_for_size(size)
+    aspect_ratio = aspect_ratio or aspect_ratio_for_size(size)
     ref_host = ""
     if image_urls:
         try:
@@ -399,7 +402,7 @@ def create_video_request_summary(
             ref_host = ""
     return (
         f"provider={provider}, model={model}, duration={int(seconds)}, "
-        f"size={size}, aspect_ratio={aspect_ratio}, image_count={len(image_urls)}, "
+        f"size={size}, resolution={resolution or '720p'}, aspect_ratio={aspect_ratio}, image_count={len(image_urls)}, "
         f"video={'yes' if reference_video_url else 'no'}"
         f"{ref_host}, prompt_chars={len(prompt or '')}"
     )
@@ -482,6 +485,7 @@ def create_video(
     reference_video_url: str | None = None,
     reference_image_urls: list[str] | tuple[str, ...] | None = None,
     request_proxy: str | None = None,
+    resolution: str | None = None, aspect_ratio: str | None = None,
 ) -> tuple[dict, int, int]:
     url = create_video_endpoint(api_base_url, provider_name)
     provider = _provider_name(provider_name)
@@ -489,7 +493,14 @@ def create_video(
     if provider not in {"seedance"} and input_reference_path and not image_urls:
         raise UpstreamError("Reference images must be public URLs and sent as image_url")
     model = _model_for(int(seconds), model_id, provider)
-    if provider == "flow_omni":
+    if provider == "oaire_grok":
+        try:
+            if not api_base_url:
+                raise ValueError("请配置 Grok 的 New API 网关地址")
+            payload = oaire_grok.build_payload(prompt, seconds, resolution, aspect_ratio, image_urls, model, reference_video_url)
+        except ValueError as exc:
+            raise UpstreamError(str(exc)) from exc
+    elif provider == "flow_omni":
         try:
             payload = flow_omni.build_payload(prompt, seconds, size, image_urls, reference_video_url)
         except ValueError as exc:
@@ -533,7 +544,7 @@ def create_video(
                 payload["video_url"] = reference_video_url
     if provider == "podgrok":
         payload["resolution"] = "720p"
-    if image_urls and provider not in {"wuyin_omni", "veo_omni", "flow_omni", "oaire_omni"}:
+    if image_urls and provider not in {"wuyin_omni", "veo_omni", "flow_omni", "oaire_omni", "oaire_grok"}:
         payload["image_url"] = image_urls[0]
 
     request_summary = create_video_request_summary(
@@ -546,6 +557,7 @@ def create_video(
         provider,
         reference_video_url,
         reference_image_urls=image_urls,
+        resolution=resolution, aspect_ratio=aspect_ratio,
     )
     headers = _headers(api_key, provider)
     if idempotency_key and provider != "wuyin_omni":
@@ -593,7 +605,7 @@ def create_video(
         exc.endpoint = url
         exc.request_summary = request_summary
         raise
-    normalized = flow_omni.normalize_response(data) if provider in {"flow_omni", "oaire_omni"} else _normalize_task_response(data)
+    normalized = flow_omni.normalize_response(data) if provider in {"flow_omni", "oaire_omni", "oaire_grok"} else _normalize_task_response(data)
     normalized["model"] = str(normalized.get("model") or model)
     return normalized, response.status_code, latency_ms
 
@@ -623,7 +635,7 @@ def fetch_video_status(api_key: str, remote_task_id: str, api_base_url: str | No
         exc.latency_ms = latency_ms
         exc.endpoint = url
         raise
-    normalized = flow_omni.normalize_response(data) if provider in {"flow_omni", "oaire_omni"} else _normalize_task_response(data)
+    normalized = flow_omni.normalize_response(data) if provider in {"flow_omni", "oaire_omni", "oaire_grok"} else _normalize_task_response(data)
     return normalized, response.status_code, latency_ms
 
 

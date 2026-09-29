@@ -617,6 +617,8 @@ function initCreateJobForm() {
   const form = document.getElementById("create-job-form");
   const sizeSelect = document.getElementById("job-size-select");
   const secondsSelect = document.getElementById("job-seconds-select");
+  const resolutionSelect = document.getElementById("job-resolution-select");
+  const aspectSelect = document.getElementById("job-aspect-select");
   const modelSelect = document.getElementById("job-model-select");
   const presetSelect = document.getElementById("reference-preset-select");
   const urlInput = document.getElementById("reference-image-url");
@@ -688,7 +690,7 @@ function initCreateJobForm() {
       const value = normalizeUrl(input.value);
       if (reset || checkbox.value !== value) checkbox.checked = false;
       checkbox.value = value;
-      const skipAllowed = !["flow_omni", "oaire_omni"].includes(selectedProvider());
+      const skipAllowed = !["flow_omni", "oaire_omni", "oaire_grok"].includes(selectedProvider());
       checkbox.closest("label").hidden = !skipAllowed;
       checkbox.disabled = !skipAllowed || input.disabled || !value;
       if (checkbox.disabled) checkbox.checked = false;
@@ -755,14 +757,97 @@ function initCreateJobForm() {
     if (omniVideoInput) { omniVideoInput.disabled = !isWuyin; omniVideoInput.required = false; if (!isWuyin) omniVideoInput.value = ""; }
   }
 
+  function currentCapabilities() {
+    try { return JSON.parse(modelSelect?.selectedOptions?.[0]?.dataset.capabilities || "null"); } catch (_) { return null; }
+  }
+  function replaceChoices(select, values, fallback, label) {
+    const previous = select.value;
+    select.replaceChildren(...values.map(value => new Option(label(String(value)), String(value))));
+    select.value = values.map(String).includes(previous) ? previous : String(fallback);
+    select.dispatchEvent(new Event('lumora:select-sync'));
+    return previous && previous !== select.value;
+  }
+  let previousModelChoice = "";
+  function syncGenerationSpecs() {
+    const spec = currentCapabilities();
+    if (!resolutionSelect || !aspectSelect) return;
+    if (!spec) { secondsSelect.replaceChildren(new Option('请选择模型', '')); return; }
+    const changed = [];
+    if (replaceChoices(resolutionSelect, spec.resolutions, spec.default_resolution, v => v)) changed.push('清晰度');
+    if (replaceChoices(aspectSelect, spec.ratios, '9:16', v => ({'9:16':'竖屏 9:16','16:9':'横屏 16:9','1:1':'方形 1:1'}[v] || v))) changed.push('比例');
+    if (replaceChoices(secondsSelect, spec.seconds, spec.default_seconds, v => `${v} 秒`)) changed.push('时长');
+    const note = document.getElementById('generation-spec-notice');
+    if (note && previousModelChoice !== modelSelect.value) note.textContent = previousModelChoice && changed.length ? `${changed.join('、')}已调整为当前模型支持的值` : '';
+    previousModelChoice = modelSelect.value;
+    // Legacy transports still receive exactly the same 720p size values.
+    const value = aspectSelect.value === '1:1' ? '720x720' : aspectSelect.value === '9:16' ? '720x1280' : '1280x720';
+    sizeSelect.replaceChildren(new Option(value, value));
+  }
+
+  let grokCheckTimer = null, grokCheckSequence = 0, grokCheckContext = '';
+  const grokRatioConsent = new Set();
+  const grokCheckBox = document.getElementById('grok-image-checks');
+  function grokReferences() {
+    return [...omniPresetChecks().filter(el => el.checked).map(el => ({url: normalizeUrl(el.dataset.url), name: el.dataset.name || '参考图'})),
+      ...omniImageInputs().filter(el => el.value.trim()).map(el => ({url: normalizeUrl(el.value), name: '图片链接'}))];
+  }
+  function scheduleGrokCheck() {
+    clearTimeout(grokCheckTimer); ++grokCheckSequence;
+    if (grokCheckBox) grokCheckBox.hidden = selectedProvider() !== 'oaire_grok';
+    grokCheckTimer = setTimeout(() => { void checkGrokImages(); }, 250);
+  }
+  async function checkGrokImages() {
+    clearTimeout(grokCheckTimer);
+    if (selectedProvider() !== 'oaire_grok' || !grokCheckBox) return true;
+    const refs = grokReferences(), ratio = aspectSelect.value;
+    const context = JSON.stringify([modelSelect.value, resolutionSelect.value, ratio, refs.map(ref => ref.url)]);
+    if (context !== grokCheckContext) { grokRatioConsent.clear(); grokCheckContext = context; }
+    const sequence = ++grokCheckSequence;
+    grokCheckBox.hidden = false;
+    grokCheckBox.replaceChildren();
+    if (!refs.length) return true;
+    const status = document.createElement('small'); status.textContent = '正在检测图片尺寸与比例…'; grokCheckBox.append(status);
+    const results = await Promise.all(refs.map(async ref => {
+      try { const dimensions = await loadImageDimensions(ref.url); return {...ref, ...dimensions}; }
+      catch (error) { return {...ref, error: error.message || '图片无法读取'}; }
+    }));
+    if (sequence !== grokCheckSequence) return false;
+    grokCheckBox.replaceChildren();
+    let valid = true;
+    const [rw, rh] = ratio.split(':').map(Number);
+    for (const result of results) {
+      const row = document.createElement('div'); row.className = 'wb-grok-check';
+      const text = document.createElement('small'); row.append(text);
+      if (result.error || !result.width || !result.height) {
+        text.textContent = `${result.name}：${result.error || '无法读取尺寸'}`; row.classList.add('is-warning'); valid = false;
+        const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '重新检测'; retry.className = 'ghost-btn small-btn';
+        retry.onclick = () => { void checkGrokImages(); }; row.append(retry);
+      } else {
+        const match = Math.abs((result.width / result.height) / (rw / rh) - 1) <= .01;
+        text.textContent = `${result.name} · ${result.width} × ${result.height} · ${match ? '比例匹配' : `与 ${ratio} 不同`}`;
+        if (!match) {
+          row.classList.add('is-warning');
+          const label = document.createElement('label'), checkbox = document.createElement('input');
+          checkbox.type = 'checkbox'; checkbox.name = 'confirmed_grok_ratios'; checkbox.value = `${ratio}|${result.url}`;
+          checkbox.checked = grokRatioConsent.has(checkbox.value);
+          checkbox.addEventListener('change', () => { checkbox.checked ? grokRatioConsent.add(checkbox.value) : grokRatioConsent.delete(checkbox.value); });
+          label.append(checkbox, document.createTextNode('按当前比例继续（可能裁切或补边）')); row.append(label);
+          if (!checkbox.checked) valid = false;
+        }
+      }
+      grokCheckBox.append(row);
+    }
+    return valid;
+  }
+
   function syncModelSeconds() {
     if (!modelSelect) return;
     const option = modelSelect.selectedOptions?.[0];
-    secondsSelect.value = option?.dataset.seconds || "";
+    syncGenerationSpecs();
     syncImageConfirmations(true);
     const provider = selectedProvider();
-    const isOmni = ["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"].includes(provider);
-    if (isOmni && lastOmniProvider && lastOmniProvider !== provider) resetOmniMaterials();
+    const isOmni = ["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni", "oaire_grok"].includes(provider);
+    // Preserve references on model changes; changed limits are validated explicitly.
     if (isOmni) lastOmniProvider = provider;
     standardReferenceField?.classList.toggle("hidden", isOmni);
     standardReferenceField?.querySelectorAll("input,select").forEach((control) => { control.disabled = isOmni; });
@@ -772,10 +857,13 @@ function initCreateJobForm() {
       const isVeo = provider === "veo_omni";
       const isFlow = provider === "flow_omni";
       const isOaire = provider === "oaire_omni";
-      const maximum = isVeo || isFlow ? 6 : isOaire ? 5 : 1;
+      const isGrok = provider === "oaire_grok";
+      const maximum = currentCapabilities()?.max_images?.[resolutionSelect.value] || (isVeo || isFlow ? 6 : isOaire ? 5 : 1);
       omniMaterialCard.dataset.maxImages = String(maximum);
-      if (omniMaterialTitle) omniMaterialTitle.textContent = isVeo ? "VEO Omni 输入素材" : isFlow ? "oaire-flow omni 输入素材" : isOaire ? "oaire omni 输入素材" : "Wuyin Omni 输入素材";
-      if (omniMaterialDescription) omniMaterialDescription.textContent = isVeo
+      if (omniMaterialTitle) omniMaterialTitle.textContent = isGrok ? "Grok 输入素材" : isVeo ? "VEO Omni 输入素材" : isFlow ? "oaire-flow omni 输入素材" : isOaire ? "oaire omni 输入素材" : "Wuyin Omni 输入素材";
+      if (omniMaterialDescription) omniMaterialDescription.textContent = isGrok
+        ? "不选参考图即文生视频；添加图片后自动检测比例。1080p 仅支持一张参考图。"
+        : isVeo
         ? "不选参考图即文生视频；可选 1–6 张参考图生成视频。"
         : isFlow ? "不选参考图即文生视频；可选 1–6 张参考图，只检查图片可读取，不限制素材比例；约 8 秒、720p。"
         : isOaire ? "不选参考图即文生视频；最多 5 张参考图。只检查图片可读取，不限制素材比例；约 10 秒。"
@@ -784,6 +872,7 @@ function initCreateJobForm() {
     }
     syncOmniMode();
     refreshOmniCount();
+    scheduleGrokCheck();
   }
 
   function addOmniImageRow() {
@@ -810,7 +899,7 @@ function initCreateJobForm() {
 
   function validateOmniMaterials() {
     const provider = selectedProvider();
-    if (!["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"].includes(provider)) return true;
+    if (!["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni", "oaire_grok"].includes(provider)) return true;
     const count = omniImageCount();
     const maximum = omniMaxImages();
     if (count > maximum) {
@@ -887,7 +976,7 @@ function initCreateJobForm() {
     }
     if (!count) missing.push('填写提示词');
     if (count > Number(form.dataset.availableQuota || 0)) missing.push('减少视频数量或申请额度');
-    if (['veo_omni','wuyin_omni','flow_omni','oaire_omni'].includes(selectedProvider()) && omniImageCount() > omniMaxImages()) missing.push('减少参考图数量');
+    if (['veo_omni','wuyin_omni','flow_omni','oaire_omni','oaire_grok'].includes(selectedProvider()) && omniImageCount() > omniMaxImages()) missing.push('减少参考图数量');
     const text = missing.length ? '还需：' + missing.join('、') + '。' : '已准备好，提交后将确认视频数量与预计额度。';
     if (status.textContent !== text) status.textContent = text;
     status.dataset.ready = String(!missing.length);
@@ -1003,7 +1092,7 @@ function initCreateJobForm() {
   }
 
   async function validateReferenceUrl() {
-    if (["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"].includes(selectedProvider())) { latestImageCheckToken++; return Boolean(secondsSelect.value && sizeSelect.value); }
+    if (["veo_omni", "wuyin_omni", "flow_omni", "oaire_omni", "oaire_grok"].includes(selectedProvider())) { latestImageCheckToken++; return Boolean(secondsSelect.value && sizeSelect.value); }
     syncImageConfirmations();
     updateRatioFrame();
     const selectedOption = presetSelect?.selectedOptions?.[0];
@@ -1142,6 +1231,11 @@ function initCreateJobForm() {
     refreshOmniCount();
   });
   omniAddImage?.addEventListener("click", addOmniImageRow);
+  resolutionSelect?.addEventListener('change', () => { syncModelSeconds(); });
+  aspectSelect?.addEventListener('change', () => { syncGenerationSpecs(); scheduleGrokCheck(); sizeSelect.dispatchEvent(new Event('change', {bubbles:true})); });
+  form.addEventListener('input', event => { if (event.target.name === 'omni_reference_image_urls') scheduleGrokCheck(); });
+  form.addEventListener('change', event => { if (event.target.name === 'omni_reference_preset_ids') scheduleGrokCheck(); });
+  omniImageUrlList?.addEventListener('click', event => { if (event.target.closest('.omni-remove-image')) scheduleGrokCheck(); });
   // Input/change/paste events already cover reference updates; no perpetual timer.
   form.querySelectorAll('input[name="aspect_choice"]').forEach(input => input.addEventListener("change", () => {
     sizeSelect.value = input.value; sizeSelect.dispatchEvent(new Event("change", {bubbles:true}));
@@ -1250,6 +1344,7 @@ function initCreateJobForm() {
       if (prompts.length > 100) throw new Error("一次最多创建 100 个任务。");
       if (prompts.length > Number(form.dataset.availableQuota || 0)) throw new Error("当前可用额度不足，请减少任务数量或前往额度页申请。");
       if (!validateOmniMaterials()) return;
+      if (!await checkGrokImages()) throw new Error("请检查参考图，或确认按当前比例继续。");
       if (!await validateReferenceUrl()) throw new Error(hint.textContent || "请检查模型和参考素材。");
       if (!await SoraUI.confirm(`将创建 ${prompts.length} 个视频，预计消耗 ${prompts.length} 次额度。`, {title:"提交本批次",label:"确认生成"})) return;
       if (submitButton) { submitButton.disabled = true; submitButton.textContent = "正在提交…"; submitButton.setAttribute("aria-busy", "true"); }
@@ -1698,7 +1793,9 @@ function initProviderKeyForms() {
       fields.forEach((field) => {
         const providers = String(field.dataset.providerModelField || "").split(/\s+/).filter(Boolean);
         field.classList.toggle("hidden", !providers.includes(provider));
+        field.querySelectorAll('select[name="model_id"]').forEach(control => {control.disabled = !providers.includes(provider);});
       });
+      if (updateBaseUrl && baseUrlInput && provider === "oaire_grok") { baseUrlInput.value = ""; baseUrlInput.placeholder = "New API 网关地址"; }
       if (updateBaseUrl && baseUrlInput && defaultBaseUrls[provider]) {
         baseUrlInput.value = defaultBaseUrls[provider];
       }

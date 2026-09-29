@@ -301,7 +301,7 @@ def _parse_model_choice(model_choice: str | None, seconds: int | str | None) -> 
             raise HTTPException(status_code=400, detail="请选择有效模型")
         try:
             provider_key_id = int(parts[1])
-            parsed_seconds = int(parts[2])
+            parsed_seconds = int(seconds) if parts[2] == "model" else int(parts[2])
         except ValueError as exc:
             raise HTTPException(status_code=400, detail="请选择有效模型") from exc
         return "", parsed_seconds, provider_key_id
@@ -345,6 +345,21 @@ def _select_model_provider_key(db: Session, provider_name: str, seconds: int, pr
             return None
         return provider_key
     return select_provider_key(db, provider_name, seconds)
+
+
+def _resolve_generation_specs(provider, model, seconds, size, resolution, aspect_ratio):
+    from app.services.model_capabilities import validate_grok, requested_size
+    if provider == "oaire_grok":
+        try:
+            validate_grok(model, seconds, resolution, aspect_ratio)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return requested_size(resolution, aspect_ratio), resolution, aspect_ratio
+    _validate_video_size(size)
+    ratio = "9:16" if size == "720x1280" else "16:9"
+    if (resolution and resolution != "720p") or (aspect_ratio and aspect_ratio != ratio):
+        raise HTTPException(status_code=400, detail="当前模型不支持所选清晰度或比例")
+    return size, "720p", ratio
 
 
 def _validate_reference_image(reference_path: Path | None, size: str) -> None:
@@ -461,18 +476,20 @@ def _resolve_job_reference_materials(
     omni_reference_image_urls: list[str] | None = None,
     omni_reference_video_url: str | None = None,
     confirmed_reference_image_urls: list[str] | None = None,
+    model_id: str | None = None, resolution: str | None = None, aspect_ratio: str | None = None,
+    confirmed_grok_ratios: list[str] | None = None,
 ) -> tuple[list[tuple[str, str | None, int | None, int | None]], str | None]:
     provider = normalize_provider_name(provider_name)
     try:
         confirmed = {url for value in (confirmed_reference_image_urls or []) if (url := normalize_public_image_url(value))}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if provider not in {"veo_omni", "wuyin_omni", "flow_omni", "oaire_omni"}:
+    if provider not in {"veo_omni", "wuyin_omni", "flow_omni", "oaire_omni", "oaire_grok"}:
         image = _resolve_reference_image_url(db, current_user, reference_preset_id, reference_image_url, size, confirmed)
         video = _resolve_reference_video_url(reference_video_url, provider) if reference_video_url else None
         return ([image] if image[0] else []), video
 
-    if provider in {"flow_omni", "oaire_omni"} and (reference_video_url or omni_reference_video_url or (omni_mode and omni_mode != "multi_image")):
+    if provider in {"flow_omni", "oaire_omni", "oaire_grok"} and (reference_video_url or omni_reference_video_url or (omni_mode and omni_mode != "multi_image")):
         raise HTTPException(status_code=400, detail="oaire Omni 渠道仅支持文生视频和图生视频，不支持视频编辑")
 
     if provider == "veo_omni" and (reference_video_url or omni_reference_video_url or (omni_mode and omni_mode != "multi_image")):
@@ -486,11 +503,14 @@ def _resolve_job_reference_materials(
         image_urls.append(str(reference_image_url).strip())
 
     maximum = 6 if provider in {"veo_omni", "flow_omni"} else (5 if provider == "oaire_omni" else 1)
+    if provider == "oaire_grok":
+        from app.services.model_capabilities import capabilities
+        maximum = capabilities(provider, model_id)["max_images"][resolution]
     if maximum is not None and len(preset_ids) + len(image_urls) > maximum:
         label = PROVIDER_LABELS[provider]
         raise HTTPException(status_code=400, detail=f"{label} 最多支持 {maximum} 张参考图")
 
-    accessibility_options = {"require_accessible": True} if provider in {"flow_omni", "oaire_omni"} else {}
+    accessibility_options = {"require_accessible": True} if provider in {"flow_omni", "oaire_omni", "oaire_grok"} else {}
     resolved: list[tuple[str, str | None, int | None, int | None]] = []
     seen: set[str] = set()
     for preset_id in preset_ids:
@@ -512,6 +532,11 @@ def _resolve_job_reference_materials(
     if maximum is not None and len(resolved) > maximum:
         raise HTTPException(status_code=400, detail=f"当前渠道最多支持 {maximum} 张参考图")
 
+    if provider == "oaire_grok":
+        from app.services.model_capabilities import matches_ratio
+        for url, name, width, height in resolved:
+            if not matches_ratio(width, height, aspect_ratio) and f"{aspect_ratio}|{url}" not in (confirmed_grok_ratios or []):
+                raise HTTPException(status_code=400, detail=f"{name or '参考图'} {width}×{height} 与 {aspect_ratio} 不匹配，请调整比例或确认继续")
     video_value = omni_reference_video_url or reference_video_url
     video = _resolve_reference_video_url(video_value, provider) if video_value else None
     return resolved, video
@@ -1353,6 +1378,9 @@ def create_job(
     seconds: str = Form(...),
     size: str = Form(...),
     model_choice: str | None = Form(default=None),
+    resolution: str | None = Form(default=None),
+    aspect_ratio: str | None = Form(default=None),
+    confirmed_grok_ratios: list[str] | None = Form(default=None),
     request_id: str | None = Form(default=None),
     batch_name: str | None = Form(default=None),
     reference_image_url: str | None = Form(default=None),
@@ -1366,7 +1394,6 @@ def create_job(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
-    _validate_video_size(size)
     provider_name, parsed_seconds, provider_key_id = _parse_model_choice(model_choice, seconds)
     _assert_requested_key_available(db, provider_key_id)
     cleaned_prompts = normalize_prompt_list([prompt])
@@ -1376,6 +1403,7 @@ def create_job(
         raise HTTPException(status_code=400, detail="当前没有可用的对应渠道密钥")
     selected_model_id = model_id_for_seconds(provider_key, parsed_seconds) if provider_key else None
     selected_provider_name = provider_key.provider_name if provider_key else provider_name
+    size, resolution, aspect_ratio = _resolve_generation_specs(selected_provider_name, selected_model_id, parsed_seconds, size, resolution, aspect_ratio)
     resolved_images: list[tuple[str, str | None, int | None, int | None]] = []
     resolved_video_url = None
     resolved_url, resolved_name, resolved_width, resolved_height = (None, None, None, None)
@@ -1388,6 +1416,8 @@ def create_job(
             omni_reference_image_urls=omni_reference_image_urls,
             omni_reference_video_url=omni_reference_video_url,
             confirmed_reference_image_urls=confirmed_reference_image_urls,
+            model_id=selected_model_id, resolution=resolution, aspect_ratio=aspect_ratio,
+            confirmed_grok_ratios=confirmed_grok_ratios,
         )
         if resolved_images:
             resolved_url, resolved_name, resolved_width, resolved_height = resolved_images[0]
@@ -1411,6 +1441,7 @@ def create_job(
             region_name=region_name,
             model_id=selected_model_id,
             risk_failure_messages=risk_failures,
+            resolution=resolution, aspect_ratio=aspect_ratio,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -1437,6 +1468,9 @@ def create_jobs_batch(
     seconds: str = Form(...),
     size: str = Form(...),
     model_choice: str | None = Form(default=None),
+    resolution: str | None = Form(default=None),
+    aspect_ratio: str | None = Form(default=None),
+    confirmed_grok_ratios: list[str] | None = Form(default=None),
     batch_request_id: str | None = Form(default=None),
     batch_name: str | None = Form(default=None),
     reference_image_url: str | None = Form(default=None),
@@ -1450,7 +1484,6 @@ def create_jobs_batch(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
-    _validate_video_size(size)
     provider_name, parsed_seconds, provider_key_id = _parse_model_choice(model_choice, seconds)
     _assert_requested_key_available(db, provider_key_id)
     cleaned_prompts = normalize_prompt_list(prompts)
@@ -1461,6 +1494,7 @@ def create_jobs_batch(
         raise HTTPException(status_code=400, detail="当前没有可用的对应渠道密钥")
     selected_model_id = model_id_for_seconds(provider_key, parsed_seconds) if provider_key else None
     selected_provider_name = provider_key.provider_name if provider_key else provider_name
+    size, resolution, aspect_ratio = _resolve_generation_specs(selected_provider_name, selected_model_id, parsed_seconds, size, resolution, aspect_ratio)
     resolved_images: list[tuple[str, str | None, int | None, int | None]] = []
     resolved_video_url = None
     resolved_url, resolved_name, resolved_width, resolved_height = (None, None, None, None)
@@ -1473,6 +1507,8 @@ def create_jobs_batch(
             omni_reference_image_urls=omni_reference_image_urls,
             omni_reference_video_url=omni_reference_video_url,
             confirmed_reference_image_urls=confirmed_reference_image_urls,
+            model_id=selected_model_id, resolution=resolution, aspect_ratio=aspect_ratio,
+            confirmed_grok_ratios=confirmed_grok_ratios,
         )
         if resolved_images:
             resolved_url, resolved_name, resolved_width, resolved_height = resolved_images[0]
@@ -1496,6 +1532,7 @@ def create_jobs_batch(
             region_name=region_name,
             model_id=selected_model_id,
             risk_failure_messages=risk_failures,
+            resolution=resolution, aspect_ratio=aspect_ratio,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -1520,6 +1557,9 @@ def create_jobs_batch_form(
     seconds: str = Form(...),
     size: str = Form(...),
     model_choice: str | None = Form(default=None),
+    resolution: str | None = Form(default=None),
+    aspect_ratio: str | None = Form(default=None),
+    confirmed_grok_ratios: list[str] | None = Form(default=None),
     batch_request_id: str | None = Form(default=None),
     batch_name: str | None = Form(default=None),
     reference_image_url: str | None = Form(default=None),
@@ -1533,7 +1573,6 @@ def create_jobs_batch_form(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _validate_video_size(size)
     provider_name, parsed_seconds, provider_key_id = _parse_model_choice(model_choice, seconds)
     _assert_requested_key_available(db, provider_key_id)
     cleaned_prompts = normalize_prompt_list(prompts)
@@ -1544,6 +1583,7 @@ def create_jobs_batch_form(
         raise HTTPException(status_code=400, detail="当前没有可用的对应渠道密钥")
     selected_model_id = model_id_for_seconds(provider_key, parsed_seconds) if provider_key else None
     selected_provider_name = provider_key.provider_name if provider_key else provider_name
+    size, resolution, aspect_ratio = _resolve_generation_specs(selected_provider_name, selected_model_id, parsed_seconds, size, resolution, aspect_ratio)
     resolved_images: list[tuple[str, str | None, int | None, int | None]] = []
     resolved_video_url = None
     resolved_url, resolved_name, resolved_width, resolved_height = (None, None, None, None)
@@ -1556,6 +1596,8 @@ def create_jobs_batch_form(
             omni_reference_image_urls=omni_reference_image_urls,
             omni_reference_video_url=omni_reference_video_url,
             confirmed_reference_image_urls=confirmed_reference_image_urls,
+            model_id=selected_model_id, resolution=resolution, aspect_ratio=aspect_ratio,
+            confirmed_grok_ratios=confirmed_grok_ratios,
         )
         if resolved_images:
             resolved_url, resolved_name, resolved_width, resolved_height = resolved_images[0]
@@ -1579,6 +1621,7 @@ def create_jobs_batch_form(
             region_name=region_name,
             model_id=selected_model_id,
             risk_failure_messages=risk_failures,
+            resolution=resolution, aspect_ratio=aspect_ratio,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -1593,6 +1636,9 @@ def create_job_form(
     seconds: str = Form(...),
     size: str = Form(...),
     model_choice: str | None = Form(default=None),
+    resolution: str | None = Form(default=None),
+    aspect_ratio: str | None = Form(default=None),
+    confirmed_grok_ratios: list[str] | None = Form(default=None),
     request_id: str | None = Form(default=None),
     batch_name: str | None = Form(default=None),
     reference_image_url: str | None = Form(default=None),
@@ -1606,7 +1652,6 @@ def create_job_form(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _validate_video_size(size)
     provider_name, parsed_seconds, provider_key_id = _parse_model_choice(model_choice, seconds)
     _assert_requested_key_available(db, provider_key_id)
     cleaned_prompts = normalize_prompt_list([prompt])
@@ -1616,6 +1661,7 @@ def create_job_form(
         raise HTTPException(status_code=400, detail="当前没有可用的对应渠道密钥")
     selected_model_id = model_id_for_seconds(provider_key, parsed_seconds) if provider_key else None
     selected_provider_name = provider_key.provider_name if provider_key else provider_name
+    size, resolution, aspect_ratio = _resolve_generation_specs(selected_provider_name, selected_model_id, parsed_seconds, size, resolution, aspect_ratio)
     resolved_images: list[tuple[str, str | None, int | None, int | None]] = []
     resolved_video_url = None
     resolved_url, resolved_name, resolved_width, resolved_height = (None, None, None, None)
@@ -1628,6 +1674,8 @@ def create_job_form(
             omni_reference_image_urls=omni_reference_image_urls,
             omni_reference_video_url=omni_reference_video_url,
             confirmed_reference_image_urls=confirmed_reference_image_urls,
+            model_id=selected_model_id, resolution=resolution, aspect_ratio=aspect_ratio,
+            confirmed_grok_ratios=confirmed_grok_ratios,
         )
         if resolved_images:
             resolved_url, resolved_name, resolved_width, resolved_height = resolved_images[0]
@@ -1651,6 +1699,7 @@ def create_job_form(
             region_name=region_name,
             model_id=selected_model_id,
             risk_failure_messages=risk_failures,
+            resolution=resolution, aspect_ratio=aspect_ratio,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

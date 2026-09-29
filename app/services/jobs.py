@@ -358,6 +358,7 @@ def create_jobs_batch_and_reserve(
     region_name: str | None = None,
     model_id: str | None = None,
     risk_failure_messages: dict[int, str] | None = None,
+    resolution: str | None = None, aspect_ratio: str | None = None,
 ) -> tuple[JobBatch, list[Job]]:
     """Create a traceable batch and multiple independent queued jobs.
 
@@ -370,6 +371,11 @@ def create_jobs_batch_and_reserve(
         raise ValueError("oaire Omni 渠道不支持视频编辑")
     if provider_key and normalize_provider_name(provider_key.provider_name) == "veo_omni" and reference_video_url:
         raise ValueError("VEO Omni 视频编辑已下线")
+    if provider_key and normalize_provider_name(provider_key.provider_name) == "oaire_grok":
+        from app.services.model_capabilities import validate_grok
+        validate_grok(model_id or provider_key.model_id, int(seconds), resolution, aspect_ratio, len(reference_images or []))
+        if reference_video_url:
+            raise ValueError("Grok 不支持参考视频")
     cleaned_prompts = normalize_prompt_list(list(prompts))
     normalized_batch_name = normalize_batch_name(batch_name, cleaned_prompts)
     normalized_product_name = normalize_required_label(product_name, "APP名称")
@@ -452,6 +458,7 @@ def create_jobs_batch_and_reserve(
                 prompt=prompt,
                 seconds=seconds,
                 size=size,
+                resolution=resolution, aspect_ratio=aspect_ratio,
                 model=resolved_model_id,
                 status="failed" if failure_message else "queued",
                 progress=0,
@@ -669,6 +676,7 @@ def serialize_job(job: Job, output_file: JobFile | None = None, *, include_upstr
         "prompt": job.prompt,
         "seconds": job.seconds,
         "size": job.size,
+        "resolution": job.resolution, "aspect_ratio": job.aspect_ratio,
         "status": job.status,
         "status_label": status_label(job.status),
         "progress": job.progress,

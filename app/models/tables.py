@@ -117,6 +117,8 @@ class Job(Base):
     prompt: Mapped[str] = mapped_column(Text)
     seconds: Mapped[int] = mapped_column(Integer, default=12)
     size: Mapped[str] = mapped_column(String(32), default='720x1280')
+    resolution: Mapped[str | None] = mapped_column(String(16))
+    aspect_ratio: Mapped[str | None] = mapped_column(String(16))
     status: Mapped[str] = mapped_column(String(32), default='queued', index=True)
     progress: Mapped[int] = mapped_column(Integer, default=0)
     error_text: Mapped[str | None] = mapped_column(Text)

@@ -172,7 +172,7 @@ class FlowCreationTests(unittest.TestCase):
         page = self.client.get("/app")
         self.assertEqual(page.status_code, 200, page.text)
         self.assertIn('data-provider="flow_omni"', page.text)
-        self.assertIn("约 8 秒", page.text)
+        self.assertIn('data-seconds="8"', page.text)
 
     def test_all_create_routes_accept_text_or_six_images_and_reserve_per_job(self):
         count = 0
