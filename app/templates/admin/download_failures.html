@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}下载失败{% endblock %}
+{% block title %}下载异常{% endblock %}
 {% block content %}
 <section class="wb-page-heading">
-  <div><h2>下载失败中心</h2></div>
+  <div><h2>下载异常</h2><p class="muted">网络恢复后，可立即重新下载等待重试或下载失败的视频。保留原任务和批次，不重新生成、不额外扣除生成额度。</p></div>
 
 </section>
 
@@ -13,20 +13,20 @@
     <article class="failure-card">
       <div class="failure-head">
         <div><strong>#{{ job.id }}</strong><span>{{ user_display_name(row.user) if row.user else ('用户 #' ~ job.user_id) }}</span></div>
-        <span class="badge status-download_failed">下载失败</span>
+        <span class="badge status-{{ job.status }}">{{ '等待下载重试' if job.status == 'download_waiting' else '下载失败' }}</span>
       </div>
       <div class="meta-grid compact-meta">
         <div><div class="k">远端任务</div><div class="v mono-cell">{{ job.remote_task_id or '-' }}</div></div>
         <div><div class="k">APP 名称</div><div class="v">{{ job.product_name or '-' }}</div></div>
         <div><div class="k">地区</div><div class="v">{{ job.region_name or '-' }}</div></div>
-        <div><div class="k">失败次数</div><div class="v">{{ job.download_attempts }}</div></div>
+        <div><div class="k">下载尝试次数</div><div class="v">{{ job.download_attempts }}</div></div>
         <div><div class="k">更新时间</div><div class="v"><time data-ui-time>{{ job.updated_at|dt }}</time></div></div>
         <div><div class="k">错误信息</div><div class="v">{{ job.error_text or '-' }}</div></div>
       </div>
       <div class="inline-actions top-gap">
         <a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">查看详情</a>
         {% if job.remote_task_id %}<a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/remote-download" target="_blank">远端直下</a>{% endif %}
-        {% if can_manage %}<button class="primary-btn small-btn" data-action-post="/admin/jobs/{{ job.id }}/redownload" type="button">重新下载</button>{% endif %}
+        {% include "admin/partials/redownload_button.html" %}
       </div>
       <details class="top-gap">
         <summary>失败日志</summary>
@@ -39,7 +39,7 @@
       </details>
     </article>
     {% else %}
-    <div class="empty-state compact-empty">暂无下载失败任务</div>
+    <div class="empty-state compact-empty">暂无等待重试或下载失败的任务</div>
     {% endfor %}
   </div>
   {% include "partials/pagination.html" %}

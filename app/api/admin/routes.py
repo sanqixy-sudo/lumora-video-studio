@@ -629,7 +629,7 @@ def _period_bounds(period: str, start_date: date | None = None, end_date: date |
 
 
 def _download_failure_rows(db: Session, page: int, per_page: int):
-    query = db.query(Job).filter(Job.status == "download_failed").order_by(Job.updated_at.desc(), Job.id.desc())
+    query = db.query(Job).filter(Job.status.in_({"download_failed", "download_waiting"})).order_by(Job.updated_at.desc(), Job.id.desc())
     paged = _pagination(query, page, per_page)
     user_map = _job_user_map(db, paged["items"])
     details = []
@@ -2083,20 +2083,24 @@ def remote_download_job(job_id: int, current_user: User = Depends(require_super_
     return StreamingResponse(iter_video_stream(response, client), media_type=content_type, headers=headers)
 
 
-@router.post("/jobs/{job_id}/redownload")
+@router.post("/jobs/{job_id}/redownload", dependencies=[Depends(require_same_origin)])
 def redownload(job_id: int, admin: User = Depends(require_super_admin), db: Session = Depends(get_db)):
-    job = db.query(Job).filter(Job.id == job_id).first()
+    job = db.query(Job).filter(Job.id == job_id).with_for_update().first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     output_file = get_output_file(db, job.id)
-    if not can_redownload(job, output_file):
-        raise HTTPException(status_code=400, detail="Current job status does not allow redownload")
+    if not job.remote_task_id or not can_redownload(job, output_file):
+        raise HTTPException(status_code=400, detail="当前任务没有可重新下载的生成结果")
+    if job.status in {"remote_completed", "downloading"}:
+        # A second click must not reset an active download or its retry budget.
+        db.rollback()
+        return {"ok": True, "already_pending": True}
     job.status = "remote_completed"
     job.download_attempts = 0
     job.error_text = None
     job.progress = 100
     db.add(job)
-    db.add(JobEvent(job_id=job.id, level="info", event_type="redownload_requested", message="Admin requested redownload."))
+    db.add(JobEvent(job_id=job.id, level="info", event_type="redownload_requested", message=f"管理员 #{admin.id} 请求重新下载原视频，不重新生成。"))
     db.commit()
     try:
         from app.services.worker_runtime import schedule_job_now
@@ -2571,5 +2575,4 @@ def cleanup_noise_audit_logs_form(admin: User = Depends(require_super_admin), db
     write_audit(db, admin.id, "cleanup_noise_audit_logs", "audit_log", None, {"count": count})
     db.commit()
     return RedirectResponse("/admin/audit-logs/page", status_code=303)
-
 

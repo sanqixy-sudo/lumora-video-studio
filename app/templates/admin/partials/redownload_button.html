@@ -1,0 +1,7 @@
+{% if can_manage and job.remote_task_id and job.status in ['download_failed', 'download_waiting'] %}
+<button class="primary-btn small-btn" type="button"
+        data-action-post="/admin/jobs/{{ job.id }}/redownload"
+        data-loading-text="提交中…"
+        data-success-message="已加入下载队列，将下载原视频，无需重新生成"
+        title="仅重新下载原视频，保留原任务和批次，不额外扣除生成额度">{{ '立即重试下载' if job.status == 'download_waiting' else '重新下载' }}</button>
+{% endif %}

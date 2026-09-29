@@ -80,6 +80,7 @@
           <td>
             <div class="row-menu">
               <a class="ghost-btn small-btn" href="/admin/jobs/{{ job.id }}/page">详情</a>
+              {% include "admin/partials/redownload_button.html" %}
               {% if selected_batch %}{% set output = batch_files.get(job.id) %}{% if output %}<a class="primary-btn small-btn" href="/app/files/{{ output.id }}/download">下载</a>{% else %}<span class="muted tiny">文件未就绪</span>{% endif %}{% endif %}
               {% if can_manage %}
               <button class="ghost-btn small-btn wb-row-trigger" type="button">更多</button>
