@@ -12,7 +12,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response, StreamingResponse
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -423,20 +423,22 @@ def _usage_month_data(db: Session, year: int, month_num: int, hide_subadmin_hidd
     return _recompute_usage_totals({**nav, "rows": rows, "real_total": real_total, "display_total": display_total, "override_count": len(overrides)})
 
 
-def _cost_month_data(db: Session, year: int, month_num: int, keyword: str | None = None) -> dict:
+def _cost_month_data(db: Session, year: int, month_num: int, keyword: str | None = None, hide_subadmin_hidden: bool = False) -> dict:
     nav = _month_nav(year, month_num)
     start_date = date(year, month_num, 1)
     end_date = date(year, month_num, nav["days"][-1])
-    records = (
-        db.query(JobCost)
-        .filter(JobCost.state == "settled", JobCost.usage_date >= start_date, JobCost.usage_date <= end_date)
-        .order_by(JobCost.source_user_id.asc(), JobCost.usage_date.asc())
-        .all()
+    records_query = db.query(JobCost).filter(
+        JobCost.state == "settled", JobCost.usage_date >= start_date, JobCost.usage_date <= end_date
     )
     month_start, month_end = month_bounds_utc(year, month_num)
     pending_query = db.query(JobCost).filter(
         JobCost.state == "pending", JobCost.created_at >= month_start, JobCost.created_at < month_end
     )
+    if hide_subadmin_hidden:
+        hidden_user_ids = select(User.id).where(User.hidden_from_subadmin_reports.is_(True))
+        records_query = records_query.filter(JobCost.source_user_id.not_in(hidden_user_ids))
+        pending_query = pending_query.filter(JobCost.source_user_id.not_in(hidden_user_ids))
+    records = records_query.order_by(JobCost.source_user_id.asc(), JobCost.usage_date.asc()).all()
     amounts: dict[tuple[int, date], Decimal] = defaultdict(Decimal)
     counts: dict[tuple[int, date], int] = defaultdict(int)
     names: dict[int, str] = {}
@@ -760,7 +762,7 @@ def usage_monthly_page(
 ):
     year, month_num = _parse_month(month)
     data = _filter_usage_rows(_usage_month_data(db, year, month_num, current_user.role == "sub_admin"), q, hide_zero)
-    cost_report = _cost_month_data(db, year, month_num, q) if current_user.role == "admin" else None
+    cost_report = _cost_month_data(db, year, month_num, q, current_user.role == "sub_admin")
     cost_rows = {int(row["user_id"]): row for row in cost_report["rows"]} if cost_report else {}
     visible_user_ids = {int(row["user"].id) for row in data["rows"]}
     return render(
@@ -804,7 +806,7 @@ def usage_monthly_json(
     if is_admin:
         payload["real_total"] = data["real_total"]
         payload["override_count"] = data["override_count"]
-        payload["cost_report"] = _cost_month_data(db, year, month_num, q)
+    payload["cost_report"] = _cost_month_data(db, year, month_num, q, current_user.role == "sub_admin")
     return payload
 
 
@@ -818,7 +820,7 @@ def usage_monthly_export(
 ):
     year, month_num = _parse_month(month)
     data = _filter_usage_rows(_usage_month_data(db, year, month_num, current_user.role == "sub_admin"), q, hide_zero)
-    cost_report = _cost_month_data(db, year, month_num, q) if current_user.role == "admin" else None
+    cost_report = _cost_month_data(db, year, month_num, q, current_user.role == "sub_admin")
     filename = f"usage_{data['month']}.xlsx"
     return Response(
         _build_usage_xlsx(data, cost_report),

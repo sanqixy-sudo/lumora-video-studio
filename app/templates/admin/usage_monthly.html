@@ -2,10 +2,9 @@
 {% block title %}每日用量{% endblock %}
 {% block body_class %}usage-monthly-page{% endblock %}
 {% block content %}
-{% if not can_manage %}{% set cost_report = none %}{% endif %}
 <section class="wb-page-heading report-head">
   <div>
-    <span class="mature-eyebrow">运营报表</span><h1>每日用量</h1><p>按用户查看整月每天的使用次数{% if can_manage %}和成功生成成本{% endif %}。</p>
+    <span class="mature-eyebrow">运营报表</span><h1>每日用量</h1><p>按用户查看整月每天的使用次数和成功生成成本。</p>
   </div>
   <div class="inline-actions report-actions">
     <a class="ghost-btn small-btn" href="{{ request.url.include_query_params(month=prev_month) }}">上一月</a>
@@ -40,7 +39,7 @@
     <button class="primary-btn small-btn" type="submit">查询</button>
     {% if usage_query or hide_zero %}<a class="ghost-btn small-btn" href="/admin/usage/monthly/page?month={{ month }}">重置</a>{% endif %}
   </form>
-  {% if can_manage and cost_report %}
+  {% if cost_report %}
   <fieldset class="usage-view-options" aria-label="表格显示内容">
     <legend class="wb-sr-only">表格显示内容</legend>
     <label for="usage-view-count"><input id="usage-view-count" name="view_count" type="checkbox" checked />次数</label>
@@ -49,7 +48,7 @@
   {% endif %}
   </div>
 
-  <div class="usage-table-toolbar"><strong>{{ month|replace('-', ' 年 ') }} 月 · {{ rows|length }} 位用户</strong><div class="inline-actions">{% if cost_report %}<span class="usage-cost-summary">已核对 {{ cost_report.count }} 个成功任务 · ${{ cost_report.total }}{% if cost_report.pending_count %} · <a href="/admin/costs/pending?month={{ month }}">{{ cost_report.pending_count }} 个待核对</a>{% endif %}</span>{% endif %}<span id="usage-date-range" role="status">1–{{ days|length }} 日 · {{ days|length }} 天</span><div class="usage-scroll-actions" hidden><button type="button" class="ghost-btn" data-usage-scroll="-1" aria-label="查看前 7 天">← 前 7 天</button><button type="button" class="ghost-btn" data-usage-scroll="1" aria-label="查看后 7 天">后 7 天 →</button></div></div></div>
+  <div class="usage-table-toolbar"><strong>{{ month|replace('-', ' 年 ') }} 月 · {{ rows|length }} 位用户</strong><div class="inline-actions">{% if cost_report %}<span class="usage-cost-summary">已核对 {{ cost_report.count }} 个成功任务 · ${{ cost_report.total }}{% if cost_report.pending_count %} · {% if can_manage %}<a href="/admin/costs/pending?month={{ month }}">{{ cost_report.pending_count }} 个待核对</a>{% else %}{{ cost_report.pending_count }} 个待核对{% endif %}{% endif %}</span>{% endif %}<span id="usage-date-range" role="status">1–{{ days|length }} 日 · {{ days|length }} 天</span><div class="usage-scroll-actions" hidden><button type="button" class="ghost-btn" data-usage-scroll="-1" aria-label="查看前 7 天">← 前 7 天</button><button type="button" class="ghost-btn" data-usage-scroll="1" aria-label="查看后 7 天">后 7 天 →</button></div></div></div>
   <div class="table-wrap surface-table usage-table-wrap clean-table-wrap" aria-label="用户每日用量，支持横向和纵向滚动">
     <table class="table usage-table clean-table" data-month="{{ month }}" style="--usage-days:{{ days|length }}"><caption class="wb-sr-only">{{ month }} 每日使用次数{% if cost_report %}和成功生成成本{% endif %}，按用户行和日期列排列，前两列为用户与整月合计。</caption>
       <colgroup>
