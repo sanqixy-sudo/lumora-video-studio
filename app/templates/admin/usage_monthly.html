@@ -92,11 +92,11 @@
           {% if can_manage %}
           <td data-level="{{ 3 if item.display >= 30 else 2 if item.display >= 10 else 1 if item.display > 0 else 0 }}" class="usage-cell {% if item.display %}usage-nonzero{% endif %} {% if item.is_override %}usage-override{% endif %}" title="真实 {{ item.real }}，显示 {{ item.display }}{% if item.note %}，{{ item.note }}{% endif %}">
             <button class="usage-edit-btn" type="button" aria-label="{{ user_display_name(row.user) }}，{{ item.date }}，显示 {{ item.display }} 次{% if item.is_override %}，已调整{% endif %}，编辑数量" data-user-id="{{ row.user.id }}" data-username="{{ user_display_name(row.user) }}" data-date="{{ item.date }}" data-real="{{ item.real }}" data-display="{{ item.display }}"><span class="usage-count">{{ item.display }}</span>{% if item.is_override %}<i></i>{% endif %}</button>
+          {% else %}
+          <td data-level="{{ 3 if item.display >= 30 else 2 if item.display >= 10 else 1 if item.display > 0 else 0 }}" class="usage-cell {% if item.display %}usage-nonzero{% endif %}"><span class="usage-count">{{ item.display }}</span>
+          {% endif %}
             {% if cost_report %}<small class="usage-cost">{% if cost_day and cost_day.count %}<a href="/usage-logs/page?start={{ cost_day.date }}&end={{ cost_day.date }}&user={{ row.user.id }}" aria-label="{{ user_display_name(row.user) }} {{ cost_day.date }} 已核对成本 ${{ cost_day.amount }}">${{ cost_day.amount }}</a>{% endif %}</small>{% endif %}
           </td>
-          {% else %}
-          <td data-level="{{ 3 if item.display >= 30 else 2 if item.display >= 10 else 1 if item.display > 0 else 0 }}" class="usage-cell {% if item.display %}usage-nonzero{% endif %}"><span class="usage-count">{{ item.display }}</span></td>
-          {% endif %}
           {% endfor %}
         </tr>
         {% else %}

@@ -34,11 +34,11 @@ def render_role(role):
         'total': '3.90',
         'pending_count': 1,
         'daily_totals': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']],
-        'rows': [{'user_id': 2, 'username': 'creator01', 'monthly_amount': '3.90', 'daily': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']]}],
+        'rows': [{'user_id': fixtures.user.id, 'username': fixtures.user.username, 'monthly_amount': '3.90', 'daily': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']]}],
     }
     return env.get_template('admin/usage_monthly.html').render(**{
         **fixtures.common, **data, 'current_user': user, 'can_manage': role == 'admin', 'cost_report': cost_report,
-        'cost_rows': {2: cost_report['rows'][0]}, 'cost_only_rows': [],
+        'cost_rows': {fixtures.user.id: cost_report['rows'][0]}, 'cost_only_rows': [],
         'request': fixtures.request('/admin/usage/monthly/page'),
     })
 
@@ -54,6 +54,8 @@ class UsageRoleTests(unittest.TestCase):
         self.assertIn('id="usage-view-count"', html)
         self.assertIn('id="usage-view-cost"', html)
         self.assertIn('$3.90', html)
+        daily_cost_link = f'/usage-logs/page?start=2026-05-03&end=2026-05-03&user={fixtures.user.id}'
+        self.assertTrue(daily_cost_link in html, '子管理员的用户日期单元格应显示费用入口')
         self.assertNotIn('/admin/costs/pending?', html)
 
     def test_admin_keeps_adjustments_and_editor(self):
