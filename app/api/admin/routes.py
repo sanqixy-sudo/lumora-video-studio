@@ -233,25 +233,35 @@ def _xlsx_col_name(index: int) -> str:
 
 def _xlsx_cell(row_idx: int, col_idx: int, value) -> str:
     ref = f"{_xlsx_col_name(col_idx)}{row_idx}"
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
+    if isinstance(value, (int, float, Decimal)) and not isinstance(value, bool):
         return f'<c r="{ref}"><v>{value}</v></c>'
     text = escape(str(value if value is not None else ""))
     return f'<c r="{ref}" t="inlineStr"><is><t>{text}</t></is></c>'
 
 
 def _build_usage_xlsx(data: dict, cost_report: dict | None = None) -> bytes:
-    table_rows = [["用户", "合计", *[str(day) for day in data["days"]]]]
+    table_rows = [["用户 / 项目", "合计", *[str(day) for day in data["days"]]]]
     daily_totals = data.get("daily_totals") or []
     if daily_totals:
         table_rows.append(["每日合计", data.get("display_total", 0), *[item["display"] for item in daily_totals]])
-    for row in data["rows"]:
-        table_rows.append([user_display_name(row["user"]), row["monthly_display"], *[item["display"] for item in row["daily"]]])
+    cost_by_user = {int(row["user_id"]): row for row in cost_report["rows"]} if cost_report else {}
     if cost_report is not None:
-        table_rows.append([])
-        table_rows.append(["成功生成成本 USD", "月合计", *[str(day) for day in data["days"]]])
-        table_rows.append(["每日合计", cost_report["total"], *[item["amount"] for item in cost_report["daily_totals"]]])
+        table_rows.append(["每日金额 USD", Decimal(cost_report["total"]), *[Decimal(item["amount"]) for item in cost_report["daily_totals"]]])
+    visible_user_ids = set()
+    for row in data["rows"]:
+        user_id = int(row["user"].id)
+        visible_user_ids.add(user_id)
+        table_rows.append([user_display_name(row["user"]), row["monthly_display"], *[item["display"] for item in row["daily"]]])
+        if cost_report is not None:
+            cost_row = cost_by_user.get(user_id)
+            table_rows.append(["  金额 USD", Decimal(cost_row["monthly_amount"]) if cost_row else Decimal(0),
+                               *([Decimal(item["amount"]) for item in cost_row["daily"]] if cost_row else [Decimal(0)] * len(data["days"]))])
+    if cost_report is not None:
         for row in cost_report["rows"]:
-            table_rows.append([row["username"], row["monthly_amount"], *[item["amount"] for item in row["daily"]]])
+            if int(row["user_id"]) in visible_user_ids:
+                continue
+            table_rows.append([row["username"], 0, *([0] * len(data["days"]))])
+            table_rows.append(["  金额 USD", Decimal(row["monthly_amount"]), *[Decimal(item["amount"]) for item in row["daily"]]])
         table_rows.append(["待计费任务", cost_report["pending_count"]])
 
     row_xml = []
@@ -751,6 +761,8 @@ def usage_monthly_page(
     year, month_num = _parse_month(month)
     data = _filter_usage_rows(_usage_month_data(db, year, month_num, current_user.role == "sub_admin"), q, hide_zero)
     cost_report = _cost_month_data(db, year, month_num, q) if current_user.role == "admin" else None
+    cost_rows = {int(row["user_id"]): row for row in cost_report["rows"]} if cost_report else {}
+    visible_user_ids = {int(row["user"].id) for row in data["rows"]}
     return render(
         request,
         "admin/usage_monthly.html",
@@ -759,6 +771,8 @@ def usage_monthly_page(
         usage_query=(q or "").strip(),
         hide_zero=hide_zero,
         cost_report=cost_report,
+        cost_rows=cost_rows,
+        cost_only_rows=[row for user_id, row in cost_rows.items() if user_id not in visible_user_ids],
         **data,
     )
 

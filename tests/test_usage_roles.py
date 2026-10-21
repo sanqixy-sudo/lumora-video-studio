@@ -1,6 +1,7 @@
 import io
 import unittest
 import zipfile
+from xml.etree import ElementTree
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -26,10 +27,11 @@ def render_role(role):
         'count': 1,
         'total': '3.90',
         'daily_totals': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']],
-        'rows': [{'user_id': 2, 'username': 'cost-user', 'monthly_amount': '3.90', 'daily': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']]}],
+        'rows': [{'user_id': 2, 'username': 'creator01', 'monthly_amount': '3.90', 'daily': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']]}],
     }
     return env.get_template('admin/usage_monthly.html').render(**{
         **fixtures.common, **data, 'current_user': user, 'can_manage': role == 'admin', 'cost_report': cost_report,
+        'cost_rows': {2: cost_report['rows'][0]}, 'cost_only_rows': [],
         'request': fixtures.request('/admin/usage/monthly/page'),
     })
 
@@ -49,7 +51,8 @@ class UsageRoleTests(unittest.TestCase):
         html = render_role('admin')
         for expected in ['真实', '已修改', '已调整', 'data-real=', 'usage-override', 'usage-edit-btn', 'usage-modal']:
             self.assertIn(expected, html)
-        self.assertIn('成功生成成本', html)
+        self.assertIn('id="usage-view-count"', html)
+        self.assertIn('id="usage-view-cost"', html)
         self.assertIn('$3.90', html)
 
     def test_subadmin_json_export_and_write_permissions(self):
@@ -97,7 +100,7 @@ class UsageRoleTests(unittest.TestCase):
         cost_report = {
             'currency': 'USD', 'total': '3.90', 'count': 1, 'pending_count': 2,
             'daily_totals': [{'amount': '3.90' if day == 3 else '0.00'} for day in data['days']],
-            'rows': [{'username': 'cost-user', 'monthly_amount': '3.90',
+            'rows': [{'user_id': 2, 'username': 'creator01', 'monthly_amount': '3.90',
                       'daily': [{'amount': '3.90' if day == 3 else '0.00'} for day in data['days']]}],
         }
         client = TestClient(app)
@@ -109,8 +112,15 @@ class UsageRoleTests(unittest.TestCase):
             self.assertEqual(export.status_code, 200)
             with zipfile.ZipFile(io.BytesIO(export.content)) as archive:
                 sheet = archive.read('xl/worksheets/sheet1.xml').decode()
-                self.assertIn('成功生成成本 USD', sheet)
+                self.assertIn('每日金额 USD', sheet)
                 self.assertIn('待计费任务', sheet)
+                root = ElementTree.fromstring(sheet)
+                ns = {'x': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+                rows = root.findall('x:sheetData/x:row', ns)
+                self.assertIn('创作一组', ElementTree.tostring(rows[3], encoding='unicode'))
+                self.assertIn('金额 USD', ElementTree.tostring(rows[4], encoding='unicode'))
+                self.assertEqual(rows[4].find("x:c[@r='B5']/x:v", ns).text, '3.90')
+                self.assertEqual(rows[4].find("x:c[@r='E5']/x:v", ns).text, '3.90')
 
 
 if __name__ == '__main__':
