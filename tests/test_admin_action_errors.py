@@ -70,7 +70,7 @@ class AdminActionErrorTests(unittest.TestCase):
         for model, path in [(RiskControlRule, "risk-control/3/toggle"), (ReferenceImagePreset, "reference-images/3/toggle"), (QuotaPlan, "quota-plans/3/toggle"), (ProviderKey, "provider-keys/3/toggle-status"), (User, "users/3/toggle-status")]:
             row = model(id=3, status="disabled")
             if model is ProviderKey:
-                row.provider_name = "sora_api"
+                row.provider_name = "oaire_omni"
             self.row(model, row)
             before = self.db.commit.call_count
             response = self.client.post(f"/admin/{path}/form", follow_redirects=False)

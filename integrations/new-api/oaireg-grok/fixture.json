@@ -1,0 +1,2858 @@
+{
+  "cases": [
+    {
+      "name": "grok-imagine-video defaults decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  "
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video defaults submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  "
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video defaults billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  "
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video480p1 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "seconds": "1",
+              "resolution": "480p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video480p1 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video480p1 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 1,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video480p6 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "seconds": "6",
+              "resolution": "480p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video480p6 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video480p6 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video480p15 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "seconds": "15",
+              "resolution": "480p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video480p15 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video480p15 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 15,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video720p1 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "seconds": "1",
+              "resolution": "720p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video720p1 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video720p1 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 1,
+        "resolution": "720p"
+      }
+    },
+    {
+      "name": "grok-imagine-video720p6 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "seconds": "6",
+              "resolution": "720p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video720p6 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video720p6 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "720p"
+      }
+    },
+    {
+      "name": "grok-imagine-video720p15 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "seconds": "15",
+              "resolution": "720p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video720p15 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video720p15 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 15,
+        "resolution": "720p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview defaults decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  "
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview defaults submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  "
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview defaults billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  "
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p1 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "1",
+              "resolution": "480p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p1 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p1 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 1,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p6 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "6",
+              "resolution": "480p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p6 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p6 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p15 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "15",
+              "resolution": "480p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p15 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview480p15 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 15,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p1 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "1",
+              "resolution": "720p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p1 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p1 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 1,
+        "resolution": "720p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p6 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "6",
+              "resolution": "720p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p6 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p6 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "720p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p15 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "15",
+              "resolution": "720p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p15 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "720p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview720p15 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 15,
+        "resolution": "720p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p1 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "1",
+              "resolution": "1080p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "1080p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p1 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "1080p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "1",
+          "resolution": "1080p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p1 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "1",
+            "resolution": "1080p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 1,
+        "resolution": "1080p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p6 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "6",
+              "resolution": "1080p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "1080p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p6 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "1080p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "1080p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p6 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "6",
+            "resolution": "1080p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "1080p"
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p15 decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "seconds": "15",
+              "resolution": "1080p",
+              "aspect_ratio": "9:16",
+              "image": "https://example.invalid/ref.png"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "1080p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p15 submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "1080p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "15",
+          "resolution": "1080p",
+          "aspect_ratio": "9:16",
+          "image": "https://example.invalid/ref.png"
+        }
+      }
+    },
+    {
+      "name": "grok-imagine-video-1.5-preview1080p15 billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "seconds": "15",
+            "resolution": "1080p",
+            "aspect_ratio": "9:16",
+            "image": "https://example.invalid/ref.png"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 15,
+        "resolution": "1080p"
+      }
+    },
+    {
+      "name": "size is not resolution decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "size": "1080x1920"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "size is not resolution submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "size": "1080x1920"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16"
+        }
+      }
+    },
+    {
+      "name": "size is not resolution billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "size": "1080x1920"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "multi-image decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-1.5-preview",
+              "prompt": "  test prompt  ",
+              "reference_images": [
+                "https://example.invalid/0",
+                "https://example.invalid/1",
+                "https://example.invalid/2",
+                "https://example.invalid/3",
+                "https://example.invalid/4",
+                "https://example.invalid/5",
+                "https://example.invalid/6"
+              ],
+              "resolution": "720p",
+              "seconds": 10
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-1.5-preview",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "reference_images": [
+            "https://example.invalid/0",
+            "https://example.invalid/1",
+            "https://example.invalid/2",
+            "https://example.invalid/3",
+            "https://example.invalid/4",
+            "https://example.invalid/5",
+            "https://example.invalid/6"
+          ],
+          "resolution": "720p",
+          "seconds": "10",
+          "aspect_ratio": "16:9"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "multi-image submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "reference_images": [
+              "https://example.invalid/0",
+              "https://example.invalid/1",
+              "https://example.invalid/2",
+              "https://example.invalid/3",
+              "https://example.invalid/4",
+              "https://example.invalid/5",
+              "https://example.invalid/6"
+            ],
+            "resolution": "720p",
+            "seconds": 10
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-1.5-preview",
+          "prompt": "  test prompt  ",
+          "reference_images": [
+            "https://example.invalid/0",
+            "https://example.invalid/1",
+            "https://example.invalid/2",
+            "https://example.invalid/3",
+            "https://example.invalid/4",
+            "https://example.invalid/5",
+            "https://example.invalid/6"
+          ],
+          "resolution": "720p",
+          "seconds": "10",
+          "aspect_ratio": "16:9"
+        }
+      }
+    },
+    {
+      "name": "multi-image billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "model": "grok-imagine-video-1.5-preview",
+            "prompt": "  test prompt  ",
+            "reference_images": [
+              "https://example.invalid/0",
+              "https://example.invalid/1",
+              "https://example.invalid/2",
+              "https://example.invalid/3",
+              "https://example.invalid/4",
+              "https://example.invalid/5",
+              "https://example.invalid/6"
+            ],
+            "resolution": "720p",
+            "seconds": 10
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 10,
+        "resolution": "720p"
+      }
+    },
+    {
+      "name": "square alias decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "size": "square",
+              "image_url": "data:image/png;base64,AA=="
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "1:1",
+          "image": "data:image/png;base64,AA=="
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "square alias submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "size": "square",
+            "image_url": "data:image/png;base64,AA=="
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "1:1",
+          "image": "data:image/png;base64,AA=="
+        }
+      }
+    },
+    {
+      "name": "square alias billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "size": "square",
+            "image_url": "data:image/png;base64,AA=="
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "fixed defaults decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-6s",
+              "prompt": "  test prompt  "
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-6s",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-6s",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "size": "720x1280"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "fixed defaults submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "requestBody": {
+            "model": "grok-imagine-video-6s",
+            "prompt": "  test prompt  "
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-6s",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "9:16",
+          "size": "720x1280"
+        }
+      }
+    },
+    {
+      "name": "fixed defaults billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "requestBody": {
+            "model": "grok-imagine-video-6s",
+            "prompt": "  test prompt  "
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "fixed ignores duration resolution decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-6s",
+              "prompt": "  test prompt  ",
+              "seconds": 999,
+              "resolution": "4k",
+              "size": "1280x720",
+              "requests": 999,
+              "image": "https://example.invalid/a"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-6s",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-6s",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9",
+          "size": "1280x720",
+          "requests": 999,
+          "image_url": "https://example.invalid/a"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "fixed ignores duration resolution submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "requestBody": {
+            "model": "grok-imagine-video-6s",
+            "prompt": "  test prompt  ",
+            "seconds": 999,
+            "resolution": "4k",
+            "size": "1280x720",
+            "requests": 999,
+            "image": "https://example.invalid/a"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-6s",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9",
+          "size": "1280x720",
+          "requests": 999,
+          "image_url": "https://example.invalid/a"
+        }
+      }
+    },
+    {
+      "name": "fixed ignores duration resolution billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "requestBody": {
+            "model": "grok-imagine-video-6s",
+            "prompt": "  test prompt  ",
+            "seconds": 999,
+            "resolution": "4k",
+            "size": "1280x720",
+            "requests": 999,
+            "image": "https://example.invalid/a"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "fixed multi decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video-6s",
+              "prompt": "  test prompt  ",
+              "images": [
+                "a",
+                "b"
+              ],
+              "aspect_ratio": "1:1"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video-6s",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video-6s",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "1:1",
+          "size": "960x960",
+          "reference_images": [
+            "a",
+            "b"
+          ]
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "fixed multi submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "requestBody": {
+            "model": "grok-imagine-video-6s",
+            "prompt": "  test prompt  ",
+            "images": [
+              "a",
+              "b"
+            ],
+            "aspect_ratio": "1:1"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video-6s",
+          "prompt": "  test prompt  ",
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "1:1",
+          "size": "960x960",
+          "reference_images": [
+            "a",
+            "b"
+          ]
+        }
+      }
+    },
+    {
+      "name": "fixed multi billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video-6s",
+          "requestBody": {
+            "model": "grok-imagine-video-6s",
+            "prompt": "  test prompt  ",
+            "images": [
+              "a",
+              "b"
+            ],
+            "aspect_ratio": "1:1"
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "extensions decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "grok-imagine-video",
+              "prompt": "  test prompt  ",
+              "metadata": {
+                "custom": 1
+              },
+              "requests": 999,
+              "seconds": 6
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "grok-imagine-video",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "metadata": {
+            "custom": 1
+          },
+          "requests": 999,
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "extensions submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "metadata": {
+              "custom": 1
+            },
+            "requests": 999,
+            "seconds": 6
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "grok-imagine-video",
+          "prompt": "  test prompt  ",
+          "metadata": {
+            "custom": 1
+          },
+          "requests": 999,
+          "seconds": "6",
+          "resolution": "480p",
+          "aspect_ratio": "16:9"
+        }
+      }
+    },
+    {
+      "name": "extensions billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "model": "grok-imagine-video",
+            "prompt": "  test prompt  ",
+            "metadata": {
+              "custom": 1
+            },
+            "requests": 999,
+            "seconds": 6
+          },
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "seconds": 6,
+        "resolution": "480p"
+      }
+    },
+    {
+      "name": "invalid seconds 0",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": 0
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "invalid seconds 16",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": 16
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "invalid seconds 4.5",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": 4.5
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "invalid seconds ",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": ""
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "invalid seconds None",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": null
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "invalid seconds True",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": true
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "invalid seconds 6.0",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": "6.0"
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "invalid seconds abc",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "seconds": "abc"
+          }
+        }
+      ],
+      "expectedError": "seconds"
+    },
+    {
+      "name": "unsupported resolution",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "resolution": "1080p"
+          }
+        }
+      ],
+      "expectedError": "resolution"
+    },
+    {
+      "name": "bad resolution",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "resolution": "4k"
+          }
+        }
+      ],
+      "expectedError": "resolution"
+    },
+    {
+      "name": "null resolution",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "resolution": null
+          }
+        }
+      ],
+      "expectedError": "resolution"
+    },
+    {
+      "name": "bad aspect",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "aspect_ratio": "3:4"
+          }
+        }
+      ],
+      "expectedError": "aspect_ratio"
+    },
+    {
+      "name": "conflicting aspect",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "aspect_ratio": "16:9",
+            "size": "720x1280"
+          }
+        }
+      ],
+      "expectedError": "conflicts"
+    },
+    {
+      "name": "bad size",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "size": "0x720"
+          }
+        }
+      ],
+      "expectedError": "size"
+    },
+    {
+      "name": "too many images",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "reference_images": [
+              "a",
+              "a",
+              "a",
+              "a",
+              "a",
+              "a",
+              "a",
+              "a"
+            ]
+          }
+        }
+      ],
+      "expectedError": "at most 7"
+    },
+    {
+      "name": "1080p multiple",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "resolution": "1080p",
+            "reference_images": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ],
+      "expectedError": "single reference"
+    },
+    {
+      "name": "1.0 multiple",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": "x",
+            "reference_images": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ],
+      "expectedError": "single reference"
+    },
+    {
+      "name": "image fields conflict",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "image": "a",
+            "reference_images": [
+              "b"
+            ]
+          }
+        }
+      ],
+      "expectedError": "only one"
+    },
+    {
+      "name": "empty image",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "image": " "
+          }
+        }
+      ],
+      "expectedError": "non-empty"
+    },
+    {
+      "name": "images type",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video-1.5-preview",
+          "requestBody": {
+            "prompt": "x",
+            "images": "a"
+          }
+        }
+      ],
+      "expectedError": "array"
+    },
+    {
+      "name": "empty prompt",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "requestBody": {
+            "prompt": " "
+          }
+        }
+      ],
+      "expectedError": "prompt"
+    },
+    {
+      "name": "unknown model",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "model": "other",
+          "requestBody": {
+            "prompt": "x"
+          }
+        }
+      ],
+      "expectedError": "unsupported"
+    },
+    {
+      "name": "no multipart",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "grok-imagine-video",
+          "body": {
+            "kind": "multipart"
+          }
+        }
+      ],
+      "expectedError": "JSON",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "no files",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "files": [
+            {}
+          ]
+        }
+      ],
+      "expectedError": "file uploads"
+    },
+    {
+      "name": "submit response",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {},
+        {
+          "body": {
+            "task_id": "upstream-1",
+            "status": "queued"
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "upstream-1",
+        "taskData": {
+          "task_id": "upstream-1",
+          "status": "queued"
+        }
+      }
+    },
+    {
+      "name": "missing id",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {},
+        {
+          "body": {}
+        }
+      ],
+      "expectedError": "task id"
+    },
+    {
+      "name": "query escaped",
+      "hook": "buildQueryRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid",
+          "taskId": "a/b",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos/a%2Fb",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer fixture-key"
+        }
+      }
+    },
+    {
+      "name": "queued",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "queued",
+          "progress": 100
+        }
+      ],
+      "expected": {
+        "status": "QUEUED",
+        "progress": "99%"
+      }
+    },
+    {
+      "name": "processing",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "processing",
+          "progress": 100
+        }
+      ],
+      "expected": {
+        "status": "IN_PROGRESS",
+        "progress": "99%"
+      }
+    },
+    {
+      "name": "in_progress",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "in_progress",
+          "progress": 100
+        }
+      ],
+      "expected": {
+        "status": "IN_PROGRESS",
+        "progress": "99%"
+      }
+    },
+    {
+      "name": "failure",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "failed",
+          "error": {
+            "message": "blocked"
+          }
+        }
+      ],
+      "expected": {
+        "status": "FAILURE",
+        "reason": "blocked"
+      }
+    },
+    {
+      "name": "completed",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed",
+          "video_url": "https://example.invalid/video"
+        }
+      ],
+      "expected": {
+        "status": "SUCCESS",
+        "progress": "100%",
+        "url": "https://example.invalid/video",
+        "remoteUrl": "https://example.invalid/video"
+      }
+    },
+    {
+      "name": "incomplete result",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed"
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "completed response is missing a video URL"
+      }
+    },
+    {
+      "name": "untrusted completion usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "seconds": 999,
+          "requests": 999,
+          "resolution": "4k"
+        }
+      ],
+      "expected": {}
+    },
+    {
+      "name": "credentialless GET",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "video_url": "https://example.invalid/video"
+          },
+          "clientRequest": {
+            "method": "GET"
+          },
+          "apiKey": "secret"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/video",
+        "method": "GET",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "credentialless HEAD",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "video_url": "https://example.invalid/video"
+          },
+          "clientRequest": {
+            "method": "HEAD"
+          },
+          "apiKey": "secret"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/video",
+        "method": "HEAD",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "no early content",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "IN_PROGRESS"
+        }
+      ],
+      "expectedError": "artifact_not_found"
+    }
+  ]
+}

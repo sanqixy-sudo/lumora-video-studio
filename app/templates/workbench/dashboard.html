@@ -4,7 +4,9 @@
 {% block top_actions %}{% endblock %}
 {% block content %}
 <div class="wb-creator">
-<form action="/app/jobs/batch/form" method="post" enctype="multipart/form-data" id="create-job-form" data-generation-defaults='{{ creation_defaults|default({})|tojson }}' data-history-scope="{{ current_user.id }}" data-async-formdata="/app/jobs/batch" data-available-quota="{{ quota_stats.total_available }}" class="wb-creation-form">
+<form action="/app/jobs/batch/form" method="post" enctype="multipart/form-data" id="create-job-form" data-generation-defaults='{{ creation_defaults|default({})|tojson }}' data-recreate-seed='{{ recreate_seed|default(none)|tojson }}' data-history-scope="{{ current_user.id }}" data-async-formdata="/app/jobs/batch" data-available-quota="{{ quota_stats.total_available }}" class="wb-creation-form">
+<div class="wb-draft-notice" id="creation-draft-notice" hidden role="status"><span id="creation-draft-message"></span><div class="inline-actions"><button type="button" class="secondary-btn small-btn" id="creation-draft-restore">恢复草稿</button><button type="button" class="ghost-btn small-btn" id="creation-draft-dismiss">丢弃草稿</button></div></div>
+<div class="wb-recreate-notice" id="creation-recreate-notice" hidden role="status"></div>
 <input type="hidden" name="batch_request_id" value="{{ new_request_id }}">
 <div class="glass-workbench"><section class="wb-settings" aria-label="共享生成设置">
  <ol class="wb-create-guide" aria-label="创作准备">
@@ -72,3 +74,4 @@
   <div class="inline-actions"><button type="button" class="ghost-btn" id="batch-prefix-cancel">取消</button><button type="button" class="primary-btn" id="batch-prefix-apply">确认添加</button></div>
 </dialog>
 {% endblock %}
+{% block scripts %}<script src="/static/workbench/creation-draft.js?v=20261021-2"></script>{% endblock %}

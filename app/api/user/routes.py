@@ -35,6 +35,8 @@ from app.services.jobs import (
     can_resume,
     create_jobs_batch_and_reserve,
     get_output_file,
+    get_reference_urls,
+    get_reference_video_url,
     normalize_prompt_list,
     queue_text,
     serialize_event,
@@ -586,6 +588,7 @@ def _apply_reference_preset_values(row: ReferenceImagePreset, name: str, image_u
 @router.get("", response_class=HTMLResponse)
 def app_dashboard_page(
     request: Request,
+    from_job: int | None = Query(default=None, ge=1),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -598,6 +601,34 @@ def app_dashboard_page(
     choices = _model_options(db)
     creation_defaults = get_creation_defaults(db, choices)
     default_model_choice = creation_defaults["default_model_choice"]
+    recreate_seed = None
+    if from_job is not None:
+        source = db.query(Job).filter(Job.id == from_job, Job.user_id == current_user.id).first()
+        if source is None:
+            raise HTTPException(status_code=404, detail="Job not found")
+        model_option = next((option for option in choices
+                             if option["provider_key_id"] == source.provider_key_id
+                             and option["model_id"] == source.model
+                             and source.seconds in option["capabilities"]["seconds"]
+                             and (option["seconds"] == source.seconds or option["provider_name"] == "oaire_grok")), None)
+        image_urls = get_reference_urls(db, source.id)
+        preset_by_url = {preset.image_url: preset.id for preset in reference_presets}
+        recreate_seed = {
+            "source_job_id": source.id,
+            "model_choice": model_option["value"] if model_option else "",
+            "model_unavailable": model_option is None,
+            "product_name": source.product_name or "",
+            "region_name": source.region_name or "",
+            "resolution": source.resolution or "",
+            "aspect_ratio": source.aspect_ratio or "",
+            "seconds": source.seconds,
+            "prompts": [source.prompt],
+            "reference_preset_id": preset_by_url.get(image_urls[0]) if len(image_urls) == 1 else None,
+            "image_urls": image_urls,
+            "video_url": get_reference_video_url(db, source.id) or "",
+            "local_reference_unavailable": db.query(JobFile.id).filter(
+                JobFile.job_id == source.id, JobFile.file_type == "reference_image").first() is not None,
+        }
     return render(
         request,
         "app/dashboard.html",
@@ -611,6 +642,7 @@ def app_dashboard_page(
         model_options=choices,
         default_model_choice=default_model_choice,
         creation_defaults=creation_defaults,
+        recreate_seed=recreate_seed,
         reference_presets=reference_presets,
         new_request_id=str(uuid4()),
     )

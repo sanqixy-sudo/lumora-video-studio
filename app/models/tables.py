@@ -140,6 +140,48 @@ class Job(Base):
     private_protected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class JobCost(Base):
+    """New API settlement snapshot; source IDs survive job and user deletion."""
+
+    __tablename__ = 'job_costs'
+    id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer, 'sqlite'), primary_key=True)
+    source_job_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    source_user_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    username: Mapped[str] = mapped_column(String(64))
+    provider_key_id: Mapped[int] = mapped_column(BigInteger)
+    api_base_url: Mapped[str] = mapped_column(Text)
+    provider_name: Mapped[str] = mapped_column(String(32))
+    remote_task_id: Mapped[str] = mapped_column(String(128), index=True)
+    model: Mapped[str] = mapped_column(String(128))
+    seconds: Mapped[int] = mapped_column(Integer)
+    resolution: Mapped[str | None] = mapped_column(String(16))
+    state: Mapped[str] = mapped_column(String(24), default='pending', index=True)
+    quota_per_unit: Mapped[int | None] = mapped_column(BigInteger)
+    net_quota: Mapped[int | None] = mapped_column(BigInteger)
+    amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    currency: Mapped[str | None] = mapped_column(String(8))
+    usage_date: Mapped[date | None] = mapped_column(Date, index=True)
+    upstream_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    source_logs: Mapped[list | None] = mapped_column(JSON().with_variant(JSONB, 'postgresql'))
+    last_error: Mapped[str | None] = mapped_column(Text)
+    checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_check_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class JobCostRevision(Base):
+    __tablename__ = 'job_cost_revisions'
+    id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer, 'sqlite'), primary_key=True)
+    source_job_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    previous_quota: Mapped[int | None] = mapped_column(BigInteger)
+    new_quota: Mapped[int] = mapped_column(BigInteger)
+    previous_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    new_amount: Mapped[Decimal] = mapped_column(Numeric(18, 6))
+    source_logs: Mapped[list] = mapped_column(JSON().with_variant(JSONB, 'postgresql'))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class QuotaLedger(Base):
     __tablename__ = 'quota_ledger'
     __table_args__ = (
@@ -251,7 +293,7 @@ class JobEvent(Base):
     level: Mapped[str] = mapped_column(String(16), default='info')
     event_type: Mapped[str] = mapped_column(String(64))
     message: Mapped[str] = mapped_column(Text)
-    payload_json: Mapped[dict | None] = mapped_column(JSONB)
+    payload_json: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, 'postgresql'))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -300,7 +342,7 @@ class AppSetting(Base):
 class RiskControlRule(Base):
     __tablename__ = 'risk_control_rules'
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    keywords: Mapped[list] = mapped_column(JSONB)
+    keywords: Mapped[list] = mapped_column(JSON().with_variant(JSONB, 'postgresql'))
     error_message: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(16), default='active', index=True)
     operator_user_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('users.id', ondelete='SET NULL'))
@@ -315,5 +357,5 @@ class AuditLog(Base):
     action: Mapped[str] = mapped_column(String(64))
     target_type: Mapped[str] = mapped_column(String(32))
     target_id: Mapped[int | None] = mapped_column(BigInteger)
-    detail_json: Mapped[dict | None] = mapped_column(JSONB)
+    detail_json: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, 'postgresql'))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

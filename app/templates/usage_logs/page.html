@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}使用日志{% endblock %}
+{% block body_class %}usage-logs-page{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/workbench/usage-logs.css?v=20261021-1">{% endblock %}
+{% block content %}
+<section class="wb-page-heading usage-logs-heading">
+  <div><h1>使用日志</h1><p>查看每天花了多少，再核对每条任务的提示词、视频和实际费用。</p></div>
+</section>
+
+<section class="usage-logs-panel" aria-label="任务计费记录">
+  <nav class="usage-logs-presets" aria-label="常用时间范围">
+    {% for period in periods %}<a class="usage-period {% if active_period == period.key %}is-active{% endif %}" href="{{ request.url.include_query_params(start=period.start, end=period.end, page=1) }}" {% if active_period == period.key %}aria-current="page"{% endif %}>{{ period.label }}</a>{% endfor %}
+  </nav>
+  <details class="usage-logs-advanced" {% if user_query or task_query or not active_period %}open{% endif %}>
+    <summary>精确筛选 <span>{{ '已按用户或任务筛选' if user_query or task_query else '时间、用户、任务 ID' }}</span></summary>
+  <form class="usage-logs-filters" method="get" action="/usage-logs/page">
+    <label>开始时间<input type="datetime-local" name="start" value="{{ start }}" required></label>
+    <label>结束时间<input type="datetime-local" name="end" value="{{ end }}" required></label>
+    {% if can_filter_user %}<label class="usage-logs-user-filter">用户<input type="search" name="user" value="{{ user_query }}" placeholder="全部用户 · 账号或 ID" autocomplete="off"></label>{% endif %}
+    <label class="usage-logs-task-filter">找任务<input type="search" name="task" value="{{ task_query }}" placeholder="任务 ID / 计费请求 ID" autocomplete="off"></label>
+    <button class="primary-btn small-btn" type="submit">筛选日志</button>
+    <a class="ghost-btn small-btn" href="/usage-logs/page">重置</a>
+  </form>
+  </details>
+
+  <div class="usage-logs-summary" aria-label="当前筛选范围统计">
+    <div><span>已结算成本</span><strong>${{ total_amount }} <small>USD</small></strong></div>
+    <div><span>成功计费</span><strong>{{ settled_count }} <small>条</small></strong></div>
+    <div><span>生成中</span><strong>{{ generating_count }} <small>条</small></strong></div>
+    <div><span>成功待核对</span><strong>{{ success_pending_count }} <small>条</small></strong></div>
+    <p>失败任务不计入成本；未结算任务不按当前价格估算。</p>
+  </div>
+
+  {% if daily_rows %}
+  <details class="usage-logs-daily">
+    <summary>每日成本 <span>按成功任务完成日期 · 最近 {{ daily_rows|length }} 个有结算记录的日期</span></summary>
+    <div class="usage-logs-daily-list">
+      {% for day in daily_rows %}
+      <a href="{{ request.url.include_query_params(start=day.date ~ 'T00:00', end=day.date ~ 'T23:59', page=1) }}"><time datetime="{{ day.date }}">{{ day.date }}</time><strong>${{ day.amount }}</strong><small>{{ day.count }} 条</small></a>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  <div class="usage-logs-table-head"><strong>任务记录</strong><span>{{ total_count }} 条 · 第 {{ page }} / {{ total_pages }} 页</span></div>
+  <div class="table-wrap surface-table usage-logs-table-wrap">
+    <table class="table clean-table usage-logs-table">
+      <caption class="wb-sr-only">按任务列出时间、提示词摘要、模型和实际费用</caption>
+      <thead><tr><th scope="col">时间</th>{% if can_filter_user %}<th scope="col">用户</th>{% endif %}<th scope="col">任务与提示词</th><th scope="col">模型 / 规格</th><th scope="col">计费状态</th><th scope="col">费用 · USD</th></tr></thead>
+      <tbody>
+        {% for cost in costs %}
+        <tr>
+          <td><time datetime="{{ cost.upstream_completed_at.isoformat() if cost.upstream_completed_at else cost.created_at.isoformat() }}">{{ (cost.upstream_completed_at or cost.created_at)|dt }}</time></td>
+          {% if can_filter_user %}<td><strong>{{ cost.username }}</strong><small>ID {{ cost.source_user_id }}</small></td>{% endif %}
+          <td><button class="usage-task-open" type="button" data-usage-detail="{{ cost.source_job_id }}" aria-label="查看任务 {{ cost.source_job_id }} 的计费详情"><strong>#{{ cost.source_job_id }}</strong><small>{{ (prompt_by_job[cost.source_job_id]|replace('\n', ' ')|truncate(90, True, '…')) if cost.source_job_id in prompt_by_job else '原任务已删除' }}</small></button></td>
+          <td><strong>{{ cost.model }}</strong><small>{{ cost.seconds }} 秒{% if cost.resolution %} · {{ cost.resolution }}{% endif %}</small></td>
+          <td>{% set state = display_states[cost.source_job_id] %}{% if state == 'settled' %}<span class="usage-cost-status is-settled">已结算</span>{% elif state == 'excluded' %}<span class="usage-cost-status is-excluded">失败不计入</span>{% elif state == 'success_pending' %}<span class="usage-cost-status is-pending">成功待核对</span>{% elif state == 'failed_pending' %}<span class="usage-cost-status is-excluded">失败待排除</span>{% else %}<span class="usage-cost-status is-generating">生成中</span>{% endif %}</td>
+          <td class="usage-cost-number">{{ '$' ~ money(cost.amount) if cost.state == 'settled' else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="usage-logs-empty" colspan="{{ 6 if can_filter_user else 5 }}"><strong>这段时间没有计费记录</strong><p>可以切换常用时间范围，或调整筛选条件。</p></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if total_pages > 1 %}
+  <nav class="usage-logs-pagination" aria-label="使用日志分页">
+    {% if page > 1 %}<a class="ghost-btn small-btn" href="{{ request.url.include_query_params(page=page-1) }}">上一页</a>{% endif %}
+    <span>{{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}<a class="ghost-btn small-btn" href="{{ request.url.include_query_params(page=page+1) }}">下一页</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+
+<dialog class="usage-detail-dialog" data-usage-dialog aria-labelledby="usage-detail-title">
+  <div class="usage-detail-shell">
+    <div class="usage-detail-header"><div><span>任务计费</span><h2 id="usage-detail-title">日志详情</h2></div><button class="ghost-btn small-btn" type="button" data-close-usage-detail aria-label="关闭日志详情">关闭</button></div>
+    <div data-usage-detail-content class="usage-detail-loading" aria-live="polite"></div>
+  </div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script defer src="/static/workbench/usage-logs.js?v=20261021-1"></script>{% endblock %}

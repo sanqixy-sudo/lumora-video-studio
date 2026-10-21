@@ -880,7 +880,7 @@ function initCreateJobForm() {
     scheduleGrokCheck();
   }
 
-  function addOmniImageRow() {
+  function addOmniImageRow(focus = true) {
     const maximum = omniMaxImages();
     const rows = omniImageUrlList?.querySelectorAll(".omni-image-url-row").length || 0;
     if (!omniImageUrlList || rows >= maximum) return;
@@ -898,9 +898,10 @@ function initCreateJobForm() {
     remove.textContent = "移除";
     row.append(input, remove);
     omniImageUrlList.append(row);
-    input.focus();
+    if (focus) input.focus();
     refreshOmniCount();
   }
+  form.addEventListener('lumora:add-omni-image-row', () => addOmniImageRow(false));
 
   function validateOmniMaterials() {
     const provider = selectedProvider();
@@ -1022,6 +1023,13 @@ function initCreateJobForm() {
     refreshPromptNumbers();
     if (focus) card.querySelector("textarea")?.focus();
   }
+
+  form.addEventListener('lumora:restore-prompts', event => {
+    const values = Array.isArray(event.detail?.prompts) ? event.detail.prompts.slice(0, 100) : [];
+    promptList.replaceChildren();
+    (values.length ? values : ['']).forEach(value => addPrompt(String(value), false));
+    refreshPromptNumbers();
+  });
 
   function splitImportedPrompts(text) {
     return String(text || "")

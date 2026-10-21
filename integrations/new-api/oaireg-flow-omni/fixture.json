@@ -1,0 +1,1750 @@
+{
+  "cases": [
+    {
+      "name": "text-default decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  "
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  "
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "text-default submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  "
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  "
+        }
+      }
+    },
+    {
+      "name": "text-default billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  "
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "portrait decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "aspect_ratio": "9:16",
+              "resolution": "720p"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "aspect_ratio": "9:16",
+          "resolution": "720p"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "portrait submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "aspect_ratio": "9:16",
+            "resolution": "720p"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "aspect_ratio": "9:16",
+          "resolution": "720p"
+        }
+      }
+    },
+    {
+      "name": "portrait billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "aspect_ratio": "9:16",
+            "resolution": "720p"
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "landscape decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "aspect_ratio": "16:9",
+              "images": [
+                "https://img.invalid/a",
+                "https://img.invalid/b"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "aspect_ratio": "16:9",
+          "images": [
+            "https://img.invalid/a",
+            "https://img.invalid/b"
+          ]
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "landscape submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "aspect_ratio": "16:9",
+            "images": [
+              "https://img.invalid/a",
+              "https://img.invalid/b"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "aspect_ratio": "16:9",
+          "images": [
+            "https://img.invalid/a",
+            "https://img.invalid/b"
+          ]
+        }
+      }
+    },
+    {
+      "name": "landscape billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "aspect_ratio": "16:9",
+            "images": [
+              "https://img.invalid/a",
+              "https://img.invalid/b"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "image-to-video"
+      }
+    },
+    {
+      "name": "six-images decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "images": [
+                "data:image/png;base64,YQ==",
+                "data:image/png;base64,YQ==",
+                "data:image/png;base64,YQ==",
+                "data:image/png;base64,YQ==",
+                "data:image/png;base64,YQ==",
+                "data:image/png;base64,YQ=="
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "images": [
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ=="
+          ]
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "six-images submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "images": [
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ=="
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "images": [
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ==",
+            "data:image/png;base64,YQ=="
+          ]
+        }
+      }
+    },
+    {
+      "name": "six-images billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "images": [
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ==",
+              "data:image/png;base64,YQ=="
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "image-to-video"
+      }
+    },
+    {
+      "name": "more-than-recommendation decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "images": [
+                "x",
+                "x",
+                "x",
+                "x",
+                "x",
+                "x",
+                "x"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "images": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ]
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "more-than-recommendation submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "images": [
+              "x",
+              "x",
+              "x",
+              "x",
+              "x",
+              "x",
+              "x"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "images": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ]
+        }
+      }
+    },
+    {
+      "name": "more-than-recommendation billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "images": [
+              "x",
+              "x",
+              "x",
+              "x",
+              "x",
+              "x",
+              "x"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "image-to-video"
+      }
+    },
+    {
+      "name": "single-image decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "image": "https://img.invalid/a"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "image": "https://img.invalid/a"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "single-image submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "image": "https://img.invalid/a"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "image": "https://img.invalid/a"
+        }
+      }
+    },
+    {
+      "name": "single-image billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "image": "https://img.invalid/a"
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "image-to-video"
+      }
+    },
+    {
+      "name": "video decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "input_reference": "https://video.invalid/ref.mp4",
+              "aspect_ratio": "9:16"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "video_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "input_reference": "https://video.invalid/ref.mp4",
+          "aspect_ratio": "9:16"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "video submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "input_reference": "https://video.invalid/ref.mp4",
+            "aspect_ratio": "9:16"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "input_reference": "https://video.invalid/ref.mp4",
+          "aspect_ratio": "9:16"
+        }
+      }
+    },
+    {
+      "name": "video billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "input_reference": "https://video.invalid/ref.mp4",
+            "aspect_ratio": "9:16"
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "video-to-video"
+      }
+    },
+    {
+      "name": "mixed decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "input_reference": "data:video/mp4;base64,YQ==",
+              "images": [
+                "https://img.invalid/a"
+              ],
+              "resolution": "720p"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "video_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "input_reference": "data:video/mp4;base64,YQ==",
+          "images": [
+            "https://img.invalid/a"
+          ],
+          "resolution": "720p"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "mixed submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "input_reference": "data:video/mp4;base64,YQ==",
+            "images": [
+              "https://img.invalid/a"
+            ],
+            "resolution": "720p"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "input_reference": "data:video/mp4;base64,YQ==",
+          "images": [
+            "https://img.invalid/a"
+          ],
+          "resolution": "720p"
+        }
+      }
+    },
+    {
+      "name": "mixed billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "input_reference": "data:video/mp4;base64,YQ==",
+            "images": [
+              "https://img.invalid/a"
+            ],
+            "resolution": "720p"
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "video-to-video"
+      }
+    },
+    {
+      "name": "size-precedence decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "size": "1080x1920",
+              "aspect_ratio": "16:9"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "size": "1080x1920",
+          "aspect_ratio": "16:9"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "size-precedence submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "size": "1080x1920",
+            "aspect_ratio": "16:9"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "size": "1080x1920",
+          "aspect_ratio": "16:9"
+        }
+      }
+    },
+    {
+      "name": "size-precedence billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "size": "1080x1920",
+            "aspect_ratio": "16:9"
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "extensions decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "  测试提示词  ",
+              "metadata": {
+                "nested": [
+                  1,
+                  2
+                ]
+              },
+              "future_option": false
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "flow-omni-1.1-flash",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "metadata": {
+            "nested": [
+              1,
+              2
+            ]
+          },
+          "future_option": false
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "extensions submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "flow-omni-1.1-flash",
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "metadata": {
+              "nested": [
+                1,
+                2
+              ]
+            },
+            "future_option": false
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "flow-omni-1.1-flash",
+          "prompt": "  测试提示词  ",
+          "metadata": {
+            "nested": [
+              1,
+              2
+            ]
+          },
+          "future_option": false
+        }
+      }
+    },
+    {
+      "name": "extensions billing",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "flow-omni-1.1-flash",
+            "prompt": "  测试提示词  ",
+            "metadata": {
+              "nested": [
+                1,
+                2
+              ]
+            },
+            "future_option": false
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "wrong-model",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast",
+              "prompt": "test"
+            }
+          }
+        }
+      ],
+      "expectedError": "unsupported",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "blank-prompt",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": " "
+            }
+          }
+        }
+      ],
+      "expectedError": "prompt",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "bad-ratio",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "aspect_ratio": "1:1"
+            }
+          }
+        }
+      ],
+      "expectedError": "aspect_ratio",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "bad-resolution",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "resolution": "1080p"
+            }
+          }
+        }
+      ],
+      "expectedError": "resolution",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "bad-size",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "size": "0x720"
+            }
+          }
+        }
+      ],
+      "expectedError": "size",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "array-as-string",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "images": "a"
+            }
+          }
+        }
+      ],
+      "expectedError": "images",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "invalid-image-member",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "images": [
+                null
+              ]
+            }
+          }
+        }
+      ],
+      "expectedError": "images",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "blank-reference",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "input_reference": ""
+            }
+          }
+        }
+      ],
+      "expectedError": "input_reference",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "wrong-image-field",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "image_url": "a"
+            }
+          }
+        }
+      ],
+      "expectedError": "Flow uses image",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "array-video",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "flow-omni-1.1-flash",
+              "prompt": "test",
+              "input_reference": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        }
+      ],
+      "expectedError": "input_reference",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "multipart unsupported",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "flow-omni-1.1-flash",
+          "body": {
+            "kind": "multipart"
+          }
+        }
+      ],
+      "expectedError": "JSON body required",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "submit task_id",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {},
+        {
+          "body": {
+            "task_id": "task_fixture",
+            "status": "queued"
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "task_fixture",
+        "taskData": {
+          "task_id": "task_fixture",
+          "status": "queued"
+        }
+      }
+    },
+    {
+      "name": "submit missing id",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {},
+        {
+          "body": {}
+        }
+      ],
+      "expectedError": "task id"
+    },
+    {
+      "name": "query encoded id",
+      "hook": "buildQueryRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid",
+          "taskId": "task/a",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos/task%2Fa",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer fixture-key"
+        }
+      }
+    },
+    {
+      "name": "running-at-100",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "in_progress",
+          "progress": 100,
+          "video_url": "https://img.invalid/preview"
+        }
+      ],
+      "expected": {
+        "status": "IN_PROGRESS",
+        "progress": "99%"
+      }
+    },
+    {
+      "name": "queued",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "queued",
+          "progress": 0
+        }
+      ],
+      "expected": {
+        "status": "QUEUED"
+      }
+    },
+    {
+      "name": "unknown",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "new_state"
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "unrecognized status: new_state"
+      }
+    },
+    {
+      "name": "error-object",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "failed",
+          "error": {
+            "message": "blocked"
+          }
+        }
+      ],
+      "expected": {
+        "status": "FAILURE",
+        "reason": "blocked"
+      }
+    },
+    {
+      "name": "error-string",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "failed",
+          "error": "blocked"
+        }
+      ],
+      "expected": {
+        "status": "FAILURE",
+        "reason": "blocked"
+      }
+    },
+    {
+      "name": "no-output",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed",
+          "images": [
+            "https://img.invalid/a"
+          ]
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "completed response is missing a video URL"
+      }
+    },
+    {
+      "name": "reject-non-http",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed",
+          "video_url": "file:///etc/passwd"
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "completed response is missing a video URL"
+      }
+    },
+    {
+      "name": "top-level completed",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed",
+          "video_url": "https://cdn.example.invalid/output.mp4",
+          "data": [
+            {
+              "url": "https://cdn.invalid/other"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "status": "SUCCESS",
+        "progress": "100%",
+        "url": "https://cdn.example.invalid/output.mp4",
+        "remoteUrl": "https://cdn.example.invalid/output.mp4"
+      }
+    },
+    {
+      "name": "top-level artifacts",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "video_url": "https://cdn.example.invalid/output.mp4",
+            "data": [
+              {
+                "url": "https://cdn.invalid/other"
+              }
+            ]
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": "video",
+          "type": "video"
+        }
+      ]
+    },
+    {
+      "name": "top-level download",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "video_url": "https://cdn.example.invalid/output.mp4",
+            "data": [
+              {
+                "url": "https://cdn.invalid/other"
+              }
+            ]
+          },
+          "apiKey": "MUST-NOT-LEAK",
+          "clientRequest": {
+            "method": "GET"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://cdn.example.invalid/output.mp4",
+        "method": "GET",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "data-array completed",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed",
+          "data": [
+            {
+              "url": "https://cdn.example.invalid/output.mp4"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "status": "SUCCESS",
+        "progress": "100%",
+        "url": "https://cdn.example.invalid/output.mp4",
+        "remoteUrl": "https://cdn.example.invalid/output.mp4"
+      }
+    },
+    {
+      "name": "data-array artifacts",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "data": [
+              {
+                "url": "https://cdn.example.invalid/output.mp4"
+              }
+            ]
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": "video",
+          "type": "video"
+        }
+      ]
+    },
+    {
+      "name": "data-array download",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "data": [
+              {
+                "url": "https://cdn.example.invalid/output.mp4"
+              }
+            ]
+          },
+          "apiKey": "MUST-NOT-LEAK",
+          "clientRequest": {
+            "method": "GET"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://cdn.example.invalid/output.mp4",
+        "method": "GET",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "metadata completed",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed",
+          "metadata": {
+            "url": "https://cdn.example.invalid/output.mp4"
+          }
+        }
+      ],
+      "expected": {
+        "status": "SUCCESS",
+        "progress": "100%",
+        "url": "https://cdn.example.invalid/output.mp4",
+        "remoteUrl": "https://cdn.example.invalid/output.mp4"
+      }
+    },
+    {
+      "name": "metadata artifacts",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "metadata": {
+              "url": "https://cdn.example.invalid/output.mp4"
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": "video",
+          "type": "video"
+        }
+      ]
+    },
+    {
+      "name": "metadata download",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "metadata": {
+              "url": "https://cdn.example.invalid/output.mp4"
+            }
+          },
+          "apiKey": "MUST-NOT-LEAK",
+          "clientRequest": {
+            "method": "GET"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://cdn.example.invalid/output.mp4",
+        "method": "GET",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "HEAD download",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "video_url": "https://cdn.example.invalid/output.mp4"
+          },
+          "clientRequest": {
+            "method": "HEAD"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://cdn.example.invalid/output.mp4",
+        "method": "HEAD",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "pending download rejected",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "IN_PROGRESS",
+          "data": {
+            "status": "in_progress",
+            "video_url": "https://cdn.example.invalid/output.mp4"
+          }
+        }
+      ],
+      "expectedError": "artifact_not_found"
+    },
+    {
+      "name": "POST download rejected",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "status": "SUCCESS",
+          "data": {
+            "status": "completed",
+            "video_url": "https://cdn.example.invalid/output.mp4"
+          },
+          "clientRequest": {
+            "method": "POST"
+          }
+        }
+      ],
+      "expectedError": "GET or HEAD"
+    },
+    {
+      "name": "no unfinished artifacts",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "IN_PROGRESS",
+          "data": {
+            "status": "in_progress",
+            "video_url": "https://cdn.example.invalid/output.mp4"
+          }
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "render progress capped",
+      "hook": "protocols",
+      "args": [
+        {},
+        {
+          "data": {
+            "status": "in_progress",
+            "progress": 100,
+            "aspect_ratio": "9:16"
+          }
+        }
+      ],
+      "expected": {
+        "status": "in_progress",
+        "progress": 99,
+        "aspect_ratio": "9:16"
+      },
+      "path": [
+        "openai_video",
+        "render"
+      ]
+    },
+    {
+      "name": "one request regardless of supplied duration None",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024"
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 0",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 0,
+            "duration": 0
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 4",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 4,
+            "duration": 4
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 8",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 8,
+            "duration": 8
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 10",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 10,
+            "duration": 10
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 1000",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 1000,
+            "duration": 1000
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1,
+        "mode": "text-to-video"
+      }
+    },
+    {
+      "name": "completion never uses vendor request count or duration",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {},
+        {
+          "seconds": 120,
+          "duration": 120,
+          "requests": 999
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    }
+  ]
+}

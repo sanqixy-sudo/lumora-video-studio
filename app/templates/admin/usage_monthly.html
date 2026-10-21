@@ -92,6 +92,25 @@
   <div class="usage-legend"><span>每日次数</span><span><i></i>0</span><span><i data-level="1"></i>1–9</span><span><i data-level="2"></i>10–29</span><span><i data-level="3"></i>30+</span>{% if can_manage %}<span><i class="usage-adjusted"></i>已调整</span><span class="usage-reading-note">点击数字修改 · 方向键移动</span>{% endif %}</div>
 </section>
 
+{% if can_manage and cost_report %}
+<section class="usage-report-card">
+  <div class="usage-table-toolbar"><strong>成功生成成本 · USD</strong><span>本月 {{ cost_report.count }} 个成功任务，共 ${{ cost_report.total }}{% if cost_report.pending_count %} · <a href="/admin/costs/pending?month={{ month }}">{{ cost_report.pending_count }} 个待计费任务</a>{% endif %}</span></div>
+  <div class="table-wrap surface-table usage-table-wrap clean-table-wrap" aria-label="用户每日成功生成成本">
+    <table class="table usage-table clean-table">
+      <thead><tr><th scope="col" class="usage-user">用户</th><th scope="col" class="usage-month-total">月成本</th>{% for day in days %}<th scope="col">{{ day }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        <tr class="usage-total-row"><th scope="row" class="usage-user">每日合计</th><td class="usage-month-total"><strong>${{ cost_report.total }}</strong></td>{% for item in cost_report.daily_totals %}<td class="usage-cell"><a href="/admin/costs/day?usage_date={{ item.date }}" title="{{ item.count }} 个成功任务">{{ item.amount }}</a></td>{% endfor %}</tr>
+        {% for row in cost_report.rows %}
+        <tr><th scope="row" class="usage-user"><strong>{{ row.username }}</strong><small>ID {{ row.user_id }}</small></th><td class="usage-month-total"><strong>${{ row.monthly_amount }}</strong></td>{% for item in row.daily %}<td class="usage-cell">{% if item.count %}<a href="/admin/costs/day?usage_date={{ item.date }}&user_id={{ row.user_id }}" title="{{ item.count }} 个成功任务">{{ item.amount }}</a>{% else %}0.00{% endif %}</td>{% endfor %}</tr>
+        {% else %}
+        <tr><td colspan="{{ days|length + 2 }}"><div class="empty-state compact-empty">本月暂无已核对的成功生成费用。</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
 {% if can_manage %}
 <div id="usage-modal" class="modal hidden">
   <div class="modal-card card clean-card">

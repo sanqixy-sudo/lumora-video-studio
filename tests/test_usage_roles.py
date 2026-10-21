@@ -22,8 +22,14 @@ def render_role(role):
     env.filters.update(dt=fixtures.dt, dt_full=fixtures.dt)
     user = SimpleNamespace(**{**vars(fixtures.admin), 'role': role})
     data = build_usage_preview(fixtures.user, '2026-05')
+    cost_report = {
+        'count': 1,
+        'total': '3.90',
+        'daily_totals': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']],
+        'rows': [{'user_id': 2, 'username': 'cost-user', 'monthly_amount': '3.90', 'daily': [{'date': f'2026-05-{day:02d}', 'amount': '3.90' if day == 3 else '0.00', 'count': 1 if day == 3 else 0} for day in data['days']]}],
+    }
     return env.get_template('admin/usage_monthly.html').render(**{
-        **fixtures.common, **data, 'current_user': user, 'can_manage': role == 'admin',
+        **fixtures.common, **data, 'current_user': user, 'can_manage': role == 'admin', 'cost_report': cost_report,
         'request': fixtures.request('/admin/usage/monthly/page'),
     })
 
@@ -36,11 +42,15 @@ class UsageRoleTests(unittest.TestCase):
         self.assertIn('本月使用', html)
         self.assertIn('2026-05', html)
         self.assertIn('导出 XLSX', html)
+        self.assertNotIn('成功生成成本', html)
+        self.assertNotIn('3.90', html)
 
     def test_admin_keeps_adjustments_and_editor(self):
         html = render_role('admin')
         for expected in ['真实', '已修改', '已调整', 'data-real=', 'usage-override', 'usage-edit-btn', 'usage-modal']:
             self.assertIn(expected, html)
+        self.assertIn('成功生成成本', html)
+        self.assertIn('$3.90', html)
 
     def test_subadmin_json_export_and_write_permissions(self):
         app = FastAPI()
@@ -60,6 +70,7 @@ class UsageRoleTests(unittest.TestCase):
             read.assert_called_once_with(None, 2026, 5, True)
             for private in ['monthly_real', 'real_total', 'override_count', 'is_override', 'note']:
                 self.assertNotIn(private, response.text)
+            self.assertNotIn('cost_report', response.text)
             self.assertEqual(response.json()['rows'][0]['daily'][2]['display'], 38)
             export = client.get(prefix+'/usage/monthly/export?month=2026-05')
             self.assertEqual(export.status_code, 200)
@@ -67,9 +78,39 @@ class UsageRoleTests(unittest.TestCase):
                 sheet = archive.read('xl/worksheets/sheet1.xml').decode()
                 self.assertNotIn('真实', sheet)
                 self.assertNotIn('调整', sheet)
+                self.assertNotIn('成功生成成本', sheet)
+        self.assertEqual(client.get(prefix+'/costs/day?usage_date=2026-05-03').status_code, 403)
         for endpoint in ['daily-override/form', 'daily-override/delete/form']:
             response = client.post(prefix+'/usage/'+endpoint, data={'user_id':2, 'usage_date':'2026-05-03', 'override_count':77})
             self.assertEqual(response.status_code, 403)
+
+    def test_admin_json_and_export_include_costs(self):
+        app = FastAPI()
+        app.include_router(routes.router)
+        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1, role='admin')
+        app.dependency_overrides[get_db] = lambda: None
+        data = build_usage_preview(fixtures.user, '2026-05')
+        data['rows'] = [vars(row) for row in data['rows']]
+        for row in data['rows']:
+            for index, day in enumerate(row['daily'], 1):
+                day['day'] = index
+        cost_report = {
+            'currency': 'USD', 'total': '3.90', 'count': 1, 'pending_count': 2,
+            'daily_totals': [{'amount': '3.90' if day == 3 else '0.00'} for day in data['days']],
+            'rows': [{'username': 'cost-user', 'monthly_amount': '3.90',
+                      'daily': [{'amount': '3.90' if day == 3 else '0.00'} for day in data['days']]}],
+        }
+        client = TestClient(app)
+        with patch.object(routes, '_usage_month_data', return_value=data), patch.object(routes, '_cost_month_data', return_value=cost_report):
+            response = client.get('/admin/usage/monthly?month=2026-05')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['cost_report']['total'], '3.90')
+            export = client.get('/admin/usage/monthly/export?month=2026-05')
+            self.assertEqual(export.status_code, 200)
+            with zipfile.ZipFile(io.BytesIO(export.content)) as archive:
+                sheet = archive.read('xl/worksheets/sheet1.xml').decode()
+                self.assertIn('成功生成成本 USD', sheet)
+                self.assertIn('待计费任务', sheet)
 
 
 if __name__ == '__main__':

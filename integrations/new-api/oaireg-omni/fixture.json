@@ -1,0 +1,844 @@
+{
+  "cases": [
+    {
+      "name": "portrait-single decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "  保留原始提示词  ",
+              "aspect_ratio": "9:16",
+              "image_url": "https://example.invalid/ref.png",
+              "metadata": {
+                "keep": true
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "omni-fast-no-water",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "omni-fast-no-water",
+          "prompt": "  保留原始提示词  ",
+          "aspect_ratio": "9:16",
+          "image_url": "https://example.invalid/ref.png",
+          "metadata": {
+            "keep": true
+          }
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "portrait-single submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "omni-fast-no-water",
+          "requestBody": {
+            "model": "omni-fast-no-water",
+            "prompt": "  保留原始提示词  ",
+            "aspect_ratio": "9:16",
+            "image_url": "https://example.invalid/ref.png",
+            "metadata": {
+              "keep": true
+            }
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "omni-fast-no-water",
+          "prompt": "  保留原始提示词  ",
+          "aspect_ratio": "9:16",
+          "image_url": "https://example.invalid/ref.png",
+          "metadata": {
+            "keep": true
+          }
+        }
+      }
+    },
+    {
+      "name": "landscape-multi decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "测试",
+              "aspect_ratio": "16:9",
+              "images": [
+                "https://example.invalid/1.png",
+                "https://example.invalid/2.png"
+              ],
+              "extra_option": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "omni-fast-no-water",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "omni-fast-no-water",
+          "prompt": "测试",
+          "aspect_ratio": "16:9",
+          "images": [
+            "https://example.invalid/1.png",
+            "https://example.invalid/2.png"
+          ],
+          "extra_option": {
+            "a": [
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "landscape-multi submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "omni-fast-no-water",
+          "requestBody": {
+            "model": "omni-fast-no-water",
+            "prompt": "测试",
+            "aspect_ratio": "16:9",
+            "images": [
+              "https://example.invalid/1.png",
+              "https://example.invalid/2.png"
+            ],
+            "extra_option": {
+              "a": [
+                1,
+                2
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "omni-fast-no-water",
+          "prompt": "测试",
+          "aspect_ratio": "16:9",
+          "images": [
+            "https://example.invalid/1.png",
+            "https://example.invalid/2.png"
+          ],
+          "extra_option": {
+            "a": [
+              1,
+              2
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "text-only decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast",
+              "prompt": "sky",
+              "aspect_ratio": "9:16"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "omni-fast",
+        "action": "text_to_video",
+        "requestBody": {
+          "model": "omni-fast",
+          "prompt": "sky",
+          "aspect_ratio": "9:16"
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "text-only submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "omni-fast",
+          "requestBody": {
+            "model": "omni-fast",
+            "prompt": "sky",
+            "aspect_ratio": "9:16"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "omni-fast",
+          "prompt": "sky",
+          "aspect_ratio": "9:16"
+        }
+      }
+    },
+    {
+      "name": "five-images decode",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "sky",
+              "aspect_ratio": "9:16",
+              "images": [
+                "https://example.invalid/0.png",
+                "https://example.invalid/1.png",
+                "https://example.invalid/2.png",
+                "https://example.invalid/3.png",
+                "https://example.invalid/4.png"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "omni-fast-no-water",
+        "action": "image_to_video",
+        "requestBody": {
+          "model": "omni-fast-no-water",
+          "prompt": "sky",
+          "aspect_ratio": "9:16",
+          "images": [
+            "https://example.invalid/0.png",
+            "https://example.invalid/1.png",
+            "https://example.invalid/2.png",
+            "https://example.invalid/3.png",
+            "https://example.invalid/4.png"
+          ]
+        }
+      },
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "five-images submit",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid/",
+          "apiKey": "fixture-key",
+          "upstreamModel": "omni-fast-no-water",
+          "requestBody": {
+            "model": "omni-fast-no-water",
+            "prompt": "sky",
+            "aspect_ratio": "9:16",
+            "images": [
+              "https://example.invalid/0.png",
+              "https://example.invalid/1.png",
+              "https://example.invalid/2.png",
+              "https://example.invalid/3.png",
+              "https://example.invalid/4.png"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "omni-fast-no-water",
+          "prompt": "sky",
+          "aspect_ratio": "9:16",
+          "images": [
+            "https://example.invalid/0.png",
+            "https://example.invalid/1.png",
+            "https://example.invalid/2.png",
+            "https://example.invalid/3.png",
+            "https://example.invalid/4.png"
+          ]
+        }
+      }
+    },
+    {
+      "name": "bad-ratio",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "test",
+              "aspect_ratio": "1:1"
+            }
+          }
+        }
+      ],
+      "expectedError": "aspect_ratio",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "too-many",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "test",
+              "aspect_ratio": "9:16",
+              "images": [
+                "x",
+                "x",
+                "x",
+                "x",
+                "x",
+                "x"
+              ]
+            }
+          }
+        }
+      ],
+      "expectedError": "at most 5",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "bad-images",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "test",
+              "aspect_ratio": "9:16",
+              "images": "x"
+            }
+          }
+        }
+      ],
+      "expectedError": "images must",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "bad-image",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "test",
+              "aspect_ratio": "9:16",
+              "image_url": ""
+            }
+          }
+        }
+      ],
+      "expectedError": "image_url",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "blank-prompt",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "  ",
+              "aspect_ratio": "9:16"
+            }
+          }
+        }
+      ],
+      "expectedError": "prompt",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "invalid-duration",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "omni-fast-no-water",
+              "prompt": "test",
+              "aspect_ratio": "9:16",
+              "seconds": 0
+            }
+          }
+        }
+      ],
+      "expectedError": "seconds",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "other-model",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "sora-2",
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "sora-2",
+              "prompt": "test",
+              "aspect_ratio": "9:16"
+            }
+          }
+        }
+      ],
+      "expectedError": "unsupported",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "reject multipart",
+      "hook": "protocols",
+      "args": [
+        {
+          "model": "omni-fast-no-water",
+          "body": {
+            "kind": "multipart"
+          }
+        }
+      ],
+      "expectedError": "JSON body required",
+      "path": [
+        "openai_video",
+        "decodeRequest"
+      ]
+    },
+    {
+      "name": "submit id",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {},
+        {
+          "body": {
+            "id": "task_fixture",
+            "status": "queued"
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "task_fixture",
+        "taskData": {
+          "id": "task_fixture",
+          "status": "queued"
+        }
+      }
+    },
+    {
+      "name": "missing id",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {},
+        {
+          "body": {
+            "status": "queued"
+          }
+        }
+      ],
+      "expectedError": "task id"
+    },
+    {
+      "name": "query",
+      "hook": "buildQueryRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid",
+          "taskId": "task_a/b",
+          "apiKey": "fixture-key"
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos/task_a%2Fb",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer fixture-key"
+        }
+      }
+    },
+    {
+      "name": "progress",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "in_progress",
+          "progress": 42
+        }
+      ],
+      "expected": {
+        "status": "IN_PROGRESS",
+        "progress": "42%"
+      }
+    },
+    {
+      "name": "completed",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "completed",
+          "progress": 100
+        }
+      ],
+      "expected": {
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "failure",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "failed",
+          "error": {
+            "message": "missing image"
+          }
+        }
+      ],
+      "expected": {
+        "status": "FAILURE",
+        "reason": "missing image"
+      }
+    },
+    {
+      "name": "unknown",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "new_vendor_state"
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "unrecognized status: new_vendor_state"
+      }
+    },
+    {
+      "name": "billing unchanged",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "model": "omni-fast-no-water",
+            "prompt": "  保留原始提示词  ",
+            "aspect_ratio": "9:16",
+            "image_url": "https://example.invalid/ref.png",
+            "metadata": {
+              "keep": true
+            }
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "completed billing",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {},
+        {
+          "seconds": 10,
+          "size": "1280x720"
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "artifacts",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS"
+        }
+      ],
+      "expected": [
+        {
+          "key": "video",
+          "type": "video"
+        }
+      ]
+    },
+    {
+      "name": "no artifacts",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "FAILURE"
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "content",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "baseUrl": "https://example.invalid",
+          "artifactKey": "video",
+          "upstreamTaskId": "up/a",
+          "apiKey": "fixture-key",
+          "clientRequest": {
+            "method": "HEAD"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://example.invalid/v1/videos/up%2Fa/content",
+        "method": "HEAD",
+        "headers": {
+          "Authorization": "Bearer fixture-key"
+        }
+      }
+    },
+    {
+      "name": "render preserves vendor metadata",
+      "hook": "protocols",
+      "args": [
+        {},
+        {
+          "data": {
+            "id": "public_fixture",
+            "status": "completed",
+            "aspect_ratio": "9:16",
+            "input_mode": "image-to-video"
+          }
+        }
+      ],
+      "expected": {
+        "id": "public_fixture",
+        "status": "completed",
+        "aspect_ratio": "9:16",
+        "input_mode": "image-to-video"
+      },
+      "path": [
+        "openai_video",
+        "render"
+      ]
+    },
+    {
+      "name": "one request regardless of supplied duration None",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024"
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 0",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 0,
+            "duration": 0
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 4",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 4,
+            "duration": 4
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 8",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 8,
+            "duration": 8
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 10",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 10,
+            "duration": 10
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "one request regardless of supplied duration 1000",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "requestBody": {
+            "requests": 999,
+            "size": "1792x1024",
+            "seconds": 1000,
+            "duration": 1000
+          }
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    },
+    {
+      "name": "completion never uses vendor request count or duration",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {},
+        {
+          "seconds": 120,
+          "duration": 120,
+          "requests": 999
+        }
+      ],
+      "expected": {
+        "requests": 1
+      }
+    }
+  ]
+}

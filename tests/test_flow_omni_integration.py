@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from creation_features_support import CreationFeaturesEnvironment
 from app.api.admin.routes import _provider_base_url
-from app.models.tables import (Base, ProviderKey, Job, JobBatch, JobFile, JobEvent, ReferenceImagePreset,
+from app.models.tables import (Base, ProviderKey, Job, JobBatch, JobFile, JobEvent, JobCost, JobCostRevision, ReferenceImagePreset,
                               RiskControlRule, JobQuotaReservation, PackageQuotaLedger,
                               QuotaLedger, QuotaWallet, APICallLog)
 from app.services import flow_omni, sora_api
@@ -38,7 +38,7 @@ class FlowEnvironment(CreationFeaturesEnvironment):
                     column.type = Integer()
                 if isinstance(column.type, JSONB):
                     column.type = JSON()
-        for model in (ProviderKey, JobBatch, Job, JobFile, JobEvent, RiskControlRule,
+        for model in (ProviderKey, JobBatch, Job, JobFile, JobEvent, JobCost, JobCostRevision, RiskControlRule,
                       JobQuotaReservation, PackageQuotaLedger, QuotaLedger, APICallLog):
             model.__table__.drop(self.engine, checkfirst=True)
             meta.tables[model.__tablename__].create(self.engine)

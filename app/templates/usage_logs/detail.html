@@ -1,0 +1,35 @@
+<div class="usage-detail-grid">
+  <div class="usage-detail-facts">
+    <section class="usage-detail-section">
+      <h3>费用与时间</h3>
+      <dl>
+        <div class="usage-detail-total"><dt>实际费用</dt><dd>{{ '$' ~ money(cost.amount) ~ ' USD' if display_state == 'settled' else '—' }}</dd></div>
+        <div><dt>计费状态</dt><dd>{{ {'settled':'已结算','success_pending':'成功待核对','generating':'生成中','failed_pending':'失败待排除','excluded':'失败不计入'}.get(display_state, display_state) }}</dd></div>
+        <div><dt>提交时间</dt><dd>{{ format_time(job.submitted_at or job.created_at) if job else format_time(cost.created_at) }}</dd></div>
+        <div><dt>完成时间</dt><dd>{{ format_time(cost.upstream_completed_at or job.completed_at) if job and (cost.upstream_completed_at or job.completed_at) else (format_time(cost.upstream_completed_at) if cost.upstream_completed_at else '—') }}</dd></div>
+        <div><dt>用户</dt><dd>{{ cost.username }} <small>· ID {{ cost.source_user_id }}</small></dd></div>
+        <div><dt>模型 / 规格</dt><dd>{{ cost.model }} · {{ cost.seconds }} 秒{% if cost.resolution %} · {{ cost.resolution }}{% endif %}</dd></div>
+        {% if cost.checked_at %}<div><dt>最近核对</dt><dd>{{ format_time(cost.checked_at) }}</dd></div>{% endif %}
+      </dl>
+      {% if can_recheck %}<div class="usage-detail-recheck"><button type="button" class="secondary-btn small-btn" data-recheck-job="{{ cost.source_job_id }}">重新核对费用</button><span role="status" data-recheck-status>{{ recheck_hint }}</span></div>{% endif %}
+    </section>
+    <section class="usage-detail-section usage-detail-prompt"><h3>提示词</h3>{% if job %}<pre>{{ job.prompt }}</pre>{% else %}<p>原任务已删除，提示词不可查看。</p>{% endif %}</section>
+    <details class="usage-detail-technical">
+      <summary>计费依据与请求 ID</summary>
+      <dl>
+        <div><dt>任务 ID</dt><dd>{{ cost.source_job_id }}</dd></div>
+        <div><dt>上游任务 ID</dt><dd class="usage-detail-id">{{ cost.remote_task_id }}</dd></div>
+        {% if request_ids %}<div><dt>计费请求 ID</dt><dd class="usage-detail-id">{{ request_ids|join('、') }}</dd></div>{% endif %}
+      </dl>
+    </details>
+  </div>
+  <section class="usage-detail-video" aria-label="生成视频">
+    <h3>生成视频</h3>
+    {% if video %}
+      <video controls preload="metadata" playsinline src="/app/files/{{ video.id }}/stream"></video>
+      <a class="ghost-btn small-btn" href="/app/files/{{ video.id }}/download">下载视频</a>
+    {% else %}
+      <div class="usage-detail-video-empty"><p>暂无可播放的视频文件。</p><small>{{ '原任务已删除。' if not job else '视频仍在生成、下载，或文件已移除。' }}</small></div>
+    {% endif %}
+  </section>
+</div>

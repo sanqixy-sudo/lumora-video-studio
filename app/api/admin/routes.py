@@ -3,6 +3,8 @@ from __future__ import annotations
 import calendar
 import io
 import zipfile
+from collections import defaultdict
+from decimal import Decimal
 from xml.sax.saxutils import escape
 from datetime import UTC, date, datetime, timedelta
 from math import ceil
@@ -25,6 +27,8 @@ from app.models.tables import (
     AuditLog,
     DailyUsageOverride,
     Job,
+    JobCost,
+    JobCostRevision,
     JobBatch,
     JobEvent,
     JobFile,
@@ -235,13 +239,20 @@ def _xlsx_cell(row_idx: int, col_idx: int, value) -> str:
     return f'<c r="{ref}" t="inlineStr"><is><t>{text}</t></is></c>'
 
 
-def _build_usage_xlsx(data: dict) -> bytes:
+def _build_usage_xlsx(data: dict, cost_report: dict | None = None) -> bytes:
     table_rows = [["用户", "合计", *[str(day) for day in data["days"]]]]
     daily_totals = data.get("daily_totals") or []
     if daily_totals:
         table_rows.append(["每日合计", data.get("display_total", 0), *[item["display"] for item in daily_totals]])
     for row in data["rows"]:
         table_rows.append([user_display_name(row["user"]), row["monthly_display"], *[item["display"] for item in row["daily"]]])
+    if cost_report is not None:
+        table_rows.append([])
+        table_rows.append(["成功生成成本 USD", "月合计", *[str(day) for day in data["days"]]])
+        table_rows.append(["每日合计", cost_report["total"], *[item["amount"] for item in cost_report["daily_totals"]]])
+        for row in cost_report["rows"]:
+            table_rows.append([row["username"], row["monthly_amount"], *[item["amount"] for item in row["daily"]]])
+        table_rows.append(["待计费任务", cost_report["pending_count"]])
 
     row_xml = []
     for row_idx, values in enumerate(table_rows, start=1):
@@ -400,6 +411,52 @@ def _usage_month_data(db: Session, year: int, month_num: int, hide_subadmin_hidd
             }
         )
     return _recompute_usage_totals({**nav, "rows": rows, "real_total": real_total, "display_total": display_total, "override_count": len(overrides)})
+
+
+def _cost_month_data(db: Session, year: int, month_num: int, keyword: str | None = None) -> dict:
+    nav = _month_nav(year, month_num)
+    start_date = date(year, month_num, 1)
+    end_date = date(year, month_num, nav["days"][-1])
+    records = (
+        db.query(JobCost)
+        .filter(JobCost.state == "settled", JobCost.usage_date >= start_date, JobCost.usage_date <= end_date)
+        .order_by(JobCost.source_user_id.asc(), JobCost.usage_date.asc())
+        .all()
+    )
+    month_start, month_end = month_bounds_utc(year, month_num)
+    pending_query = db.query(JobCost).filter(
+        JobCost.state == "pending", JobCost.created_at >= month_start, JobCost.created_at < month_end
+    )
+    amounts: dict[tuple[int, date], Decimal] = defaultdict(Decimal)
+    counts: dict[tuple[int, date], int] = defaultdict(int)
+    names: dict[int, str] = {}
+    keyword = (keyword or "").strip().lower()
+    pending = [row for row in pending_query.all() if not keyword or keyword in row.username.lower() or keyword == str(row.source_user_id)]
+    for record in records:
+        if keyword and keyword not in record.username.lower() and keyword != str(record.source_user_id):
+            continue
+        key = (record.source_user_id, record.usage_date)
+        amounts[key] += record.amount or Decimal(0)
+        counts[key] += 1
+        names[record.source_user_id] = record.username
+    daily_totals = []
+    for day in nav["days"]:
+        current = date(year, month_num, day)
+        amount = sum((value for (user_id, usage_date), value in amounts.items() if usage_date == current), Decimal(0))
+        count = sum(value for (user_id, usage_date), value in counts.items() if usage_date == current)
+        daily_totals.append({"day": day, "date": current.isoformat(), "amount": f"{amount:.2f}", "count": count})
+    rows = []
+    for user_id, username in sorted(names.items()):
+        daily = []
+        monthly = Decimal(0)
+        for day in nav["days"]:
+            current = date(year, month_num, day)
+            amount = amounts[(user_id, current)]
+            monthly += amount
+            daily.append({"day": day, "date": current.isoformat(), "amount": f"{amount:.2f}", "count": counts[(user_id, current)]})
+        rows.append({"user_id": user_id, "username": username, "monthly_amount": f"{monthly:.2f}", "daily": daily})
+    total = sum((Decimal(row["monthly_amount"]) for row in rows), Decimal(0))
+    return {"currency": "USD", "total": f"{total:.2f}", "count": sum(item["count"] for item in daily_totals), "pending_count": len(pending), "daily_totals": daily_totals, "rows": rows}
 
 
 def _real_usage_for_date(db: Session, user_id: int, usage_date: date) -> int:
@@ -693,6 +750,7 @@ def usage_monthly_page(
 ):
     year, month_num = _parse_month(month)
     data = _filter_usage_rows(_usage_month_data(db, year, month_num, current_user.role == "sub_admin"), q, hide_zero)
+    cost_report = _cost_month_data(db, year, month_num, q) if current_user.role == "admin" else None
     return render(
         request,
         "admin/usage_monthly.html",
@@ -700,6 +758,7 @@ def usage_monthly_page(
         can_manage=current_user.role == "admin",
         usage_query=(q or "").strip(),
         hide_zero=hide_zero,
+        cost_report=cost_report,
         **data,
     )
 
@@ -731,6 +790,7 @@ def usage_monthly_json(
     if is_admin:
         payload["real_total"] = data["real_total"]
         payload["override_count"] = data["override_count"]
+        payload["cost_report"] = _cost_month_data(db, year, month_num, q)
     return payload
 
 
@@ -744,12 +804,114 @@ def usage_monthly_export(
 ):
     year, month_num = _parse_month(month)
     data = _filter_usage_rows(_usage_month_data(db, year, month_num, current_user.role == "sub_admin"), q, hide_zero)
+    cost_report = _cost_month_data(db, year, month_num, q) if current_user.role == "admin" else None
     filename = f"usage_{data['month']}.xlsx"
     return Response(
-        _build_usage_xlsx(data),
+        _build_usage_xlsx(data, cost_report),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/costs/pending")
+def pending_costs(
+    month: str | None = None,
+    admin: User = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    year, month_num = _parse_month(month)
+    start, end = month_bounds_utc(year, month_num)
+    records = (
+        db.query(JobCost)
+        .filter(JobCost.state == "pending", JobCost.created_at >= start, JobCost.created_at < end)
+        .order_by(JobCost.created_at.asc(), JobCost.id.asc())
+        .all()
+    )
+    return {
+        "month": f"{year:04d}-{month_num:02d}",
+        "count": len(records),
+        "tasks": [
+            {"job_id": row.source_job_id, "username": row.username, "remote_task_id": row.remote_task_id,
+             "model": row.model, "last_error": row.last_error, "checked_at": row.checked_at.isoformat() if row.checked_at else None}
+            for row in records
+        ],
+    }
+
+
+@router.get("/costs/day")
+def costs_for_day(
+    usage_date: date,
+    user_id: int | None = None,
+    admin: User = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    query = db.query(JobCost).filter(JobCost.state == "settled", JobCost.usage_date == usage_date)
+    if user_id is not None:
+        query = query.filter(JobCost.source_user_id == user_id)
+    records = query.order_by(JobCost.source_user_id.asc(), JobCost.source_job_id.asc()).all()
+    return {
+        "date": usage_date.isoformat(),
+        "currency": "USD",
+        "total": f"{sum((row.amount or Decimal(0) for row in records), Decimal(0)):.2f}",
+        "tasks": [
+            {
+                "job_id": row.source_job_id,
+                "user_id": row.source_user_id,
+                "username": row.username,
+                "remote_task_id": row.remote_task_id,
+                "model": row.model,
+                "seconds": row.seconds,
+                "resolution": row.resolution,
+                "net_quota": row.net_quota,
+                "amount": f"{row.amount:.6f}" if row.amount is not None else None,
+                "completed_at": row.upstream_completed_at.isoformat() if row.upstream_completed_at else None,
+                "source_logs": row.source_logs,
+            }
+            for row in records
+        ],
+    }
+
+
+@router.get("/costs/{source_job_id}")
+def cost_for_job(
+    source_job_id: int,
+    admin: User = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    row = db.query(JobCost).filter(JobCost.source_job_id == source_job_id).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Cost record not found")
+    revisions = (
+        db.query(JobCostRevision)
+        .filter(JobCostRevision.source_job_id == source_job_id)
+        .order_by(JobCostRevision.created_at.asc(), JobCostRevision.id.asc())
+        .all()
+    )
+    return {
+        "job_id": row.source_job_id,
+        "user_id": row.source_user_id,
+        "username": row.username,
+        "remote_task_id": row.remote_task_id,
+        "model": row.model,
+        "state": row.state,
+        "currency": row.currency,
+        "amount": str(row.amount) if row.amount is not None else None,
+        "net_quota": row.net_quota,
+        "quota_per_unit": row.quota_per_unit,
+        "usage_date": row.usage_date.isoformat() if row.usage_date else None,
+        "last_error": row.last_error,
+        "source_logs": row.source_logs,
+        "revisions": [
+            {
+                "previous_quota": item.previous_quota,
+                "new_quota": item.new_quota,
+                "previous_amount": str(item.previous_amount) if item.previous_amount is not None else None,
+                "new_amount": str(item.new_amount),
+                "created_at": item.created_at.isoformat() if item.created_at else None,
+            }
+            for item in revisions
+        ],
+    }
 
 
 @router.post("/usage/daily-override/form")
@@ -1508,6 +1670,9 @@ def update_provider_key_form(
         raise HTTPException(status_code=404, detail="Job not found")
     if provider_is_retired(row.provider_name):
         raise HTTPException(status_code=400, detail="已下线渠道仅保留历史记录")
+    pending_cost_count = int(db.query(func.count(JobCost.id)).filter(JobCost.provider_key_id == key_id, JobCost.state == "pending").scalar() or 0)
+    if raw_key and raw_key.strip() and pending_cost_count:
+        raise HTTPException(status_code=409, detail="仍有待核对账单，暂不能替换此令牌")
     _validate_grok_model(provider_name, model_id)
     row.name = name.strip()
     row.provider_name = normalize_provider_name(provider_name)
@@ -1539,13 +1704,14 @@ def delete_provider_key_form(key_id: int, admin: User = Depends(require_super_ad
     if not row:
         raise HTTPException(status_code=404, detail="Job not found")
     used_count = int(db.query(func.count(Job.id)).filter(Job.provider_key_id == row.id).scalar() or 0)
-    if used_count:
+    pending_cost_count = int(db.query(func.count(JobCost.id)).filter(JobCost.provider_key_id == row.id, JobCost.state == "pending").scalar() or 0)
+    if used_count or pending_cost_count:
         row.status = "deleted"
         row.name = f"{row.name}（已删除）"[:128]
         db.add(row)
     else:
         db.delete(row)
-    write_audit(db, admin.id, "delete_provider_key", "provider_key", key_id, {"used_count": used_count})
+    write_audit(db, admin.id, "delete_provider_key", "provider_key", key_id, {"used_count": used_count, "pending_cost_count": pending_cost_count})
     db.commit()
     return RedirectResponse("/admin/provider-keys/page", status_code=303)
 

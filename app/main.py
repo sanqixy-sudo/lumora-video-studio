@@ -16,6 +16,7 @@ from app.api.auth.routes import router as auth_router
 from app.api.files.routes import router as files_router
 from app.api.user.routes import router as user_router
 from app.api.user.settings import router as account_settings_router
+from app.api.usage_logs.routes import router as usage_logs_router
 from app.core.config import settings
 from app.db import SessionLocal
 from app.deps import get_db, user_for_token
@@ -195,6 +196,7 @@ def readyz() -> dict[str, str]:
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(account_settings_router)
+app.include_router(usage_logs_router)
 app.include_router(admin_router)
 app.include_router(files_router)
 

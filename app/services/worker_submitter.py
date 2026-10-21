@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.db import SessionLocal
 from app.models.tables import APICallLog, Job, ProviderKey
 from app.services.crypto import decrypt_secret
+from app.services.cost_accounting import register_job_cost
 from app.services.network_settings import get_proxy_url
 from app.services.jobs import add_event, get_reference_path, get_reference_url, get_reference_urls, get_reference_video_url, release_reserved_quota_for_job
 from app.services.provider_keys import record_provider_key_failure, record_provider_key_success
@@ -212,6 +213,8 @@ def submit_queued_job(job_id: int) -> None:
             job.progress = int(data.get("progress") or 0)
             job.submitted_at = utcnow()
             job.error_text = None
+            if provider_key:
+                register_job_cost(db, job, provider_key)
             try:
                 charge_reserved_quota(db, job)
             except ValueError as exc:

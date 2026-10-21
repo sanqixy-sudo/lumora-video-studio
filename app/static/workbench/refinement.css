@@ -1,0 +1,87 @@
+/* Quieter chrome keeps the editing surface and results in the foreground. */
+.wb-glass:not(.wb-auth-page) .wb-sidebar,
+.wb-glass:not(.wb-auth-page) .wb-topbar {
+  background:var(--wb-surface);
+  border-color:var(--wb-line);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:0 2px 12px #15162909;
+}
+@media(min-width:1200px) {
+  .wb-glass:not(.wb-auth-page) .wb-sidebar {background:transparent;border:0;box-shadow:none}
+  .wb-glass:not(.wb-auth-page) .wb-sidebar::before {
+    background:var(--wb-surface);border-color:var(--wb-line);
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
+}
+.wb-glass.wb-create-page .glass-workbench {
+  background:var(--wb-surface);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:0 3px 18px #16132c0b;
+}
+.wb-glass.wb-create-page .wb-settings {padding:14px 18px 0}
+.wb-glass.wb-create-page .wb-create-guide {margin-bottom:8px;gap:18px}
+.wb-glass.wb-create-page .wb-settings-fields {gap:10px 14px}
+.wb-glass.wb-create-page .wb-format-row {min-height:52px}
+.wb-glass.wb-create-page .wb-editor {grid-template-columns:236px minmax(0,1fr)}
+.wb-glass.wb-create-page .wb-pane-title {min-height:52px;padding:11px 16px 8px}
+.wb-glass.wb-create-page .wb-materials-content,
+.wb-glass.wb-create-page .wb-prompts-content {padding-inline:16px}
+.wb-glass.wb-create-page .wb-materials-content {gap:12px}
+.wb-glass.wb-create-page .wb-add-material {min-height:76px;padding:12px}
+.wb-glass.wb-create-page .wb-submit {
+  min-height:66px;
+  padding:10px 16px;
+  background:var(--wb-surface);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:0 2px 14px #16132c10;
+}
+.wb-draft-notice,.wb-recreate-notice {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 14px;margin-bottom:8px;border:1px solid var(--wb-line);
+  border-radius:10px;background:var(--wb-selection);color:var(--wb-ink);font-size:13px;
+}
+.wb-draft-notice[hidden],.wb-recreate-notice[hidden] {display:none}
+.wb-draft-notice .inline-actions {flex:none}
+.usage-logs-page .usage-logs-heading {margin-bottom:8px}
+.usage-logs-page .usage-logs-heading>div h1 {display:block;margin:0;font-size:20px}
+.usage-logs-page .usage-logs-heading>div p {display:none}
+.usage-logs-page .usage-logs-panel {background:var(--wb-surface);box-shadow:none}
+.usage-logs-page .usage-logs-presets {padding:10px 14px 8px;border-bottom:1px solid var(--wb-line)}
+.usage-logs-page .usage-logs-advanced {border-bottom:1px solid var(--wb-line)}
+.usage-logs-page .usage-logs-advanced>summary {cursor:pointer;padding:9px 16px;color:var(--wb-ink);font-size:13px;font-weight:600}
+.usage-logs-page .usage-logs-advanced>summary span {margin-left:8px;color:var(--wb-muted);font-size:12px;font-weight:400}
+.usage-logs-page .usage-logs-filters {padding:4px 16px 12px;gap:8px;border-bottom:0}
+.usage-logs-page .usage-logs-filters input {min-height:36px}
+.usage-logs-page .usage-logs-filters button,.usage-logs-page .usage-logs-filters>a {min-height:36px}
+.usage-logs-page .usage-logs-summary {gap:12px 24px;padding:10px 16px}
+.usage-logs-page .usage-logs-summary>div {gap:2px;min-width:92px}
+.usage-logs-page .usage-logs-summary strong {font-size:18px}
+.usage-logs-page .usage-logs-table-head {padding:10px 16px}
+.usage-logs-page .usage-logs-table td,.usage-logs-page .usage-logs-table th {padding:10px 12px}
+.usage-cost-status.is-generating {background:var(--wb-inset);color:var(--wb-muted)}
+.wb-glass .usage-detail-dialog {backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 18px 54px #11142b26}
+.usage-detail-content {min-height:360px}
+.usage-detail-skeleton .usage-detail-facts {gap:14px;padding-top:5px}
+.usage-skeleton-line,.usage-skeleton-block,.usage-skeleton-video {background:var(--wb-inset);border-radius:8px}
+.usage-skeleton-line {height:20px;width:66%}
+.usage-skeleton-line.wide {width:88%}
+.usage-skeleton-block {height:132px;margin-top:12px}
+.usage-skeleton-video {min-height:290px}
+.usage-detail-recheck {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px}
+.usage-detail-recheck span {font-size:12px;color:var(--wb-muted)}
+@media(prefers-reduced-motion:no-preference) {
+  .usage-detail-dialog[open] {animation:usage-detail-enter 140ms ease-out both}
+  @keyframes usage-detail-enter {from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+}
+@media(max-width:767px) {
+  .wb-glass.wb-create-page .wb-settings {padding:12px 12px 0}
+  .wb-glass.wb-create-page .wb-editor {display:flex}
+  .wb-glass.wb-create-page .wb-submit {padding:9px 12px}
+  .wb-draft-notice {align-items:start;flex-direction:column}
+  .usage-detail-content {min-height:260px}
+  .usage-skeleton-video {min-height:180px}
+  .usage-logs-page .usage-logs-summary p {width:100%}
+}

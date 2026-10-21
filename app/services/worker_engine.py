@@ -8,7 +8,8 @@ from threading import Lock
 from sqlalchemy import func
 from app.core.config import settings
 from app.db import SessionLocal
-from app.models.tables import Job, ProviderKey, User
+from app.models.tables import Job, JobCost, ProviderKey, User
+from app.services.cost_accounting import reconcile_job_cost, register_job_cost, NEWAPI_PROVIDERS
 from app.services.crypto import decrypt_secret
 from app.services.jobs import add_event, refund_failed_job_quota
 from app.services.system_settings import get_system_setting_int
@@ -50,9 +51,56 @@ _PROCESS_FUTURES: dict[object, tuple[int, datetime]] = {}
 # Downloads must never occupy status-polling threads. Bound pending work too.
 DOWNLOAD_CONCURRENCY = settings.video_download_concurrency
 DOWNLOAD_EXECUTOR = ThreadPoolExecutor(max_workers=32, thread_name_prefix="video-download")
+ACCOUNTING_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="newapi-cost")
+_ACCOUNTING_FUTURES: dict[object, int] = {}
 _DOWNLOAD_FUTURES: dict[int, object] = {}
 _DOWNLOAD_LOCK = Lock()
 _LAST_TEMP_CLEANUP_AT: datetime | None = None
+_LAST_COST_BACKFILL_AT: datetime | None = None
+
+
+def _schedule_cost_reconciliation() -> None:
+    global _LAST_COST_BACKFILL_AT
+    for future, job_id in list(_ACCOUNTING_FUTURES.items()):
+        if future.done():
+            del _ACCOUNTING_FUTURES[future]
+            try:
+                future.result()
+            except Exception:
+                logger.exception("Cost reconciliation crashed for job %s", job_id)
+    now = utcnow()
+    with SessionLocal() as db:
+        if _LAST_COST_BACKFILL_AT is None or now - _LAST_COST_BACKFILL_AT >= timedelta(minutes=10):
+            existing_ids = db.query(JobCost.source_job_id)
+            recent = (
+                db.query(Job, ProviderKey)
+                .join(ProviderKey, ProviderKey.id == Job.provider_key_id)
+                .filter(Job.remote_task_id.isnot(None), Job.submitted_at >= now - timedelta(days=2))
+                .filter(ProviderKey.provider_name.in_(NEWAPI_PROVIDERS))
+                .filter(~Job.id.in_(existing_ids))
+                .order_by(Job.id.asc())
+                .limit(100)
+                .all()
+            )
+            for job, provider_key in recent:
+                register_job_cost(db, job, provider_key)
+            db.commit()
+            _LAST_COST_BACKFILL_AT = now
+        available = max(2 - len(_ACCOUNTING_FUTURES), 0)
+        if not available:
+            return
+        in_flight = set(_ACCOUNTING_FUTURES.values())
+        due = (
+            db.query(JobCost.source_job_id)
+            .filter(JobCost.next_check_at.isnot(None), JobCost.next_check_at <= now)
+            .filter(~JobCost.source_job_id.in_(in_flight))
+            .order_by(JobCost.next_check_at.asc(), JobCost.id.asc())
+            .limit(available)
+            .all()
+        )
+    for (job_id,) in due:
+        future = ACCOUNTING_EXECUTOR.submit(reconcile_job_cost, int(job_id))
+        _ACCOUNTING_FUTURES[future] = int(job_id)
 
 
 def _refresh_download_concurrency(db) -> None:
@@ -319,6 +367,7 @@ def process_once() -> None:
     force_due_content_fallback_jobs()
     touched_polling_job_ids = touch_stale_polling_jobs(_drop_process_futures_for_job)
     _start_queued_jobs()
+    _schedule_cost_reconciliation()
     _kick_remote_completed_downloads()
     _cleanup_process_futures()
 

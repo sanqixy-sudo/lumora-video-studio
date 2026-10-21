@@ -5,7 +5,7 @@ from uuid import uuid4
 import httpx
 from fastapi.testclient import TestClient
 from test_flow_omni_integration import FlowEnvironment
-from app.models.tables import ProviderKey, Job, QuotaWallet, User
+from app.models.tables import ProviderKey, Job, JobCost, QuotaWallet, User
 from app.services.crypto import encrypt_secret
 from app.services import sora_api
 from app.services.model_capabilities import capabilities, matches_ratio, validate_grok, GROK_MODELS
@@ -144,6 +144,8 @@ class GrokCreationTests(unittest.TestCase):
             with self.env.Session() as db:
                 job=db.get(Job,job_id)
                 self.assertEqual(job.remote_task_id,'grok-worker')
+                cost=db.query(JobCost).filter_by(source_job_id=job_id).one()
+                self.assertEqual((cost.remote_task_id,cost.state),('grok-worker','pending'))
                 poll_remote(db,job,db.get(ProviderKey,5),'secret')
                 self.assertEqual(job.status,'remote_completed')
                 self.assertEqual((job.resolution,job.aspect_ratio,job.seconds),('720p','1:1',7))
