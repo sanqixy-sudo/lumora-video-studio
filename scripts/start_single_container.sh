@@ -25,8 +25,7 @@ if [ -z "${PG_BIN}" ]; then
 fi
 
 mkdir -p /var/run/postgresql /data/postgres /data/logs /data/uploads /data/outputs /data/temp /data/secrets
-touch /data/logs/postgres.log
-chown -R postgres:postgres /data/postgres /data/logs /var/run/postgresql
+chown -R postgres:postgres /data/postgres /var/run/postgresql
 chmod 700 /data/postgres /var/run/postgresql
 
 if [ ! -s "${PGDATA}/PG_VERSION" ]; then
@@ -39,13 +38,19 @@ if [ ! -s "${PGDATA}/PG_VERSION" ]; then
     echo "host all all 127.0.0.1/32 scram-sha-256" >> "${PGDATA}/pg_hba.conf"
 fi
 
+# A NAS shared-folder ACL can deny writes even after chown. Keep PostgreSQL's
+# persistent log in its Docker volume, where the postgres user owns the files.
+POSTGRES_LOG_PATH="${POSTGRES_LOG_PATH:-${PGDATA}/postgres.log}"
+touch "${POSTGRES_LOG_PATH}"
+chown postgres:postgres "${POSTGRES_LOG_PATH}"
+
 as_postgres() {
     su -s /bin/bash postgres -c "$1"
 }
 
-if ! as_postgres "${PG_BIN}/pg_ctl -D '${PGDATA}' -l /data/logs/postgres.log -w start"; then
+if ! as_postgres "${PG_BIN}/pg_ctl -D '${PGDATA}' -l '${POSTGRES_LOG_PATH}' -w start"; then
     echo "PostgreSQL failed to start. Last log lines:" >&2
-    tail -n 200 /data/logs/postgres.log >&2 || true
+    tail -n 200 "${POSTGRES_LOG_PATH}" >&2 || true
     exit 1
 fi
 
