@@ -6,7 +6,6 @@ __pycache__/
 .venv/
 venv/
 .git/
-原版/
 probe_results/
 data/postgres/
 data/outputs/
