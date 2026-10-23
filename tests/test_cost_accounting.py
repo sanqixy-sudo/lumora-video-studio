@@ -25,6 +25,7 @@ def source_log(request_id, task_id, quota, log_type=2):
 
 class CostAccountingTests(unittest.TestCase):
     def setUp(self):
+        costs._token_log_cache.clear()
         self.engine = create_engine("sqlite+pysqlite:///:memory:")
         for table in (ProviderKey.__table__, JobEvent.__table__, JobCost.__table__, JobCostRevision.__table__):
             table.create(self.engine)
@@ -40,7 +41,25 @@ class CostAccountingTests(unittest.TestCase):
             db.commit()
 
     def tearDown(self):
+        costs._token_log_cache.clear()
         self.engine.dispose()
+
+    def test_cny_display_keeps_usd_quota_conversion_and_shares_recent_logs(self):
+        with self.Session() as db:
+            row = db.query(JobCost).one()
+            with (
+                patch.object(costs, "fetch_video_status", return_value=({"status": "completed"}, 200, 0)),
+                patch.object(costs, "_read_json", side_effect=[
+                    {"data": [source_log("a", "task-101", 1950000)]},
+                    {"data": {"quota_display_type": "CNY", "quota_per_unit": 500000}},
+                    {"data": {"quota_display_type": "CNY", "quota_per_unit": 500000}},
+                ]) as read,
+            ):
+                first = costs._fetch_snapshot(row, "test-key", "")
+                second = costs._fetch_snapshot(row, "test-key", "")
+        self.assertEqual(first[2:4], (1950000, 500000))
+        self.assertEqual(second[2:4], (1950000, 500000))
+        self.assertEqual(read.call_count, 3)
 
     def reconcile(self, status, current_logs):
         _net, matched = costs.matching_billing_logs(current_logs, "task-101")

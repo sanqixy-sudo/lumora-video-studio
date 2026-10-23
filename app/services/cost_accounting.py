@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 import base64
 import binascii
+import hashlib
+import threading
+import time
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from types import SimpleNamespace
@@ -23,6 +26,9 @@ from app.services.sora_api import COMPLETED_STATUSES, UpstreamError, fetch_video
 
 NEWAPI_PROVIDERS = frozenset({"oaire_grok", "oaire_omni", "flow_omni"})
 FAILED_REMOTE_STATUSES = frozenset({"failed", "error", "stopped", "cancelled", "canceled"})
+TOKEN_LOG_CACHE_SECONDS = 60
+_token_log_cache: dict[tuple[str, bytes, str], tuple[float, list[dict]]] = {}
+_token_log_lock = threading.Lock()
 
 
 def register_job_cost(db: Session, job: Job, provider_key: ProviderKey) -> JobCost | None:
@@ -73,6 +79,24 @@ def _read_json(client: httpx.Client, url: str, api_key: str | None = None) -> di
     if not isinstance(payload, dict) or payload.get("success") is False:
         raise ValueError("New API returned an unsuccessful billing response")
     return payload
+
+
+def _token_logs(client: httpx.Client, base: str, api_key: str, request_proxy: str) -> list[dict]:
+    """Share the token's recent logs across task checks to avoid New API rate limits."""
+    cache_key = (base, hashlib.sha256(api_key.encode()).digest(), request_proxy)
+    with _token_log_lock:
+        now = time.monotonic()
+        cached = _token_log_cache.get(cache_key)
+        if cached and cached[0] > now:
+            return cached[1]
+        logs = _read_json(client, base + "/api/log/token", api_key).get("data")
+        if not isinstance(logs, list):
+            raise ValueError("New API billing log response has no list")
+        for key, entry in list(_token_log_cache.items()):
+            if entry[0] <= now:
+                del _token_log_cache[key]
+        _token_log_cache[cache_key] = (time.monotonic() + TOKEN_LOG_CACHE_SECONDS, logs)
+        return logs
 
 
 def _other(log: dict) -> dict:
@@ -172,10 +196,7 @@ def _fetch_snapshot(row: JobCost, api_key: str, request_proxy: str) -> tuple[str
     status = str(video.get("status") or "").lower()
     with httpx.Client(timeout=httpx.Timeout(connect=10, read=30, write=10, pool=10), proxy=request_proxy or None, trust_env=False) as client:
         base = row.api_base_url.rstrip("/")
-        log_body = _read_json(client, base + "/api/log/token", api_key)
-        logs = log_body.get("data")
-        if not isinstance(logs, list):
-            raise ValueError("New API billing log response has no list")
+        logs = _token_logs(client, base, api_key, request_proxy)
         net_quota, matched = matching_billing_logs(logs, row.remote_task_id)
         if not matched and status in COMPLETED_STATUSES and not row.source_logs:
             raise ValueError("No billing log for task in recent token logs" + (" (1000-row window full)" if len(logs) >= 1000 else ""))
@@ -186,8 +207,7 @@ def _fetch_snapshot(row: JobCost, api_key: str, request_proxy: str) -> tuple[str
                 raise ValueError("Token log window may omit this task's first charge")
         status_body = _read_json(client, base + "/api/status")
         status_data = status_body.get("data") or {}
-        if str(status_data.get("quota_display_type") or "").upper() != "USD":
-            raise ValueError("New API quota currency is not USD")
+        # quota_display_type controls the UI currency; raw quota / quota_per_unit is USD.
         quota_per_unit = int(status_data.get("quota_per_unit") or 0)
         if quota_per_unit <= 0:
             raise ValueError("New API returned no valid quota_per_unit")
@@ -228,7 +248,11 @@ def reconcile_job_cost(source_job_id: int) -> None:
         api_key = decrypt_secret(key_encrypted)
         status, video, net_quota, quota_per_unit, matched = _fetch_snapshot(lookup, api_key, request_proxy)
     except (UpstreamError, httpx.HTTPError, ValueError, TypeError, OverflowError) as exc:
-        detail = str(exc)[:200] if isinstance(exc, ValueError) else type(exc).__name__
+        detail = (
+            str(exc)[:200] if isinstance(exc, ValueError)
+            else f"HTTP {exc.response.status_code}" if isinstance(exc, httpx.HTTPStatusError)
+            else type(exc).__name__
+        )
         with SessionLocal() as db:
             row = db.query(JobCost).filter(JobCost.source_job_id == source_job_id).with_for_update().first()
             if row and row.state != "excluded" and (row.remote_task_id, row.api_base_url, row.provider_key_id) == snapshot:
